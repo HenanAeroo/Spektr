@@ -1,0 +1,58 @@
+### Variables
+@baseUrl = http://localhost:3000
+@accessToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjYsImVtYWlsIjoidGVzdDJAZXhhbXBsZS5jb20iLCJpYXQiOjE3NzM5MDg5MTcsImV4cCI6MTc3MzkwOTgxN30.OJiBB0c_0gF2HJo5aEOEo-8YMm8L-_OVaf3-da1Rkug
+@refreshToken = e6ac1001e370da9c6dee9ee951ccd185b5f041da7b1859d67e34fc44185e62e98574ecbbdae964aee8813ec40f0d4ed32bc540890a1e8cc38075e42a6b9fdea7
+
+### AUTH
+
+### Register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test2@example.com",
+  "password": "password123",
+  "first_name": "John",
+  "last_name": "Doe"
+}
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test2@example.com",
+  "password": "password123"
+}
+
+### Refresh token
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+### USERS
+
+### Get all users
+GET {{baseUrl}}/users
+
+### Get user by id
+GET {{baseUrl}}/users/4
+
+### Update user
+PATCH {{baseUrl}}/users/4
+Content-Type: application/json
+
+{
+  "first_name": "Jane"
+}
+
+### Delete user
+DELETE {{baseUrl}}/users/4

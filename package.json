@@ -1,0 +1,14 @@
+{
+  "name": "boilerplate",
+  "private": true,
+  "packageManager": "pnpm@10.30.3",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test:api": "pnpm --filter api test",
+    "test:web": "pnpm --filter web test"
+  },
+  "devDependencies": {
+    "turbo": "^2.8.21"
+  }
+}

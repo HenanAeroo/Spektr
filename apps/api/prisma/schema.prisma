@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique @db.VarChar(255)
+  first_name  String?
+  last_name   String?
+
+  created_at  DateTime @default(now())
+  modified_at DateTime @updatedAt
+
+  authProviders AuthProvider[]
+  refreshTokens RefreshToken[]
+}
+
+enum Provider {
+  local
+  google
+}
+
+model AuthProvider {
+  id          Int      @id @default(autoincrement())
+  provider    Provider
+  provider_id String?
+  password    String?
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@unique([provider, provider_id])
+  @@unique([userId, provider])
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  expires_at DateTime
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+}

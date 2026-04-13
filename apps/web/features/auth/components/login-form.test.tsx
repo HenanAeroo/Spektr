@@ -32,7 +32,7 @@ describe("login-form", () => {
       "test@test.com",
     );
     await user.type(
-      document.querySelector('input[type="password"]'),
+      document.querySelector('input[type="password"]')!,
       "123@test",
     );
     await user.click(screen.getByRole("button", { name: "Se connecter" }));

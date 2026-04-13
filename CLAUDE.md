@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | Layer    | Technology                                          |
 | -------- | --------------------------------------------------- |
-| Frontend | Next.js 16 (App Router) + TypeScript + Tailwind v4 |
+| Frontend | React 19 + Vite + React Router v7 + TypeScript + Tailwind v4 |
 | Backend  | NestJS 11 + TypeScript                              |
 | Database | PostgreSQL + Prisma 7 (with `@prisma/adapter-pg`)   |
 | Auth     | JWT dual-token + Google OAuth (Passport.js)         |
@@ -46,12 +46,12 @@ npx prisma studio            # DB GUI
 Turborepo orchestrates `dev` and `build`. Each app has its own `pnpm-lock.yaml` and dependencies. The root `package.json` only has `turbo` as a dev dependency.
 
 ### Frontend (`apps/web`)
-Feature-first structure:
-- `app/` — routing only. `(auth)/` group for public pages, root layout wraps everything in `AuthProvider` + `ConditionalLayout`.
+Vite + React SPA with feature-first structure:
+- `src/` — entry point (`main.tsx`, `App.tsx`), `pages/` (route components), `routes/` (`ProtectedRoute`).
 - `features/<domain>/` — business logic: `actions/` (API calls), `components/`, `hooks/`, `types.ts`.
 - `shared/` — cross-feature: `lib/api.ts` (fetch wrapper), `lib/auth.ts` (in-memory token store), `components/` (layout, UI), `types/`.
 
-Route protection is handled by `middleware.ts` at the root of `apps/web` (Next.js convention — must be named exactly `middleware.ts`). `ConditionalLayout` renders the `Sidebar` for private routes and nothing for public routes (`/login`, `/register`, `/oauth/callback`).
+Routing is handled by React Router v7 (`BrowserRouter`) in `App.tsx`. `ProtectedRoute` wraps private routes and redirects to `/login` if no access token. The `Sidebar` is rendered inside the protected layout via `Outlet`.
 
 ### Backend (`apps/api`)
 Standard NestJS module structure: `AuthModule`, `UsersModule`, `PrismaModule`. Each module follows the controller → service → Prisma pattern.
@@ -87,5 +87,5 @@ FRONT_URL=http://localhost:3000
 
 **`apps/web/.env.local`**
 ```
-NEXT_PUBLIC_API_URL=http://localhost:3001
+VITE_API_URL=http://localhost:3001
 ```

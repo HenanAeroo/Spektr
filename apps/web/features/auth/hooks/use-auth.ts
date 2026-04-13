@@ -6,12 +6,12 @@ import {
   loginWithGoogle,
 } from "../actions/auth.actions";
 import { LoginFormData, RegisterFormData } from "../types";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   async function handleLogin(data: LoginFormData) {
     setIsLoading(true);
@@ -19,7 +19,7 @@ export function useAuth() {
 
     try {
       await login(data);
-      router.push("/");
+      navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Mauvais identifiants");
     } finally {
@@ -33,7 +33,7 @@ export function useAuth() {
 
     try {
       await register(data);
-      router.push("/");
+      navigate("/");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Problème lors de l'inscription",
@@ -49,7 +49,7 @@ export function useAuth() {
 
     try {
       await logout();
-      router.push("/login");
+      navigate("/login");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Impossible de se déconnecter",

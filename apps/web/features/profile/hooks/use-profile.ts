@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { getUser } from "@/shared/lib/auth";

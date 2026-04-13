@@ -1,5 +1,3 @@
-"use client";
-
 import { useAuth } from "../hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

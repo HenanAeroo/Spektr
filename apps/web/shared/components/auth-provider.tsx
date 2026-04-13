@@ -1,12 +1,28 @@
-"use client";
-
+import { createContext, useContext, useEffect, useState } from "react";
 import { refresh } from "@/features/auth/actions/auth.actions";
-import { useEffect } from "react";
+
+interface AuthContextValue {
+  isInitialized: boolean;
+}
+
+const AuthContext = createContext<AuthContextValue>({ isInitialized: false });
+
+export function useAuthContext() {
+  return useContext(AuthContext);
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [isInitialized, setIsInitialized] = useState(false);
+
   useEffect(() => {
-    refresh().catch(() => {});
+    refresh()
+      .catch(() => {})
+      .finally(() => setIsInitialized(true));
   }, []);
 
-  return children;
+  return (
+    <AuthContext.Provider value={{ isInitialized }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

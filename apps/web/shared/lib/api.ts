@@ -1,5 +1,4 @@
-// NEXT_PUBLIC_ is mandatory to make an env var accessible on the client side
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 
 type FetchOptions = RequestInit & {
   token?: string;

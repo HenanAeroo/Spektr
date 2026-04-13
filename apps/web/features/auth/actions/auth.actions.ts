@@ -39,5 +39,5 @@ export async function refresh() {
 }
 
 export function loginWithGoogle() {
-  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+  window.location.href = `${import.meta.env.VITE_API_URL ?? "http://localhost:3001"}/auth/google`;
 }

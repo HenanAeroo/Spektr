@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@/shared/lib/utils";
 import {
   LayoutDashboard,
@@ -11,7 +9,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +24,7 @@ const Sidebar = () => {
 
   const { handleLogout } = useAuth();
 
-  const pathName = usePathname();
+  const { pathname: pathName } = useLocation();
   const navLinks = [{ href: "/", label: "Dashboard", icon: LayoutDashboard }];
 
   const user = getUser();
@@ -59,8 +57,8 @@ const Sidebar = () => {
           <TooltipProvider key={link.href}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <a
-                  href={link.href}
+                <Link
+                  to={link.href}
                   className={cn(
                     "flex items-center gap-3 p-2 rounded-md w-full",
                     pathName === link.href
@@ -70,7 +68,7 @@ const Sidebar = () => {
                 >
                   <link.icon />
                   {!collapse && <span>{link.label}</span>}
-                </a>
+                </Link>
               </TooltipTrigger>
               {collapse && (
                 <TooltipContent side="right">{link.label}</TooltipContent>
@@ -82,14 +80,14 @@ const Sidebar = () => {
       <footer className="flex flex-col gap-2 p-2">
         {user ? (
           <>
-            <a
-              href="/profile"
+            <Link
+              to="/profile"
               aria-label="Profil"
               className="flex items-center gap-3 p-2 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 w-full"
             >
               <User />
               {!collapse && <p>Profil</p>}
-            </a>
+            </Link>
             <button
               aria-label="Déconnexion"
               onClick={() => handleLogout()}
@@ -100,14 +98,14 @@ const Sidebar = () => {
             </button>
           </>
         ) : (
-          <a
+          <Link
             aria-label="Connexion"
-            href="/login"
+            to="/login"
             className="flex items-center gap-3 p-2 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 w-full"
           >
             <LogIn />
             {!collapse && <p>Se connecter</p>}
-          </a>
+          </Link>
         )}
         <ModeToggle collapse={collapse} />
       </footer>

@@ -51,15 +51,9 @@ export class AuthService {
   }
 
   // Send both tokens to the controller
-  private async issueTokens(
-    userId: number,
-    email: string,
-    first_name: string | null,
-  ) {
+  private async issueTokens(userId: number) {
     const accessToken = await this.generateAccessToken({
       sub: userId,
-      email,
-      first_name,
     });
 
     const rawRefreshToken = this.generateRawRefreshToken();
@@ -111,12 +105,12 @@ export class AuthService {
       },
     });
 
-    return this.issueTokens(user.id, user.email, user.first_name);
+    return this.issueTokens(user.id);
   }
 
   // As local strategy validate the user, localLogin is simple
   async localLogin(payload: JwtPayload) {
-    return this.issueTokens(payload.sub, payload.email, payload.first_name);
+    return this.issueTokens(payload.sub);
   }
 
   async refresh(rawRefreshToken: string) {
@@ -133,11 +127,7 @@ export class AuthService {
     if (record.expires_at < new Date())
       throw new UnauthorizedException('Refresh token invalide ou expiré');
 
-    return this.issueTokens(
-      record.user.id,
-      record.user.email,
-      record.user.first_name,
-    );
+    return this.issueTokens(record.user.id);
   }
 
   async logout(userId: number) {
@@ -161,11 +151,7 @@ export class AuthService {
     });
 
     if (existing) {
-      return this.issueTokens(
-        existing.user.id,
-        existing.user.email,
-        existing.user.first_name,
-      );
+      return this.issueTokens(existing.user.id);
     }
 
     let user = await this.usersService.findOne({ email });
@@ -191,6 +177,6 @@ export class AuthService {
       });
     }
 
-    return this.issueTokens(user.id, user.email, user.first_name);
+    return this.issueTokens(user.id);
   }
 }

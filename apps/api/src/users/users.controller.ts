@@ -11,9 +11,14 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User as UserModel } from '../../prisma/generated/prisma/client';
+import {
+  User as UserModel,
+  Role as RoleModel,
+} from '../../prisma/generated/prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 
 @Controller('users')
@@ -21,6 +26,8 @@ import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Roles(RoleModel.ADMIN)
+  @UseGuards(RolesGuard)
   @Get()
   findAll(
     @Query() query: { skip?: string; take?: string },

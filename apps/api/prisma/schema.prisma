@@ -12,6 +12,7 @@ model User {
   email       String   @unique @db.VarChar(255)
   first_name  String?
   last_name   String?
+  role        Role     @default(STUDENT)
 
   created_at  DateTime @default(now())
   modified_at DateTime @updatedAt
@@ -49,4 +50,9 @@ model RefreshToken {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  STUDENT
 }

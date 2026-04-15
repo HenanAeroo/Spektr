@@ -68,7 +68,7 @@ model Application {
   contact_nom       String?
   contact_email     String?
   contact_tel       String?
-  date_candidature  DateTime
+  date_candidature  DateTime?
   date_relance      DateTime?
   outcome           Outcome? @default(RAPPEL)
 

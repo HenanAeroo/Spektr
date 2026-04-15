@@ -36,6 +36,11 @@ export class UsersController {
     });
   }
 
+  @Get('me')
+  me(@CurrentUser() user: UserModel): UserModel {
+    return user;
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string): Promise<UserModel | null> {
     return this.usersService.findOne({ id: Number(id) });

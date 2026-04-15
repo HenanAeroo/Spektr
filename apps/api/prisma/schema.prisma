@@ -19,6 +19,7 @@ model User {
 
   authProviders AuthProvider[]
   refreshTokens RefreshToken[]
+  applications  Application[]
 }
 
 enum Provider {
@@ -55,4 +56,41 @@ model RefreshToken {
 enum Role {
   ADMIN
   STUDENT
+}
+
+model Application {
+  id                Int @id @default(autoincrement())
+
+  entreprise        String
+  lien              String?
+  commentaire       String?
+  statut            Statut
+  contact_nom       String?
+  contact_email     String?
+  contact_tel       String?
+  date_candidature  DateTime
+  date_relance      DateTime?
+  outcome           Outcome?
+
+  created_at        DateTime @default(now())
+  modified_at       DateTime @updatedAt
+
+  userId            Int
+  user              User @relation(fields: [userId], references: [id])
+}
+
+enum Outcome {
+    RAPPEL
+    SANS_REPONSE
+    ENTRETIEN
+    DECROCHEE
+}
+
+enum Statut {
+  A_CONTACTER
+  ENVOYE
+  RELANCE
+  EN_DISCUSSION
+  REPONSE_POSITIVE
+  REFUS
 }

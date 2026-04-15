@@ -10,6 +10,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { schema } from './env.validation';
 import { EventsModule } from './events/events.module';
+import { ApplicationResolver } from './application/application.resolver';
+import { ApplicationsModule } from './applications/applications.module';
 
 @Module({
   imports: [
@@ -32,8 +34,9 @@ import { EventsModule } from './events/events.module';
       ],
     }),
     EventsModule,
+    ApplicationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }, ApplicationResolver],
 })
 export class AppModule {}

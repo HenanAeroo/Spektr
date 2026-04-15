@@ -64,13 +64,13 @@ model Application {
   entreprise        String
   lien              String?
   commentaire       String?
-  statut            Statut
+  statut            Statut @default(A_CONTACTER)
   contact_nom       String?
   contact_email     String?
   contact_tel       String?
   date_candidature  DateTime
   date_relance      DateTime?
-  outcome           Outcome?
+  outcome           Outcome? @default(RAPPEL)
 
   created_at        DateTime @default(now())
   modified_at       DateTime @updatedAt

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Application" ALTER COLUMN "statut" SET DEFAULT 'A_CONTACTER',
+ALTER COLUMN "outcome" SET DEFAULT 'RAPPEL';

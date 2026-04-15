@@ -1,26 +1,64 @@
 import { Injectable } from '@nestjs/common';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { Application } from './entities/application.entity';
 
 @Injectable()
 export class ApplicationsService {
-  create(createApplicationDto: CreateApplicationDto) {
-    return 'This action adds a new application';
+  constructor(private readonly prisma: PrismaService) {}
+
+  create(
+    createApplicationDto: CreateApplicationDto,
+    userId: number,
+  ): Promise<Application> {
+    return this.prisma.application.create({
+      data: {
+        ...createApplicationDto,
+        user: { connect: { id: userId } },
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all applications`;
+  findMyApplications(userId: number) {
+    return this.prisma.application.findMany({
+      where: {
+        userId: userId,
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} application`;
+  findOne(id: number, userId: number) {
+    return this.prisma.application.findFirst({
+      where: {
+        id: id,
+        userId: userId,
+      },
+    });
   }
 
-  update(id: number, updateApplicationDto: UpdateApplicationDto) {
-    return `This action updates a #${id} application`;
+  update(
+    id: number,
+    updateApplicationDto: UpdateApplicationDto,
+    userId: number,
+  ) {
+    return this.prisma.application.updateMany({
+      where: {
+        id: id,
+        userId: userId,
+      },
+      data: {
+        ...updateApplicationDto,
+      },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} application`;
+  remove(id: number, userId: number) {
+    return this.prisma.application.deleteMany({
+      where: {
+        id: id,
+        userId: userId,
+      },
+    });
   }
 }

@@ -15,6 +15,18 @@ type CreateApplicationData = {
   outcome?: Outcome;
 };
 
+type UpdateApplicationData = {
+  lien?: string;
+  commentaire?: string;
+  statut?: Statut;
+  contact_nom?: string;
+  contact_email?: string;
+  contact_tel?: string;
+  date_candidature?: string;
+  date_relance?: string;
+  outcome?: Outcome;
+};
+
 export async function fetchMyApplications() {
   return apiFetch<Application[]>("/applications/me", {
     method: "GET",
@@ -33,6 +45,17 @@ export async function createApplication(data: CreateApplicationData) {
 export async function deleteApplication(id: number) {
   return apiFetch<Application>(`/applications/${id}`, {
     method: "DELETE",
+    token: getToken() ?? undefined,
+  });
+}
+
+export async function updateApplication(
+  id: number,
+  data: UpdateApplicationData,
+) {
+  return apiFetch<Application>(`/applications/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
     token: getToken() ?? undefined,
   });
 }

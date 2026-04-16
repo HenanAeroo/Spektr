@@ -10,10 +10,13 @@ import {
 } from "../../../shared/components/ui/table";
 import { EmptyRow } from "@/features/applications/components/empty-row";
 import { ExistingRow } from "@/features/applications/components/existing-row";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/shared/components/ui/sheet";
+import { ApplicationForm } from "@/features/applications/components/application-form";
 
 export const Applications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [rows, setRows] = useState<(Application | null)[]>([]);
+  const [selectedRow, setSelectedRow] = useState<Application | null>(null);
 
   function handleCreated(newApp: Application) {
     setRows((prev) => {
@@ -29,6 +32,14 @@ export const Applications = () => {
   function handleDelete(id: number) {
     setRows((prev) =>
       prev.map((row) => (row !== null && row.id === id ? null : row)),
+    );
+  }
+
+  function handleUpdated(updatedApp: Application) {
+    setRows((prev) =>
+      prev.map((row) =>
+        row !== null && row.id === updatedApp.id ? updatedApp : row,
+      ),
     );
   }
 
@@ -59,11 +70,29 @@ export const Applications = () => {
             row === null ? (
               <EmptyRow key={`empty-${index}`} onCreated={handleCreated} />
             ) : (
-              <ExistingRow key={row.id} row={row} onDeleted={handleDelete} />
+              <ExistingRow
+                key={row.id}
+                row={row}
+                onDeleted={handleDelete}
+                onEdit={(row) => setSelectedRow(row)}
+              />
             ),
           )}
         </TableBody>
       </Table>
+      <Sheet
+        open={selectedRow !== null}
+        onOpenChange={() => setSelectedRow(null)}
+      >
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Modifier la candidature</SheetTitle>
+          </SheetHeader>
+          {selectedRow && (
+            <ApplicationForm row={selectedRow} onUpdated={handleUpdated} />
+          )}
+        </SheetContent>
+      </Sheet>
     </>
   );
 };

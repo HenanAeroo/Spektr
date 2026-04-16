@@ -12,9 +12,9 @@ export function EmptyRow({
 
   function handleBlur() {
     if (value.trim() === "") return;
-    createApplication({ entreprise: value }).then((newApp) =>
-      onCreated(newApp),
-    );
+    createApplication({ entreprise: value })
+      .then((newApp) => onCreated(newApp))
+      .catch((err) => console.error("Erreur création : ", err));
   }
 
   return (

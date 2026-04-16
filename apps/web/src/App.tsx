@@ -7,6 +7,7 @@ import LoginPage from "./pages/login";
 import GoogleCallbackPage from "./pages/oauth/callback";
 import Home from "./pages/Home";
 import ProfilePage from "./pages/profile";
+import { Applications } from "./pages/applications";
 
 function AppLayout() {
   return (
@@ -22,7 +23,12 @@ function AppLayout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -31,6 +37,7 @@ export default function App() {
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/applications" element={<Applications />} />
               </Route>
             </Route>
           </Routes>

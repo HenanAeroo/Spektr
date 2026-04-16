@@ -38,10 +38,12 @@ export class CreateApplicationDto {
   contact_tel?: string;
 
   @IsDateString()
-  date_candidature?: Date;
+  @IsOptional()
+  date_candidature?: string;
 
   @IsDateString()
-  date_relance?: Date;
+  @IsOptional()
+  date_relance?: string;
 
   @IsEnum(Outcome)
   @IsOptional()

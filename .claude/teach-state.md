@@ -2,7 +2,7 @@
 
 ## Meta
 - date_started: 2026-03-17
-- date_updated: 2026-04-15
+- date_updated: 2026-04-16
 - level: Advanced
 
 ## Project
@@ -51,7 +51,7 @@
 
 ## Progress
 - current_task: Colonne 2 — Candidatures (CRUD vertical complet)
-- current_substep: 3 — [Frontend] Liste des candidatures + création
+- current_substep: 3D — [Frontend] Sheet d'édition + updateApplication
 - attempt_count: 0
 
 ## Recap
@@ -108,3 +108,11 @@
 - @IsDateString() valide une string, pas un objet Date → typer le champ string dans le DTO
 - prisma generate doit être relancé après chaque migrate pour mettre à jour les types TypeScript
 - GET /me doit être déclaré avant GET /:id sinon NestJS interprète "me" comme un id (même règle que /users)
+
+### Colonne 2 — Sous-étape 3 (A/B/C) — Frontend table + création inline + suppression
+- Structure HTML table : un seul TableHeader + un seul TableBody, le map se fait sur les lignes, pas sur les colonnes
+- Pattern rows : tableau de 50 éléments (Application | null), les null = lignes vides éditables
+- Composants séparés EmptyRow / ExistingRow : chacun gère son propre état local de saisie
+- Props React = un seul objet destructuré en premier argument — jamais de second argument de fonction
+- handleDelete : setRows avec .map() qui remplace la ligne trouvée par null
+- onDeleted typé (id: number) et non (app: Application) — passer l'id suffit pour identifier la ligne

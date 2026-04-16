@@ -1,44 +1,15 @@
-import {
-  createApplication,
-  fetchMyApplications,
-} from "@/features/applications/actions/applications.actions";
+import { fetchMyApplications } from "@/features/applications/actions/applications.actions";
 import { Application } from "@/features/applications/types";
 import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "../../../shared/components/ui/table";
-
-function EmptyRow({ onCreated }: { onCreated: (app: Application) => void }) {
-  const [value, setValue] = useState("");
-
-  function handleBlur() {
-    if (value.trim() === "") return;
-    createApplication({ entreprise: value }).then((newApp) =>
-      onCreated(newApp),
-    );
-  }
-
-  return (
-    <TableRow>
-      <TableCell>
-        <input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onBlur={handleBlur}
-        />
-      </TableCell>
-      <TableCell></TableCell>
-      <TableCell></TableCell>
-      <TableCell></TableCell>
-      <TableCell></TableCell>
-    </TableRow>
-  );
-}
+import { EmptyRow } from "@/features/applications/components/empty-row";
+import { ExistingRow } from "@/features/applications/components/existing-row";
 
 export const Applications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -53,6 +24,12 @@ export const Applications = () => {
 
       return updated;
     });
+  }
+
+  function handleDelete(id: number) {
+    setRows((prev) =>
+      prev.map((row) => (row !== null && row.id === id ? null : row)),
+    );
   }
 
   useEffect(() => {
@@ -82,13 +59,7 @@ export const Applications = () => {
             row === null ? (
               <EmptyRow key={`empty-${index}`} onCreated={handleCreated} />
             ) : (
-              <TableRow key={row.id}>
-                <TableCell>{row.entreprise}</TableCell>
-                <TableCell>{row.statut}</TableCell>
-                <TableCell>{row.date_candidature}</TableCell>
-                <TableCell>{row.date_relance}</TableCell>
-                <TableCell>{row.outcome}</TableCell>
-              </TableRow>
+              <ExistingRow key={row.id} row={row} onDeleted={handleDelete} />
             ),
           )}
         </TableBody>

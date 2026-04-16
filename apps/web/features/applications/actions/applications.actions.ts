@@ -29,3 +29,10 @@ export async function createApplication(data: CreateApplicationData) {
     token: getToken() ?? undefined,
   });
 }
+
+export async function deleteApplication(id: number) {
+  return apiFetch<Application>(`/applications/${id}`, {
+    method: "DELETE",
+    token: getToken() ?? undefined,
+  });
+}

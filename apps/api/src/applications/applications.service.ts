@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { Application } from './entities/application.entity';
+import type { Application } from '../../prisma/generated/prisma/client';
 
 @Injectable()
 export class ApplicationsService {

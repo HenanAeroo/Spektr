@@ -38,9 +38,11 @@ export class CreateApplicationDto {
   contact_tel?: string;
 
   @IsDateString()
+  @IsOptional()
   date_candidature?: string;
 
   @IsDateString()
+  @IsOptional()
   date_relance?: string;
 
   @IsEnum(Outcome)

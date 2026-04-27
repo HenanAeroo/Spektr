@@ -13,6 +13,7 @@ import { EventsModule } from './events/events.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { FoldersModule } from './folders/folders.module';
 import { MinioService } from './minio/minio.service';
+import { DocumentsModule } from './documents/documents.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { MinioService } from './minio/minio.service';
     EventsModule,
     ApplicationsModule,
     FoldersModule,
+    DocumentsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -10,10 +10,15 @@ import {
 } from "../../../shared/components/ui/table";
 import { EmptyRow } from "@/features/applications/components/empty-row";
 import { ExistingRow } from "@/features/applications/components/existing-row";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/shared/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/shared/components/ui/sheet";
 import { ApplicationForm } from "@/features/applications/components/application-form";
 
-export const Applications = () => {
+const Applications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [rows, setRows] = useState<(Application | null)[]>([]);
   const [selectedRow, setSelectedRow] = useState<Application | null>(null);
@@ -96,3 +101,5 @@ export const Applications = () => {
     </>
   );
 };
+
+export default Applications;

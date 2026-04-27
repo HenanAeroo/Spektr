@@ -20,6 +20,8 @@ model User {
   authProviders AuthProvider[]
   refreshTokens RefreshToken[]
   applications  Application[]
+  folders       Folder[]
+  documents     Document[]
 }
 
 enum Provider {
@@ -59,33 +61,33 @@ enum Role {
 }
 
 model Application {
-  id                Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  entreprise        String
-  lien              String?
-  commentaire       String?
-  statut            Statut @default(A_CONTACTER)
-  contact_nom       String?
-  contact_email     String?
-  contact_tel       String?
+  entreprise    String
+  lien          String?
+  commentaire   String?
+  statut        Statut @default(A_CONTACTER)
+  contact_nom   String?
+  contact_email String?
+  contact_tel   String?
 
-  date_candidature  DateTime?
-  date_relance      DateTime?
+  date_candidature DateTime?
+  date_relance     DateTime?
   
-  outcome           Outcome? @default(RAPPEL)
+  outcome Outcome? @default(RAPPEL)
 
-  created_at        DateTime @default(now())
-  modified_at       DateTime @updatedAt
+  created_at  DateTime @default(now())
+  modified_at DateTime @updatedAt
 
-  userId            Int
-  user              User @relation(fields: [userId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }
 
 enum Outcome {
-    RAPPEL
-    SANS_REPONSE
-    ENTRETIEN
-    DECROCHEE
+  RAPPEL
+  SANS_REPONSE
+  ENTRETIEN
+  DECROCHEE
 }
 
 enum Statut {
@@ -95,4 +97,34 @@ enum Statut {
   EN_DISCUSSION
   REPONSE_POSITIVE
   REFUS
+}
+
+model Folder {
+  id Int @id @default(autoincrement())
+
+  name String
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  created_at DateTime @default(now())
+
+  documents Document[]
+}
+
+model Document {
+  id Int @id @default(autoincrement())
+
+  name        String
+  mimeType    String
+  size        Int
+  storageKey  String
+
+  folderId Int?
+  folder   Folder? @relation(fields: [folderId], references: [id])
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+  
+  created_at DateTime @default(now())
 }

@@ -11,6 +11,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { schema } from './env.validation';
 import { EventsModule } from './events/events.module';
 import { ApplicationsModule } from './applications/applications.module';
+import { FoldersModule } from './folders/folders.module';
+import { MinioService } from './minio/minio.service';
 
 @Module({
   imports: [
@@ -34,8 +36,13 @@ import { ApplicationsModule } from './applications/applications.module';
     }),
     EventsModule,
     ApplicationsModule,
+    FoldersModule,
   ],
   controllers: [AppController],
-  providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    MinioService,
+  ],
 })
 export class AppModule {}

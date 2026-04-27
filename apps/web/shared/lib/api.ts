@@ -9,8 +9,9 @@ export async function apiFetch<T>(
   options: FetchOptions = {}, // Fetch options (method, body...) + Optionnal JWT token
 ): Promise<T> {
   const { token, ...rest } = options;
+  const isFormData = options.body instanceof FormData;
   const header = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 

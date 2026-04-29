@@ -10,6 +10,7 @@ import ProfilePage from "./pages/profile";
 import ApplicationsPage from "./pages/applications";
 import DocumentsPage from "@/src/pages/documents";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "sonner";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ export default function App() {
                 </Route>
               </Route>
             </Routes>
+            <Toaster />
           </AuthProvider>
         </ThemeProvider>
       </BrowserRouter>

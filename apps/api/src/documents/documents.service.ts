@@ -2,12 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MinioService } from '../minio/minio.service';
 import 'multer';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotifType } from '../../prisma/generated/prisma/client';
 
 @Injectable()
 export class DocumentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly minio: MinioService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async upload(
@@ -22,7 +25,7 @@ export class DocumentsService {
       file.size,
       file.mimetype,
     );
-    return this.prisma.document.create({
+    const doc = await this.prisma.document.create({
       data: {
         name: file.originalname,
         mimeType: file.mimetype,
@@ -32,6 +35,14 @@ export class DocumentsService {
         userId,
       },
     });
+
+    await this.notificationsService.createAndEmit(
+      userId,
+      NotifType.DOCUMENT_ADDED,
+      { documentName: file.originalname },
+    );
+
+    return doc;
   }
 
   findAll(userId: number) {

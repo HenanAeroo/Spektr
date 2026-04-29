@@ -18,6 +18,7 @@ import {
 } from "@/shared/components/ui/tooltip";
 import { getUser } from "@/shared/lib/auth";
 import { ModeToggle } from "../theme-toggle";
+import NotificationBell from "@/features/notifications/components/NotificationBell";
 
 const Sidebar = () => {
   const [collapse, setCollapse] = useState(true);
@@ -80,6 +81,7 @@ const Sidebar = () => {
       <footer className="flex flex-col gap-2 p-2">
         {user ? (
           <>
+            <NotificationBell />
             <Link
               to="/profile"
               aria-label="Profil"

@@ -14,6 +14,7 @@ import { ApplicationsModule } from './applications/applications.module';
 import { FoldersModule } from './folders/folders.module';
 import { MinioService } from './minio/minio.service';
 import { DocumentsModule } from './documents/documents.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { DocumentsModule } from './documents/documents.module';
     ApplicationsModule,
     FoldersModule,
     DocumentsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

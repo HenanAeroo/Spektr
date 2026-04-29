@@ -23,6 +23,8 @@ model User {
   folders       Folder[]
   documents     Document[]
   notifications Notification[]
+  promoId       Int?
+  promo         Promo? @relation(fields: [promoId], references: [id])
 }
 
 enum Provider {
@@ -146,4 +148,13 @@ model Notification {
 
   userId  Int
   user    User @relation(fields: [userId], references: [id])
+}
+
+model Promo {
+  id Int @id @default(autoincrement())
+
+  name        String
+  created_at  DateTime @default(now())
+
+  users User[]
 }

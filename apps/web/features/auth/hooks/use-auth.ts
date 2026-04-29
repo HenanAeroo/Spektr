@@ -1,10 +1,8 @@
 import { useState } from "react";
-import {
-  login,
-  register,
-  logout,
-  loginWithGoogle,
-} from "../actions/auth.actions";
+import { login } from "../actions/login";
+import { register } from "../actions/register";
+import { logout } from "../actions/logout";
+import { loginWithGoogle } from "../actions/loginWithGoogle";
 import { LoginFormData, RegisterFormData } from "../types";
 import { useNavigate } from "react-router-dom";
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Application } from "../types";
-import { createApplication } from "../actions/applications.actions";
+import { createApplication } from "../actions/createApplication";
 import { TableCell, TableRow } from "@/shared/components/ui/table";
 
 export function EmptyRow({

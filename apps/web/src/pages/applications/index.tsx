@@ -1,4 +1,4 @@
-import { fetchMyApplications } from "@/features/applications/actions/applications.actions";
+import { fetchMyApplications } from "@/features/applications/actions/fetchMyApplications";
 import { Application } from "@/features/applications/types";
 import { useEffect, useState } from "react";
 import {

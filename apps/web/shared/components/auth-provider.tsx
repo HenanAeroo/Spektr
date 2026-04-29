@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { refresh } from "@/features/auth/actions/auth.actions";
+import { refresh } from "@/features/auth/actions/refresh";
 import { User } from "../types";
 import { apiFetch } from "../lib/api";
 import { getToken } from "../lib/auth";

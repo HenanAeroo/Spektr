@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Application, Outcome, Statut } from "../types";
-import {
-  deleteApplication,
-  updateApplication,
-} from "../actions/applications.actions";
+import { deleteApplication } from "../actions/deleteApplication";
+import { updateApplication } from "../actions/updateApplication";
 import { TableCell, TableRow } from "@/shared/components/ui/table";
 import {
   Popover,

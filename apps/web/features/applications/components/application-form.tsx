@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Application, Outcome, Statut } from "../types";
-import { updateApplication } from "../actions/applications.actions";
+import { updateApplication } from "../actions/updateApplication";
 import { Input } from "@/shared/components/ui/input";
 import {
   Select,

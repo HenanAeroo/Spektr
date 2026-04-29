@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { Document, Folder } from "../../../features/documents/types";
+import { useState } from "react";
 import { getFolders } from "../../../features/documents/actions/getFolders";
 import { getDocuments } from "../../../features/documents/actions/getDocuments";
 import { deleteFolder } from "../../../features/documents/actions/deleteFolder";
@@ -7,41 +6,39 @@ import { createFolder } from "../../../features/documents/actions/createFolder";
 import { deleteDocument } from "../../../features/documents/actions/deleteDocument";
 import FolderList from "../../../features/documents/components/FolderList";
 import DocumentList from "../../../features/documents/components/DocumentList";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 const DocumentsPage = () => {
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const queryClient = useQueryClient();
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      const resultFolder = await getFolders();
-      setFolders(resultFolder);
+  const { data: folders = [] } = useQuery({
+    queryKey: ["folders"],
+    queryFn: getFolders,
+  });
 
-      const resultDoc = await getDocuments();
-      setDocuments(resultDoc);
-    }
-
-    load();
-  }, []);
+  const { data: documents = [] } = useQuery({
+    queryKey: ["documents"],
+    queryFn: getDocuments,
+  });
 
   async function handleDeleteFolder(id: number) {
     await deleteFolder(id);
-    setFolders(folders.filter((f) => f.id !== id));
+    queryClient.invalidateQueries({ queryKey: ["folders"] });
   }
 
   async function handleCreateFolder(name: string) {
-    const newFolder = await createFolder(name);
-    setFolders([...folders, newFolder]);
+    await createFolder(name);
+    queryClient.invalidateQueries({ queryKey: ["folders"] });
   }
 
   async function handleDeleteDocument(id: number) {
     await deleteDocument(id);
-    setDocuments(documents.filter((d) => d.id !== id));
+    queryClient.invalidateQueries({ queryKey: ["documents"] });
   }
 
-  function handleDocumentAdded(doc: Document) {
-    setDocuments([...documents, doc]);
+  function handleDocumentAdded() {
+    queryClient.invalidateQueries({ queryKey: ["documents"] });
   }
 
   return (

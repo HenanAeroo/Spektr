@@ -22,6 +22,7 @@ model User {
   applications  Application[]
   folders       Folder[]
   documents     Document[]
+  notifications Notification[]
 }
 
 enum Provider {
@@ -127,4 +128,22 @@ model Document {
   user   User @relation(fields: [userId], references: [id])
   
   created_at DateTime @default(now())
+}
+
+enum NotifType {
+  DOCUMENT_ADDED
+  APPLICATION_STATUS
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+
+  type    NotifType
+  payload Json
+  read    Boolean @default(false)
+
+  created_at DateTime @default(now())
+
+  userId  Int
+  user    User @relation(fields: [userId], references: [id])
 }

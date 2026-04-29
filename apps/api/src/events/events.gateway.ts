@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -10,17 +11,28 @@ import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({ cors: { origin: process.env.FRONT_URL } })
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  constructor(private readonly jwtService: JwtService) {}
+
   @WebSocketServer() server!: Server;
 
   private readonly logger = new Logger('EventsGateway');
 
   handleConnection(client: Socket) {
-    if (!client.handshake.auth.token) {
+    const token = client.handshake.auth.token;
+
+    if (!token) {
       client.disconnect();
       return;
     }
 
-    this.logger.log(`Client connected: ${client.id}`);
+    try {
+      const payload = this.jwtService.verify(token);
+      client.data.userId = payload.sub;
+      client.join(`user:${payload.sub}`);
+      this.logger.log(`Client connected: ${client.id}`);
+    } catch {
+      client.disconnect();
+    }
   }
 
   handleDisconnect(client: Socket) {

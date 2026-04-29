@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { Document, Folder } from "../types";
-import { getFolders } from "../actions/getFolders";
-import { getDocuments } from "../actions/getDocuments";
-import { deleteFolder } from "../actions/deleteFolder";
-import { createFolder } from "../actions/createFolder";
-import { deleteDocument } from "../actions/deleteDocument";
-import FolderList from "./FolderList";
-import DocumentList from "./DocumentList";
+import { Document, Folder } from "../../../features/documents/types";
+import { getFolders } from "../../../features/documents/actions/getFolders";
+import { getDocuments } from "../../../features/documents/actions/getDocuments";
+import { deleteFolder } from "../../../features/documents/actions/deleteFolder";
+import { createFolder } from "../../../features/documents/actions/createFolder";
+import { deleteDocument } from "../../../features/documents/actions/deleteDocument";
+import FolderList from "../../../features/documents/components/FolderList";
+import DocumentList from "../../../features/documents/components/DocumentList";
 
-const DocumentPage = () => {
+const DocumentsPage = () => {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
@@ -63,4 +63,4 @@ const DocumentPage = () => {
   );
 };
 
-export default DocumentPage;
+export default DocumentsPage;

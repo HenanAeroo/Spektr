@@ -18,7 +18,7 @@ import {
 } from "@/shared/components/ui/sheet";
 import { ApplicationForm } from "@/features/applications/components/application-form";
 
-const Applications = () => {
+const ApplicationsPage = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [rows, setRows] = useState<(Application | null)[]>([]);
   const [selectedRow, setSelectedRow] = useState<Application | null>(null);
@@ -102,4 +102,4 @@ const Applications = () => {
   );
 };
 
-export default Applications;
+export default ApplicationsPage;

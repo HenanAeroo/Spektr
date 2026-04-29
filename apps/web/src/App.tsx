@@ -5,9 +5,10 @@ import { ProtectedRoute } from "./routes/ProtectedRoute";
 import Sidebar from "@/shared/components/layout/sidebar";
 import LoginPage from "./pages/login";
 import GoogleCallbackPage from "./pages/oauth/callback";
-import Home from "./pages/Home";
+import HomePage from "./pages/Home";
 import ProfilePage from "./pages/profile";
-import { Applications } from "./pages/applications";
+import ApplicationsPage from "./pages/applications";
+import DocumentsPage from "@/src/pages/documents";
 
 function AppLayout() {
   return (
@@ -35,9 +36,10 @@ export default function App() {
             <Route path="/oauth/callback" element={<GoogleCallbackPage />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/applications" element={<Applications />} />
+                <Route path="/applications" element={<ApplicationsPage />} />
+                <Route path="/documents" element={<DocumentsPage />} />
               </Route>
             </Route>
           </Routes>

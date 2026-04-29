@@ -15,6 +15,7 @@ import { FoldersModule } from './folders/folders.module';
 import { MinioService } from './minio/minio.service';
 import { DocumentsModule } from './documents/documents.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
@@ -41,6 +42,19 @@ import { NotificationsModule } from './notifications/notifications.module';
     FoldersModule,
     DocumentsModule,
     NotificationsModule,
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        auth: {
+          user: process.env.BREVO_SMTP_LOGIN,
+          pass: process.env.BREVO_SMTP_KEY,
+        },
+      },
+      defaults: {
+        from: '"Spektr" <noreply@hnoel.fr>',
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [

@@ -144,10 +144,10 @@ model Notification {
   payload Json
   read    Boolean @default(false)
 
-  created_at DateTime @default(now())
-
   userId  Int
   user    User @relation(fields: [userId], references: [id])
+
+  created_at DateTime @default(now())
 }
 
 model Promo {
@@ -156,5 +156,19 @@ model Promo {
   name        String
   created_at  DateTime @default(now())
 
-  users User[]
+  users       User[]
+  objectives  Objective[]
+}
+
+model Objective {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String?
+  deadline    DateTime?
+
+  promoId Int
+  promo   Promo @relation(fields: [promoId], references: [id])
+
+  created_at  DateTime @default(now())
 }

@@ -1,19 +1,22 @@
-# Boilerplate Full-Stack — Next.js + NestJS
+# Spektr
 
-Un boilerplate production-ready avec authentification complète, architecture feature-first et stack moderne.
+Plateforme de suivi des candidatures et de gestion de documents pour les étudiants suivis par les RE de Rennes Ynov Campus.
 
 ---
 
 ## Stack technique
 
-| Couche          | Technologie                          |
-| --------------- | ------------------------------------ |
-| Frontend        | Next.js 16 (App Router) + TypeScript |
-| Backend         | NestJS + TypeScript                  |
-| Base de données | PostgreSQL + Prisma ORM              |
-| Auth            | JWT dual-token + Google OAuth        |
-| UI              | shadcn/ui + Tailwind CSS v4          |
-| Monorepo        | pnpm workspaces                      |
+| Couche          | Technologie                                      |
+| --------------- | ------------------------------------------------ |
+| Frontend        | React 19 + Vite + React Router v7 + TypeScript   |
+| Backend         | NestJS 11 + TypeScript                           |
+| Base de données | PostgreSQL + Prisma 7                            |
+| Auth            | JWT dual-token + Google OAuth (Passport.js)      |
+| UI              | shadcn/ui + Tailwind CSS v4 + HugeIcons + Lucide |
+| Stockage        | Minio (S3-compatible)                            |
+| Temps réel      | WebSocket (Socket.io)                            |
+| Email           | Brevo (SMTP)                                     |
+| Monorepo        | Turborepo + pnpm workspaces                      |
 
 ---
 
@@ -22,17 +25,15 @@ Un boilerplate production-ready avec authentification complète, architecture fe
 - Node.js >= 20
 - pnpm >= 9
 - PostgreSQL >= 14
+- Minio (instance locale ou distante)
 
 ---
 
 ## Installation
 
 ```bash
-# Cloner le repo
-git clone https://github.com/HenanAeroo/boilerplate.git
-cd boilerplate
-
-# Installer les dépendances
+git clone https://github.com/HenanAeroo/Spektr.git
+cd Spektr
 pnpm install
 ```
 
@@ -44,11 +45,10 @@ pnpm install
 
 ```env
 # Base de données
-DATABASE_URL=postgresql://user:password@localhost:5432/boilerplate
+DATABASE_URL=postgresql://user:password@localhost:5432/spektr
 
 # JWT
 JWT_SECRET=your_jwt_secret
-JWT_REFRESH_SECRET=your_refresh_secret
 
 # Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
@@ -58,12 +58,24 @@ GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
 # App
 PORT=3001
 FRONT_URL=http://localhost:3000
+
+# Minio
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=spektr-documents
+MINIO_USE_SSL=false
+
+# Email (Brevo SMTP)
+BREVO_SMTP_LOGIN=your_email@domain.com
+BREVO_SMTP_KEY=your_brevo_smtp_key
 ```
 
 ### `apps/web/.env.local`
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
+VITE_API_URL=http://localhost:3001
 ```
 
 ---
@@ -71,7 +83,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 ## Lancer le projet
 
 ```bash
-# A la racine
+# À la racine — démarre frontend et backend en parallèle
 pnpm dev
 ```
 
@@ -88,42 +100,57 @@ cd apps/api
 # Générer le client Prisma
 npx prisma generate
 
-# Appliquer les migrations
+# Créer et appliquer les migrations
 npx prisma migrate dev
+
+# Interface graphique
+npx prisma studio
 ```
 
 ---
 
 ## Architecture
 
-### Monorepo
-
 ```
-boilerplate/
+Spektr/
 ├── apps/
 │   ├── api/          # Backend NestJS
-│   └── web/          # Frontend Next.js
-└── README.md
+│   └── web/          # Frontend React + Vite
+├── turbo.json
+└── package.json
 ```
 
-### Frontend — Feature-first
+### Frontend — Feature-first (`apps/web/src/`)
 
 ```
-apps/web/
-├── app/              # Routing Next.js uniquement
-│   ├── (auth)/       # Pages publiques (login, oauth)
-│   └── layout.tsx    # Root layout
+src/
+├── pages/            # Composants de route (login, home, applications, documents, profile)
+├── routes/           # ProtectedRoute
 ├── features/         # Logique métier par domaine
+│   ├── applications/ #   actions/, components/, hooks/, types.ts
+│   ├── documents/
+│   ├── folders/
+│   ├── notifications/
 │   └── auth/
-│       ├── actions/  # Appels API
-│       ├── components/ # Formulaires
-│       ├── hooks/    # useAuth
-│       └── types.ts
-└── shared/           # Code réutilisable
-    ├── components/   # Layout, UI
-    ├── lib/          # api.ts, auth.ts, utils.ts
-    └── types/        # Types globaux
+└── shared/
+    ├── lib/          # api.ts (fetch wrapper), auth.ts (token en mémoire)
+    ├── components/   # Layout, Sidebar, UI réutilisable
+    └── types/
 ```
+
+### Backend — Modules NestJS (`apps/api/src/`)
+
+| Module          | Responsabilité                                       |
+| --------------- | ---------------------------------------------------- |
+| `auth`          | JWT dual-token, Google OAuth, register/login/refresh |
+| `users`         | Profil utilisateur                                   |
+| `applications`  | Suivi des candidatures (statuts, entreprises, dates) |
+| `documents`     | Upload/download de fichiers via Minio                |
+| `folders`       | Organisation des documents par dossier               |
+| `notifications` | Notifications temps réel + email (Brevo)             |
+| `events`        | Gateway WebSocket                                    |
+| `minio`         | Service de stockage objet S3-compatible              |
+| `prisma`        | Accès base de données                                |
 
 ---
 
@@ -140,32 +167,36 @@ apps/web/
 **Stratégie JWT dual-token :**
 
 - `accessToken` → stocké en mémoire JS (15 min)
-- `refreshToken` → cookie httpOnly (7 jours)
-- Refresh automatique au montage de l'app
+- `refreshToken` → cookie httpOnly (7 jours), haché en base
+- Refresh automatique au montage de l'app via `AuthProvider`
+- `AuthTasks` (cron quotidien à 1h) purge les refresh tokens expirés
+
+**Google OAuth :** l'API redirige vers `FRONT_URL/oauth/callback?token=<accessToken>` après succès ; la page stocke le token en mémoire et redirige vers `/`.
 
 ---
 
-## Protection des routes
+## Fonctionnalités
 
-Le fichier `middleware.ts` protège les routes :
-
-- `/` → redirige vers `/login` si non connecté
-- `/login` → redirige vers `/` si déjà connecté
+- **Candidatures** — création, suivi par statut (_À contacter_, _Envoyé_, _Relancé_, _En discussion_, _Réponse positive_, _Refus_)
+- **Documents** — upload/download de fichiers organisés en dossiers, stockage Minio
+- **Notifications** — alertes en temps réel (WebSocket) et par email (Brevo) sur les ajouts de documents et changements de statut
+- **Profil** — gestion des informations utilisateur
+- **Dark mode** — toggle dans la sidebar
+- **Rate limiting** — 100 req/60s global, 10 req/60s sur les routes auth
 
 ---
 
 ## Tests
 
 ```bash
-# Backend (depuis apps/api ou racine)
-pnpm test:api
+# Backend
+cd apps/api && pnpm test          # Jest (unitaires)
+cd apps/api && pnpm test:e2e      # Jest e2e
+cd apps/api && pnpm test:cov      # Couverture
 
-# Frontend (depuis apps/web ou racine)
-pnpm test:web
+# Frontend
+cd apps/web && pnpm test          # Vitest
 ```
-
-- Backend : Jest, tests unitaires dans `src/**/*.spec.ts`
-- Frontend : Vitest + Testing Library
 
 ---
 
@@ -175,11 +206,3 @@ GitHub Actions déclenché sur chaque push et PR vers `master` :
 
 - `test-api` — génère le client Prisma puis lance les tests Jest
 - `test-web` — lance les tests Vitest
-
----
-
-## Features
-
-- Dark mode (next-themes) — toggle dans la sidebar
-- Rate limiting — 100 req/60s global, 10 req/60s sur les routes auth
-- Validation des variables d'environnement au démarrage (Joi)

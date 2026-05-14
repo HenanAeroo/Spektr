@@ -135,6 +135,7 @@ model Document {
 enum NotifType {
   DOCUMENT_ADDED
   APPLICATION_STATUS
+  OBJECTIVE_CREATED
 }
 
 model Notification {

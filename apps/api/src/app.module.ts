@@ -16,6 +16,7 @@ import { MinioService } from './minio/minio.service';
 import { DocumentsModule } from './documents/documents.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { PromosModule } from './promos/promos.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
         from: '"Spektr" <noreply@hnoel.fr>',
       },
     }),
+    PromosModule,
   ],
   controllers: [AppController],
   providers: [

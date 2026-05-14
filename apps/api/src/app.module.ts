@@ -17,6 +17,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PromosModule } from './promos/promos.module';
+import { ObjectivesModule } from './objectives/objectives.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { PromosModule } from './promos/promos.module';
       },
     }),
     PromosModule,
+    ObjectivesModule,
   ],
   controllers: [AppController],
   providers: [

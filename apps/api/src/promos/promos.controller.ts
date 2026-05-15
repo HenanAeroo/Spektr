@@ -42,6 +42,11 @@ export class PromosController {
     return this.promosService.update(+id, updatePromoDto);
   }
 
+  @Patch(':id/assign')
+  assign(@Param('id') id: string, @Body() body: { userId: number }) {
+    return this.promosService.assignUser(+id, body.userId);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.promosService.remove(+id);

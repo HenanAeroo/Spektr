@@ -39,4 +39,11 @@ export class PromosService {
   remove(id: number) {
     return this.prismaService.promo.delete({ where: { id: id } });
   }
+
+  assignUser(promoId: number, userId: number) {
+    return this.prismaService.user.update({
+      where: { id: userId },
+      data: { promoId: promoId },
+    });
+  }
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
 import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotifType, Role } from '../../prisma/generated/prisma/client';
+import { NotifType, Role, User } from '../../prisma/generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
@@ -53,6 +53,16 @@ export class ObjectivesService {
       where: {
         id: id,
       },
+    });
+  }
+
+  findByUser(user: User) {
+    if (user.promoId === null) {
+      return [];
+    }
+
+    return this.prismaService.objective.findMany({
+      where: { promoId: user.promoId },
     });
   }
 

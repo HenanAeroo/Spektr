@@ -15,6 +15,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../../prisma/generated/prisma/client';
+import type { User } from '../../prisma/generated/prisma/client';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('objectives')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,6 +32,12 @@ export class ObjectivesController {
   @Get()
   findAll() {
     return this.objectivesService.findAll();
+  }
+
+  @Get('/my')
+  @Roles()
+  findByUser(@CurrentUser() user: User) {
+    return this.objectivesService.findByUser(user);
   }
 
   @Get(':id')

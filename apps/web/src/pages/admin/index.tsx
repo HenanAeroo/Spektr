@@ -1,9 +1,11 @@
 import { assignPromo } from "@/features/promos/actions/assignPromo";
-import { createPromo } from "@/features/promos/actions/createPromo";
+import {
+  createPromo,
+  CreatePromoData,
+} from "@/features/promos/actions/createPromo";
 import { deletePromo } from "@/features/promos/actions/deletePromo";
 import { fetchPromos } from "@/features/promos/actions/fetchPromos";
 import { fetchUsers } from "@/features/promos/actions/fetchUsers";
-import { Promo } from "@/features/promos/types";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -13,45 +15,50 @@ import {
   SelectItem,
   SelectContent,
 } from "@/shared/components/ui/select";
-import { User } from "@/shared/types";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 const AdminPage = () => {
-  const [promos, setPromos] = useState<Promo[]>([]);
+  const queryClient = useQueryClient();
+
+  const { data: promos = [], isLoading } = useQuery({
+    queryKey: ["promos"],
+    queryFn: fetchPromos,
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+  });
+
   const [newName, setNewName] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
 
-  useEffect(() => {
-    fetchPromos().then((data) => setPromos(data));
-  }, []);
+  const { mutate: handlerCreate } = useMutation({
+    mutationFn: (data: CreatePromoData) => createPromo(data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["promos"] }),
+  });
 
-  useEffect(() => {
-    fetchUsers().then((data) => setUsers(data));
-  }, []);
-
-  async function handleCreate() {
-    const promo = await createPromo({ name: newName });
-    setPromos((prev) => [...prev, promo]);
-    setNewName("");
+  async function handleCreate(data: CreatePromoData) {
+    handlerCreate(data);
   }
+
+  const { mutate: handlerDelete } = useMutation({
+    mutationFn: (id: number) => deletePromo(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["promos"] }),
+  });
 
   async function handleDelete(id: number) {
-    await deletePromo(id);
-    setPromos((prev) => prev.filter((p) => p.id !== id));
+    handlerDelete(id);
   }
 
-  async function handleAssign(userId: number, promoId: number) {
-    await assignPromo(promoId, userId);
+  const { mutate: handlerAssign } = useMutation({
+    mutationFn: ({ promoId, userId }: { promoId: number; userId: number }) =>
+      assignPromo(promoId, userId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
+  });
 
-    setUsers((prev) =>
-      prev.map((user) => {
-        if (user.id === userId) {
-          return { ...user, promoId: promoId };
-        } else {
-          return user;
-        }
-      }),
-    );
+  async function handleAssign(promoId: number, userId: number) {
+    handlerAssign({ promoId, userId });
   }
 
   return (
@@ -70,7 +77,7 @@ const AdminPage = () => {
         onChange={(e) => setNewName(e.target.value)}
         placeholder="Nom de la promo"
       />
-      <Button onClick={handleCreate}>Créer</Button>
+      <Button onClick={() => handleCreate({ name: newName })}>Créer</Button>
 
       <ul>
         {users.map((user) => (
@@ -81,7 +88,7 @@ const AdminPage = () => {
 
             <Select
               value={user.promoId === null ? "" : String(user.promoId)}
-              onValueChange={(value) => handleAssign(user.id, parseInt(value))}
+              onValueChange={(value) => handleAssign(parseInt(value), user.id)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Assigner une promo" />

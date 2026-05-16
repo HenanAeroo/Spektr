@@ -2,7 +2,7 @@ import { apiFetch } from "@/shared/lib/api";
 import { getToken } from "@/shared/lib/auth";
 import { Promo } from "../types";
 
-type CreatePromoData = {
+export type CreatePromoData = {
   name: string;
 };
 

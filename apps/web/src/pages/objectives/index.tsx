@@ -2,19 +2,24 @@ import { fetchMyObjectives } from "@/features/objectives/actions/fetchMyObjectiv
 import { fetchObjectives } from "@/features/objectives/actions/fetchObjectives";
 import { Objective } from "@/features/objectives/types";
 import { useRole } from "@/shared/hooks/useRole";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 const ObjectivesPage = () => {
-  const [objectives, setObjectives] = useState<Objective[]>([]);
   const role = useRole();
 
-  useEffect(() => {
-    if (role === "ADMIN") {
-      fetchObjectives().then((data) => setObjectives(data));
-    } else {
-      fetchMyObjectives().then((data) => setObjectives(data));
-    }
-  }, []);
+  const { data: queryAdmin = [], isLoading } = useQuery({
+    queryKey: ["objectives", "all"],
+    queryFn: fetchObjectives,
+    enabled: role === "ADMIN",
+  });
+
+  const { data: queryStudent = [] } = useQuery({
+    queryKey: ["objectives", "mine"],
+    queryFn: fetchMyObjectives,
+    enabled: role === "STUDENT",
+  });
+
+  const objectives = role === "ADMIN" ? queryAdmin : queryStudent;
 
   if (role === "ADMIN") {
     const grouped = objectives.reduce<Record<number, Objective[]>>(
@@ -24,7 +29,6 @@ const ObjectivesPage = () => {
       },
       {},
     );
-
     return (
       <div className="p-6 space-y-8">
         <h1 className="text-2xl font-bold">Objectifs par promo</h1>

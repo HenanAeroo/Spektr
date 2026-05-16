@@ -2,10 +2,18 @@ import { apiFetch } from "@/shared/lib/api";
 import { setToken } from "@/shared/lib/auth";
 import { AuthResponse } from "@/shared/types";
 
-export async function refresh() {
-  const { accessToken } = await apiFetch<AuthResponse>("/auth/refresh", {
-    method: "POST",
-  });
+let pendingRefresh: Promise<void> | null = null;
 
-  setToken(accessToken);
+export async function refresh() {
+  if (pendingRefresh) return pendingRefresh;
+
+  pendingRefresh = apiFetch<AuthResponse>("/auth/refresh", {
+    method: "POST",
+  })
+    .then(({ accessToken }) => setToken(accessToken))
+    .finally(() => {
+      pendingRefresh = null;
+    });
+
+  return pendingRefresh;
 }

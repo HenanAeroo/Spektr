@@ -2,16 +2,16 @@ import { apiFetch } from "@/shared/lib/api";
 import { Application, Outcome, Statut } from "../types";
 import { getToken } from "@/shared/lib/auth";
 
-type UpdateApplicationData = {
-  lien?: string;
-  commentaire?: string;
+export type UpdateApplicationData = {
+  lien?: string | null;
+  commentaire?: string | null;
+  contact_nom?: string | null;
+  contact_email?: string | null;
+  contact_tel?: string | null;
+  date_candidature?: string | null;
+  date_relance?: string | null;
   statut?: Statut;
-  contact_nom?: string;
-  contact_email?: string;
-  contact_tel?: string;
-  date_candidature?: string;
-  date_relance?: string;
-  outcome?: Outcome;
+  outcome?: Outcome | null;
 };
 
 export async function updateApplication(

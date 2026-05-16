@@ -2,7 +2,7 @@ import { apiFetch } from "@/shared/lib/api";
 import { Application, Outcome, Statut } from "../types";
 import { getToken } from "@/shared/lib/auth";
 
-type CreateApplicationData = {
+export type CreateApplicationData = {
   entreprise: string;
   lien?: string;
   commentaire?: string;

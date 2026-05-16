@@ -1,9 +1,10 @@
 import { fetchMyApplications } from "@/features/applications/actions/fetchMyApplications";
 import { Application } from "@/features/applications/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -17,46 +18,83 @@ import {
   SheetTitle,
 } from "@/shared/components/ui/sheet";
 import { ApplicationForm } from "@/features/applications/components/application-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deleteApplication } from "@/features/applications/actions/deleteApplication";
+import {
+  updateApplication,
+  UpdateApplicationData,
+} from "@/features/applications/actions/updateApplication";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 
 const ApplicationsPage = () => {
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [rows, setRows] = useState<(Application | null)[]>([]);
+  const queryClient = useQueryClient();
+
+  const { data: applications = [], isLoading } = useQuery({
+    queryKey: ["applications"],
+    queryFn: fetchMyApplications,
+  });
+
+  const rows = [
+    ...applications,
+    ...Array(Math.max(0, 50 - applications.length)).fill(null),
+  ];
   const [selectedRow, setSelectedRow] = useState<Application | null>(null);
 
-  function handleCreated(newApp: Application) {
-    setRows((prev) => {
-      const updated = [...prev];
-      const firstNull = updated.indexOf(null);
-
-      updated[firstNull] = newApp;
-
-      return updated;
-    });
+  function handleCreate(_app: Application) {
+    queryClient.invalidateQueries({ queryKey: ["applications"] });
   }
+
+  const { mutate: deleteApp } = useMutation({
+    mutationFn: (id: number) => deleteApplication(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
+  });
 
   function handleDelete(id: number) {
-    setRows((prev) =>
-      prev.map((row) => (row !== null && row.id === id ? null : row)),
-    );
+    deleteApp(id);
   }
 
-  function handleUpdated(updatedApp: Application) {
-    setRows((prev) =>
-      prev.map((row) =>
-        row !== null && row.id === updatedApp.id ? updatedApp : row,
-      ),
-    );
+  const { mutate: updateApp } = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateApplicationData }) =>
+      updateApplication(id, data),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
+
+  function handleUpdated(app: Application) {
+    updateApp({ id: app.id, data: app });
   }
 
-  useEffect(() => {
-    fetchMyApplications()
-      .then((data) => {
-        setApplications(data);
-        const empty_rows = Array(Math.max(0, 50 - data.length)).fill(null);
-        setRows([...data, ...empty_rows]);
-      })
-      .catch(() => {});
-  }, []);
+  if (isLoading) {
+    return (
+      <Table>
+        <TableBody>
+          {Array(10)
+            .fill(null)
+            .map((_, i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-24" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-24" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="h-4 w-full" />
+                </TableCell>
+              </TableRow>
+            ))}
+        </TableBody>
+      </Table>
+    );
+  }
 
   return (
     <>
@@ -73,7 +111,7 @@ const ApplicationsPage = () => {
         <TableBody>
           {rows.map((row, index) =>
             row === null ? (
-              <EmptyRow key={`empty-${index}`} onCreated={handleCreated} />
+              <EmptyRow key={`empty-${index}`} onCreated={handleCreate} />
             ) : (
               <ExistingRow
                 key={row.id}

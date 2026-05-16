@@ -12,6 +12,7 @@ import DocumentsPage from "@/src/pages/documents";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import AdminPage from "./pages/admin";
+import ObjectivesPage from "./pages/objectives";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ export default function App() {
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/applications" element={<ApplicationsPage />} />
                   <Route path="/documents" element={<DocumentsPage />} />
+                  <Route path="/objectives" element={<ObjectivesPage />} />
                 </Route>
                 <Route element={<ProtectedRoute requiredRole="ADMIN" />}>
                   <Route element={<AppLayout />}>

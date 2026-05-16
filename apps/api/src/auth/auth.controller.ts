@@ -62,6 +62,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
   async refresh(@Req() req: any, @Res() res: any) {
     const token = req.cookies['refreshToken'];
     if (!token) throw new UnauthorizedException('Refresh token manquant');

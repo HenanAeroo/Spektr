@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { Link, useLocation } from "react-router-dom";
 import {
   Tooltip,
   TooltipContent,
@@ -19,13 +18,13 @@ import {
 import { getUser } from "@/shared/lib/auth";
 import { ModeToggle } from "../theme-toggle";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
+import { Link } from "@tanstack/react-router";
 
 const Sidebar = () => {
   const [collapse, setCollapse] = useState(true);
 
   const { handleLogout } = useAuth();
 
-  const { pathname: pathName } = useLocation();
   const navLinks = [{ href: "/", label: "Dashboard", icon: LayoutDashboard }];
 
   const user = getUser();
@@ -51,7 +50,7 @@ const Sidebar = () => {
         </button>
         {!collapse && (
           <h2 className="whitespace-nowrap overflow-hidden px-2 text-m">
-            Bonjour {user?.first_name} !
+            Bonjour !
           </h2>
         )}
         {navLinks.map((link) => (
@@ -62,7 +61,7 @@ const Sidebar = () => {
                   to={link.href}
                   className={cn(
                     "flex items-center gap-3 p-2 rounded-md w-full",
-                    pathName === link.href
+                    location.pathname === link.href
                       ? "text-white bg-neutral-800"
                       : "text-neutral-400 hover:text-white hover:bg-neutral-800",
                   )}
@@ -83,7 +82,7 @@ const Sidebar = () => {
           <>
             <NotificationBell />
             <Link
-              to="/profile"
+              to="/profil"
               aria-label="Profil"
               className="flex items-center gap-3 p-2 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 w-full"
             >

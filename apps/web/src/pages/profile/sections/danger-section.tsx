@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Separator } from "@/shared/components/ui/separator";
 import { Button } from "@/shared/components/ui/button";
@@ -15,6 +14,7 @@ import {
 import { removeToken, getUser } from "@/shared/lib/auth";
 import { useMutation } from "@tanstack/react-query";
 import { deleteAccount } from "@/features/profile/actions/profile.actions";
+import { useNavigate } from "@tanstack/react-router";
 
 export default function DangerSection() {
   const [open, setOpen] = useState(false);
@@ -25,7 +25,7 @@ export default function DangerSection() {
     mutationFn: (userId: number) => deleteAccount(userId),
     onSuccess: () => {
       removeToken();
-      navigate("/login");
+      navigate({ to: "/login" });
     },
     onError: () => toast.error("Erreur lors de la suppression du compte"),
   });

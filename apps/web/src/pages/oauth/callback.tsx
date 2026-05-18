@@ -1,14 +1,14 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { refresh } from "@/features/auth/actions/refresh";
+import { useNavigate } from "@tanstack/react-router";
 
 const GoogleCallbackPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
     refresh()
-      .then(() => navigate("/"))
-      .catch(() => navigate("/login"));
+      .then(() => navigate({ to: "/" }))
+      .catch(() => navigate({ to: "/login" }));
   }, [navigate]);
 
   return <p>Connexion en cours...</p>;

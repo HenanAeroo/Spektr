@@ -4,7 +4,7 @@ import { register } from "../actions/register";
 import { logout } from "../actions/logout";
 import { loginWithGoogle } from "../actions/loginWithGoogle";
 import { LoginFormData, RegisterFormData } from "../types";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "@tanstack/react-router";
 
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +17,7 @@ export function useAuth() {
 
     try {
       await login(data);
-      navigate("/");
+      navigate({ to: "/" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Mauvais identifiants");
     } finally {
@@ -31,7 +31,7 @@ export function useAuth() {
 
     try {
       await register(data);
-      navigate("/");
+      navigate({ to: "/" });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Problème lors de l'inscription",
@@ -47,7 +47,7 @@ export function useAuth() {
 
     try {
       await logout();
-      navigate("/login");
+      navigate({ to: "/login" });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Impossible de se déconnecter",

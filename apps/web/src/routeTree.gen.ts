@@ -13,11 +13,11 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as ProtectedIndexRouteImport } from './routes/_protected/index'
 import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
-import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
-import { Route as ProtectedObjectivesRouteImport } from './routes/_protected/objectives'
-import { Route as ProtectedDocumentsRouteImport } from './routes/_protected/documents'
-import { Route as ProtectedApplicationsRouteImport } from './routes/_protected/applications'
-import { Route as ProtectedAdminRouteImport } from './routes/_protected/admin'
+import { Route as ProtectedProfilRouteImport } from './routes/_protected/profil'
+import { Route as ProtectedObjectifsRouteImport } from './routes/_protected/objectifs'
+import { Route as ProtectedMichelRouteImport } from './routes/_protected/michel'
+import { Route as ProtectedDocsRouteImport } from './routes/_protected/docs'
+import { Route as ProtectedCandidaturesRouteImport } from './routes/_protected/candidatures'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -38,49 +38,49 @@ const OauthCallbackRoute = OauthCallbackRouteImport.update({
   path: '/oauth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
+const ProtectedProfilRoute = ProtectedProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedObjectivesRoute = ProtectedObjectivesRouteImport.update({
-  id: '/objectives',
-  path: '/objectives',
+const ProtectedObjectifsRoute = ProtectedObjectifsRouteImport.update({
+  id: '/objectifs',
+  path: '/objectifs',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedDocumentsRoute = ProtectedDocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
+const ProtectedMichelRoute = ProtectedMichelRouteImport.update({
+  id: '/michel',
+  path: '/michel',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedApplicationsRoute = ProtectedApplicationsRouteImport.update({
-  id: '/applications',
-  path: '/applications',
+const ProtectedDocsRoute = ProtectedDocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedAdminRoute = ProtectedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const ProtectedCandidaturesRoute = ProtectedCandidaturesRouteImport.update({
+  id: '/candidatures',
+  path: '/candidatures',
   getParentRoute: () => ProtectedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof ProtectedIndexRoute
   '/login': typeof LoginRoute
-  '/admin': typeof ProtectedAdminRoute
-  '/applications': typeof ProtectedApplicationsRoute
-  '/documents': typeof ProtectedDocumentsRoute
-  '/objectives': typeof ProtectedObjectivesRoute
-  '/profile': typeof ProtectedProfileRoute
+  '/candidatures': typeof ProtectedCandidaturesRoute
+  '/docs': typeof ProtectedDocsRoute
+  '/michel': typeof ProtectedMichelRoute
+  '/objectifs': typeof ProtectedObjectifsRoute
+  '/profil': typeof ProtectedProfilRoute
   '/oauth/callback': typeof OauthCallbackRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/admin': typeof ProtectedAdminRoute
-  '/applications': typeof ProtectedApplicationsRoute
-  '/documents': typeof ProtectedDocumentsRoute
-  '/objectives': typeof ProtectedObjectivesRoute
-  '/profile': typeof ProtectedProfileRoute
+  '/candidatures': typeof ProtectedCandidaturesRoute
+  '/docs': typeof ProtectedDocsRoute
+  '/michel': typeof ProtectedMichelRoute
+  '/objectifs': typeof ProtectedObjectifsRoute
+  '/profil': typeof ProtectedProfilRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/': typeof ProtectedIndexRoute
 }
@@ -88,11 +88,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_protected': typeof ProtectedRouteWithChildren
   '/login': typeof LoginRoute
-  '/_protected/admin': typeof ProtectedAdminRoute
-  '/_protected/applications': typeof ProtectedApplicationsRoute
-  '/_protected/documents': typeof ProtectedDocumentsRoute
-  '/_protected/objectives': typeof ProtectedObjectivesRoute
-  '/_protected/profile': typeof ProtectedProfileRoute
+  '/_protected/candidatures': typeof ProtectedCandidaturesRoute
+  '/_protected/docs': typeof ProtectedDocsRoute
+  '/_protected/michel': typeof ProtectedMichelRoute
+  '/_protected/objectifs': typeof ProtectedObjectifsRoute
+  '/_protected/profil': typeof ProtectedProfilRoute
   '/oauth/callback': typeof OauthCallbackRoute
   '/_protected/': typeof ProtectedIndexRoute
 }
@@ -101,31 +101,31 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
-    | '/admin'
-    | '/applications'
-    | '/documents'
-    | '/objectives'
-    | '/profile'
+    | '/candidatures'
+    | '/docs'
+    | '/michel'
+    | '/objectifs'
+    | '/profil'
     | '/oauth/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
-    | '/admin'
-    | '/applications'
-    | '/documents'
-    | '/objectives'
-    | '/profile'
+    | '/candidatures'
+    | '/docs'
+    | '/michel'
+    | '/objectifs'
+    | '/profil'
     | '/oauth/callback'
     | '/'
   id:
     | '__root__'
     | '/_protected'
     | '/login'
-    | '/_protected/admin'
-    | '/_protected/applications'
-    | '/_protected/documents'
-    | '/_protected/objectives'
-    | '/_protected/profile'
+    | '/_protected/candidatures'
+    | '/_protected/docs'
+    | '/_protected/michel'
+    | '/_protected/objectifs'
+    | '/_protected/profil'
     | '/oauth/callback'
     | '/_protected/'
   fileRoutesById: FileRoutesById
@@ -166,59 +166,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OauthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_protected/profile': {
-      id: '/_protected/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProtectedProfileRouteImport
+    '/_protected/profil': {
+      id: '/_protected/profil'
+      path: '/profil'
+      fullPath: '/profil'
+      preLoaderRoute: typeof ProtectedProfilRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/objectives': {
-      id: '/_protected/objectives'
-      path: '/objectives'
-      fullPath: '/objectives'
-      preLoaderRoute: typeof ProtectedObjectivesRouteImport
+    '/_protected/objectifs': {
+      id: '/_protected/objectifs'
+      path: '/objectifs'
+      fullPath: '/objectifs'
+      preLoaderRoute: typeof ProtectedObjectifsRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/documents': {
-      id: '/_protected/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof ProtectedDocumentsRouteImport
+    '/_protected/michel': {
+      id: '/_protected/michel'
+      path: '/michel'
+      fullPath: '/michel'
+      preLoaderRoute: typeof ProtectedMichelRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/applications': {
-      id: '/_protected/applications'
-      path: '/applications'
-      fullPath: '/applications'
-      preLoaderRoute: typeof ProtectedApplicationsRouteImport
+    '/_protected/docs': {
+      id: '/_protected/docs'
+      path: '/docs'
+      fullPath: '/docs'
+      preLoaderRoute: typeof ProtectedDocsRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/admin': {
-      id: '/_protected/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof ProtectedAdminRouteImport
+    '/_protected/candidatures': {
+      id: '/_protected/candidatures'
+      path: '/candidatures'
+      fullPath: '/candidatures'
+      preLoaderRoute: typeof ProtectedCandidaturesRouteImport
       parentRoute: typeof ProtectedRoute
     }
   }
 }
 
 interface ProtectedRouteChildren {
-  ProtectedAdminRoute: typeof ProtectedAdminRoute
-  ProtectedApplicationsRoute: typeof ProtectedApplicationsRoute
-  ProtectedDocumentsRoute: typeof ProtectedDocumentsRoute
-  ProtectedObjectivesRoute: typeof ProtectedObjectivesRoute
-  ProtectedProfileRoute: typeof ProtectedProfileRoute
+  ProtectedCandidaturesRoute: typeof ProtectedCandidaturesRoute
+  ProtectedDocsRoute: typeof ProtectedDocsRoute
+  ProtectedMichelRoute: typeof ProtectedMichelRoute
+  ProtectedObjectifsRoute: typeof ProtectedObjectifsRoute
+  ProtectedProfilRoute: typeof ProtectedProfilRoute
   ProtectedIndexRoute: typeof ProtectedIndexRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
-  ProtectedAdminRoute: ProtectedAdminRoute,
-  ProtectedApplicationsRoute: ProtectedApplicationsRoute,
-  ProtectedDocumentsRoute: ProtectedDocumentsRoute,
-  ProtectedObjectivesRoute: ProtectedObjectivesRoute,
-  ProtectedProfileRoute: ProtectedProfileRoute,
+  ProtectedCandidaturesRoute: ProtectedCandidaturesRoute,
+  ProtectedDocsRoute: ProtectedDocsRoute,
+  ProtectedMichelRoute: ProtectedMichelRoute,
+  ProtectedObjectifsRoute: ProtectedObjectifsRoute,
+  ProtectedProfilRoute: ProtectedProfilRoute,
   ProtectedIndexRoute: ProtectedIndexRoute,
 }
 

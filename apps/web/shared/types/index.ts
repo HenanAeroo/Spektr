@@ -11,8 +11,7 @@ export type AuthResponse = {
 
 export type JwtPayload = {
   sub: number;
-  email: string;
-  first_name: string | null;
+  role: "STUDENT" | "ADMIN";
 };
 
 export type User = {

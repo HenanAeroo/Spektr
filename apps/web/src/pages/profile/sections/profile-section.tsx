@@ -34,7 +34,8 @@ export default function ProfileSection() {
     }
   }, [profile, reset]);
 
-  if (loading) return <p className="text-sm text-muted-foreground">Chargement...</p>;
+  if (loading)
+    return <p className="text-sm text-muted-foreground">Chargement...</p>;
 
   return (
     <div className="flex flex-col gap-6">
@@ -47,20 +48,27 @@ export default function ProfileSection() {
 
       <Separator />
 
-      <form onSubmit={handleSubmit(handleUpdate)} className="flex flex-col gap-4">
+      <form
+        onSubmit={handleSubmit(handleUpdate)}
+        className="flex flex-col gap-4"
+      >
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="first_name">Prénom</Label>
             <Input id="first_name" {...register("first_name")} />
             {errors.first_name && (
-              <p className="text-xs text-destructive">{errors.first_name.message}</p>
+              <p className="text-xs text-destructive">
+                {errors.first_name.message}
+              </p>
             )}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="last_name">Nom</Label>
             <Input id="last_name" {...register("last_name")} />
             {errors.last_name && (
-              <p className="text-xs text-destructive">{errors.last_name.message}</p>
+              <p className="text-xs text-destructive">
+                {errors.last_name.message}
+              </p>
             )}
           </div>
         </div>

@@ -18,3 +18,10 @@ export async function updateProfile(
     token: getToken() ?? undefined,
   });
 }
+
+export async function deleteAccount(userId: number): Promise<ProfileUser> {
+  return apiFetch<ProfileUser>(`/users/${userId}`, {
+    method: "DELETE",
+    token: getToken() ?? undefined,
+  });
+}

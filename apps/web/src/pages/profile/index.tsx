@@ -30,8 +30,12 @@ export default function ProfilePage() {
               active === id
                 ? "bg-neutral-800 text-white"
                 : "text-muted-foreground hover:text-foreground hover:bg-neutral-800/50",
-              id === "danger" && active === id && "bg-destructive/20 text-destructive",
-              id === "danger" && active !== id && "text-destructive/70 hover:text-destructive hover:bg-destructive/10",
+              id === "danger" &&
+                active === id &&
+                "bg-destructive/20 text-destructive",
+              id === "danger" &&
+                active !== id &&
+                "text-destructive/70 hover:text-destructive hover:bg-destructive/10",
             )}
           >
             {label}

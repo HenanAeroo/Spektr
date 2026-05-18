@@ -12,31 +12,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/components/ui/dialog";
-import { apiFetch } from "@/shared/lib/api";
-import { getToken, removeToken, getUser } from "@/shared/lib/auth";
+import { removeToken, getUser } from "@/shared/lib/auth";
+import { useMutation } from "@tanstack/react-query";
+import { deleteAccount } from "@/features/profile/actions/profile.actions";
 
 export default function DangerSection() {
   const [open, setOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
   const user = getUser();
 
-  async function handleDelete() {
-    if (!user) return;
-    setDeleting(true);
-    try {
-      await apiFetch(`/users/${user.sub}`, {
-        method: "DELETE",
-        token: getToken() ?? undefined,
-      });
+  const { mutate: deleteProfile, isPending } = useMutation({
+    mutationFn: (userId: number) => deleteAccount(userId),
+    onSuccess: () => {
       removeToken();
       navigate("/login");
-    } catch {
-      toast.error("Erreur lors de la suppression du compte");
-    } finally {
-      setDeleting(false);
-      setOpen(false);
-    }
+    },
+    onError: () => toast.error("Erreur lors de la suppression du compte"),
+  });
+
+  async function handleDelete() {
+    deleteProfile(user!.sub);
   }
 
   return (
@@ -67,16 +62,20 @@ export default function DangerSection() {
             <DialogHeader>
               <DialogTitle>Supprimer le compte</DialogTitle>
               <DialogDescription>
-                Cette action est irréversible. Votre compte et toutes vos données
-                seront définitivement supprimés.
+                Cette action est irréversible. Votre compte et toutes vos
+                données seront définitivement supprimés.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>
                 Annuler
               </Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-                {deleting ? "Suppression..." : "Confirmer la suppression"}
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isPending}
+              >
+                {isPending ? "Suppression..." : "Confirmer la suppression"}
               </Button>
             </DialogFooter>
           </DialogContent>

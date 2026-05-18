@@ -52,8 +52,10 @@ export class AuthService {
 
   // Send both tokens to the controller
   private async issueTokens(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     const accessToken = await this.generateAccessToken({
       sub: userId,
+      role: user!.role,
     });
 
     const rawRefreshToken = this.generateRawRefreshToken();

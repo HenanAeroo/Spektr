@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { socket } from "@/shared/lib/socket";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { getToken } from "@/shared/lib/auth";
 
 function NotificationBell() {
   const queryClient = useQueryClient();
@@ -14,6 +15,7 @@ function NotificationBell() {
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications"],
     queryFn: getNotifications,
+    enabled: !!getToken(),
   });
 
   const { mutate: markAsReadMutation } = useMutation({

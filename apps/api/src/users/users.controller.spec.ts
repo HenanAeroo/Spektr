@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -14,6 +15,10 @@ describe('UsersController', () => {
         {
           provide: PrismaService,
           useValue: {},
+        },
+        {
+          provide: NotificationsService,
+          useValue: { sendFeedbackEmail: jest.fn() },
         },
       ],
     }).compile();

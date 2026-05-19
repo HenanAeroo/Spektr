@@ -49,9 +49,10 @@ const LoginForm = () => {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} style={{ width: "100%" }}>
       <div style={{ marginBottom: 14 }}>
-        <label style={labelStyle}>Adresse email</label>
+        <label htmlFor="email" style={labelStyle}>Adresse email</label>
         <input
           {...form.register("email")}
+          id="email"
           type="email"
           placeholder="prenom.nom@ynov.com"
           style={inputStyle}
@@ -66,10 +67,11 @@ const LoginForm = () => {
       </div>
 
       <div style={{ marginBottom: 20 }}>
-        <label style={labelStyle}>Mot de passe</label>
+        <label htmlFor="password" style={labelStyle}>Mot de passe</label>
         <div style={{ position: "relative" }}>
           <input
             {...form.register("password")}
+            id="password"
             type={showPwd ? "text" : "password"}
             placeholder="••••••••"
             style={{ ...inputStyle, paddingRight: 40 }}

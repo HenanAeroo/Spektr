@@ -106,9 +106,10 @@ const RegisterForm = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
-              <label style={labelStyle}>Prénom</label>
+              <label htmlFor="first_name" style={labelStyle}>Prénom</label>
               <input
                 {...form.register("first_name")}
+                id="first_name"
                 placeholder="Sophie"
                 style={inputStyle}
                 onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
@@ -116,9 +117,10 @@ const RegisterForm = () => {
               />
             </div>
             <div>
-              <label style={labelStyle}>Nom</label>
+              <label htmlFor="last_name" style={labelStyle}>Nom</label>
               <input
                 {...form.register("last_name")}
+                id="last_name"
                 placeholder="Martin"
                 style={inputStyle}
                 onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
@@ -127,9 +129,10 @@ const RegisterForm = () => {
             </div>
           </div>
           <div>
-            <label style={labelStyle}>Adresse email Ynov</label>
+            <label htmlFor="email" style={labelStyle}>Adresse email Ynov</label>
             <input
               {...form.register("email")}
+              id="email"
               type="email"
               placeholder="prenom.nom@ynov.com"
               style={inputStyle}
@@ -176,9 +179,10 @@ const RegisterForm = () => {
       {step === 3 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div>
-            <label style={labelStyle}>Mot de passe</label>
+            <label htmlFor="password" style={labelStyle}>Mot de passe</label>
             <input
               {...form.register("password")}
+              id="password"
               type="password"
               placeholder="8 caractères minimum"
               style={inputStyle}

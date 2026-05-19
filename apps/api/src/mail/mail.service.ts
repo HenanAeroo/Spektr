@@ -12,8 +12,9 @@ export class MailService {
   constructor(private readonly config: ConfigService) {
     const user = config.get<string>('SMTP_USER');
     const pass = config.get<string>('SMTP_PASS');
+    const fromAddress = config.get<string>('SMTP_FROM', user!);
 
-    this.from = `"Spektr — Ynov Campus" <${user}>`;
+    this.from = `"Spektr — Ynov Campus" <${fromAddress}>`;
 
     this.transporter = nodemailer.createTransport({
       host: 'smtp-relay.brevo.com',

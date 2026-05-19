@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
   OnGatewayConnection,
@@ -9,9 +10,22 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: { origin: true, credentials: true } })
+@WebSocketGateway({
+  cors: {
+    origin: (
+      requestOrigin: string,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      callback(null, requestOrigin === process.env.FRONT_URL);
+    },
+    credentials: true,
+  },
+})
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
+  ) {}
 
   @WebSocketServer() server!: Server;
 
@@ -26,7 +40,10 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     try {
-      const payload = this.jwtService.verify(token);
+      const payload = this.jwtService.verify(token, {
+        secret: this.config.get<string>('JWT_SECRET'),
+        algorithms: ['HS256'],
+      });
       client.data.userId = payload.sub;
       client.join(`user:${payload.sub}`);
       this.logger.log(`Client connected: ${client.id}`);

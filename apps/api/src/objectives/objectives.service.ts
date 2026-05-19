@@ -56,30 +56,74 @@ export class ObjectivesService {
 
   findOne(id: number) {
     return this.prismaService.objective.findUnique({
-      where: {
-        id: id,
-      },
+      where: { id },
     });
   }
 
-  findByUser(user: User) {
+  async findByUser(user: User) {
     if (user.promoId === null) {
       return [];
     }
 
-    return this.prismaService.objective.findMany({
+    const objectives = await this.prismaService.objective.findMany({
       where: { promoId: user.promoId },
+      include: {
+        completions: {
+          where: { userId: user.id },
+          select: { done: true },
+        },
+      },
     });
+
+    return objectives.map((obj) => ({
+      ...obj,
+      done: obj.completions[0]?.done ?? false,
+      completions: undefined,
+    }));
+  }
+
+  async toggleCompletion(objectiveId: number, userId: number) {
+    const existing = await this.prismaService.objectiveCompletion.findUnique({
+      where: { objectiveId_userId: { objectiveId, userId } },
+    });
+
+    if (existing) {
+      return this.prismaService.objectiveCompletion.update({
+        where: { objectiveId_userId: { objectiveId, userId } },
+        data: { done: !existing.done },
+      });
+    }
+
+    return this.prismaService.objectiveCompletion.create({
+      data: { objectiveId, userId, done: true },
+    });
+  }
+
+  async findAllCompletions() {
+    const objectives = await this.prismaService.objective.findMany({
+      include: {
+        promo: true,
+        completions: {
+          include: {
+            user: {
+              select: { id: true, first_name: true, last_name: true, email: true, promoId: true },
+            },
+          },
+        },
+      },
+    });
+
+    return objectives;
   }
 
   update(id: number, dto: UpdateObjectiveDto) {
     return this.prismaService.objective.update({
-      where: { id: id },
+      where: { id },
       data: dto,
     });
   }
 
   remove(id: number) {
-    return this.prismaService.objective.delete({ where: { id: id } });
+    return this.prismaService.objective.delete({ where: { id } });
   }
 }

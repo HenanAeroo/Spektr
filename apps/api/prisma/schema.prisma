@@ -17,14 +17,15 @@ model User {
   created_at  DateTime @default(now())
   modified_at DateTime @updatedAt
 
-  authProviders AuthProvider[]
-  refreshTokens RefreshToken[]
-  applications  Application[]
-  folders       Folder[]
-  documents     Document[]
-  notifications Notification[]
-  promoId       Int?
-  promo         Promo? @relation(fields: [promoId], references: [id])
+  authProviders        AuthProvider[]
+  refreshTokens        RefreshToken[]
+  applications         Application[]
+  folders              Folder[]
+  documents            Document[]
+  notifications        Notification[]
+  objectiveCompletions ObjectiveCompletion[]
+  promoId              Int?
+  promo                Promo? @relation(fields: [promoId], references: [id])
 }
 
 enum Provider {
@@ -171,5 +172,23 @@ model Objective {
   promoId Int
   promo   Promo @relation(fields: [promoId], references: [id])
 
+  completions ObjectiveCompletion[]
+
   created_at  DateTime @default(now())
+}
+
+model ObjectiveCompletion {
+  id      Int     @id @default(autoincrement())
+  done    Boolean @default(false)
+
+  objectiveId Int
+  objective   Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  created_at  DateTime @default(now())
+  modified_at DateTime @updatedAt
+
+  @@unique([objectiveId, userId])
 }

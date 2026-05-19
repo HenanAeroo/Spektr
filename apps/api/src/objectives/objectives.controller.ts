@@ -34,10 +34,21 @@ export class ObjectivesController {
     return this.objectivesService.findAll();
   }
 
-  @Get('/my')
+  @Get('my')
   @Roles(Role.STUDENT, Role.ADMIN)
   findByUser(@CurrentUser() user: User) {
     return this.objectivesService.findByUser(user);
+  }
+
+  @Post(':id/toggle')
+  @Roles(Role.STUDENT, Role.ADMIN)
+  toggle(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.objectivesService.toggleCompletion(+id, user.id);
+  }
+
+  @Get('completions')
+  findAllCompletions() {
+    return this.objectivesService.findAllCompletions();
   }
 
   @Get(':id')

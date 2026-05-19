@@ -9,9 +9,11 @@ import {
   UseGuards,
   Query,
   ForbiddenException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import type { User as UserModel } from '../../prisma/generated/prisma/client';
 import { Role as RoleModel } from '../../prisma/generated/prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -47,27 +49,33 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<UserModel | null> {
-    return this.usersService.findOne({ id: Number(id) });
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() currentUser: UserModel,
+  ): Promise<UserModel | null> {
+    if (currentUser.role !== RoleModel.ADMIN && currentUser.id !== id) {
+      throw new ForbiddenException();
+    }
+    return this.usersService.findOne({ id });
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto,
     @CurrentUser() user: UserModel,
   ): Promise<UserModel> {
-    if (user.id !== Number(id)) throw new ForbiddenException();
+    if (user.id !== id) throw new ForbiddenException();
 
     return this.usersService.update({
-      where: { id: Number(id) },
+      where: { id },
       data: updateUserDto,
     });
   }
 
   @Patch('me/password')
   async changePassword(
-    @Body() body: { oldPassword: string; newPassword: string },
+    @Body() body: ChangePasswordDto,
     @CurrentUser() user: UserModel,
   ) {
     const result = await this.usersService.changePassword(
@@ -83,20 +91,20 @@ export class UsersController {
   @Roles(RoleModel.ADMIN)
   @UseGuards(RolesGuard)
   async sendFeedback(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() body: { score: number; comment: string },
   ) {
-    await this.notificationsService.sendFeedbackEmail(Number(id), body.score, body.comment);
+    await this.notificationsService.sendFeedbackEmail(id, body.score, body.comment);
     return { sent: true };
   }
 
   @Delete(':id')
   remove(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: UserModel,
   ): Promise<UserModel> {
-    if (user.id !== Number(id)) throw new ForbiddenException();
+    if (user.id !== id) throw new ForbiddenException();
 
-    return this.usersService.remove({ id: Number(id) });
+    return this.usersService.remove({ id });
   }
 }

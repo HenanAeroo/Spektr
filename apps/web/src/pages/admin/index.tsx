@@ -8,6 +8,7 @@ import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompl
 import { createObjective, CreateObjectiveData } from "@/features/objectives/actions/createObjective";
 import { deleteObjective } from "@/features/objectives/actions/deleteObjective";
 import { getUserDocuments } from "@/features/documents/actions/getUserDocuments";
+import { sendFeedback } from "@/features/users/actions/sendFeedback";
 import { useProfile } from "@/features/profile/hooks/use-profile";
 import { useAuthContext } from "@/shared/components/auth-provider";
 import { Calendar } from "@/shared/components/ui/calendar";
@@ -408,7 +409,10 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
   const [activeTab, setActiveTab] = useState<"profile" | "objectifs" | "documents">("profile");
   const [feedbackScore, setFeedbackScore] = useState<number | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
-  const [feedbackSent, setFeedbackSent] = useState(false);
+
+  const { mutate: submitFeedback, isPending: feedbackPending, isSuccess: feedbackSent } = useMutation({
+    mutationFn: () => sendFeedback(userId, feedbackScore!, feedbackText),
+  });
 
   const { data: users = [] } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
   const user = users.find((u: any) => u.id === userId);
@@ -540,9 +544,10 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
                     onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
                     onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
                   <button
-                    onClick={() => feedbackScore !== null && setFeedbackSent(true)}
-                    style={{ width: "100%", padding: "8px", borderRadius: 8, border: "none", background: feedbackScore !== null ? "#23b2a4" : "#e8e8e8", color: feedbackScore !== null ? "#fff" : "#9ca3af", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 12, cursor: feedbackScore !== null ? "pointer" : "default", marginTop: 8 }}>
-                    ✉ Envoyer le feedback
+                    onClick={() => feedbackScore !== null && submitFeedback()}
+                    disabled={feedbackScore === null || feedbackPending}
+                    style={{ width: "100%", padding: "8px", borderRadius: 8, border: "none", background: feedbackScore !== null && !feedbackPending ? "#23b2a4" : "#e8e8e8", color: feedbackScore !== null && !feedbackPending ? "#fff" : "#9ca3af", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 12, cursor: feedbackScore !== null && !feedbackPending ? "pointer" : "default", marginTop: 8 }}>
+                    {feedbackPending ? "Envoi…" : "✉ Envoyer le feedback"}
                   </button>
                 </>
               )}

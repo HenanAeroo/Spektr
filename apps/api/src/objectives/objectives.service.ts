@@ -37,7 +37,12 @@ export class ObjectivesService {
           this.notificationsService.createAndEmit(
             student.id,
             NotifType.OBJECTIVE_CREATED,
-            { objectiveId: objective.id, title: objective.title },
+            {
+              objectiveId: objective.id,
+              title: objective.title,
+              description: objective.description,
+              deadline: objective.deadline?.toISOString() ?? null,
+            },
           ),
         ),
       );

@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Body,
   Patch,
   Param,
@@ -17,11 +18,15 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   @Roles(RoleModel.ADMIN)
   @UseGuards(RolesGuard)
@@ -58,6 +63,17 @@ export class UsersController {
       where: { id: Number(id) },
       data: updateUserDto,
     });
+  }
+
+  @Post(':id/feedback')
+  @Roles(RoleModel.ADMIN)
+  @UseGuards(RolesGuard)
+  async sendFeedback(
+    @Param('id') id: string,
+    @Body() body: { score: number; comment: string },
+  ) {
+    await this.notificationsService.sendFeedbackEmail(Number(id), body.score, body.comment);
+    return { sent: true };
   }
 
   @Delete(':id')

@@ -10,7 +10,11 @@ import { fetchUserApplications } from "@/features/applications/actions/fetchUser
 import { getUserDocuments } from "@/features/documents/actions/getUserDocuments";
 import { useProfile } from "@/features/profile/hooks/use-profile";
 import { useAuthContext } from "@/shared/components/auth-provider";
+import { Calendar } from "@/shared/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 import { useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
@@ -694,14 +698,14 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [deadline, setDeadline] = useState("");
+  const [deadline, setDeadline] = useState<Date | undefined>(undefined);
   const [promoId, setPromoId] = useState<string>("");
 
   const { mutate: handleCreate, isPending: creating } = useMutation({
     mutationFn: (data: CreateObjectiveData) => createObjective(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["objectives", "all"] });
-      setTitle(""); setDescription(""); setDeadline(""); setPromoId(""); setShowForm(false);
+      setTitle(""); setDescription(""); setDeadline(undefined); setPromoId(""); setShowForm(false);
     },
   });
 
@@ -715,7 +719,7 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
     handleCreate({
       title: title.trim(),
       description: description.trim() || undefined,
-      deadline: deadline || undefined,
+      deadline: deadline ? format(deadline, "yyyy-MM-dd") : undefined,
       promoId: Number(promoId),
     });
   };
@@ -773,16 +777,39 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
               </select>
             </div>
             <div>
-              <label htmlFor="obj-deadline" style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Deadline (optionnel)</label>
-              <input
-                id="obj-deadline"
-                type="date"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                style={{ ...inputStyle }}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
-              />
+              <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Deadline (optionnel)</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    style={{ ...inputStyle, textAlign: "left", cursor: "pointer", color: deadline ? "#1d1d1e" : "#9ca3af", display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <span style={{ fontSize: 14 }}>📅</span>
+                    {deadline ? format(deadline, "dd MMMM yyyy", { locale: fr }) : "Choisir une date"}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="start" style={{ width: "auto", padding: 0 }}>
+                  <Calendar
+                    mode="single"
+                    selected={deadline}
+                    onSelect={setDeadline}
+                    locale={fr}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    initialFocus
+                  />
+                  {deadline && (
+                    <div style={{ padding: "8px 12px", borderTop: "1px solid #f0f0f0" }}>
+                      <button
+                        type="button"
+                        onClick={() => setDeadline(undefined)}
+                        style={{ fontSize: 12, color: "#e05252", background: "none", border: "none", cursor: "pointer", fontFamily: "Source Sans 3, sans-serif" }}
+                      >
+                        Effacer la date
+                      </button>
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <label htmlFor="obj-desc" style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Description (optionnel)</label>

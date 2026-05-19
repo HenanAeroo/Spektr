@@ -35,7 +35,7 @@ export class ObjectivesController {
   }
 
   @Get('/my')
-  @Roles()
+  @Roles(Role.STUDENT, Role.ADMIN)
   findByUser(@CurrentUser() user: User) {
     return this.objectivesService.findByUser(user);
   }

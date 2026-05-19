@@ -695,6 +695,16 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
                         {sizeKb} Ko · {doc.created_at ? new Date(doc.created_at).toLocaleDateString("fr-FR") : "—"}
                       </div>
                     </div>
+                    <button
+                      onClick={async () => {
+                        const { getDocumentUrl } = await import("@/features/documents/actions/getDocumentUrl");
+                        const { url } = await getDocumentUrl(doc.id);
+                        window.open(url, "_blank");
+                      }}
+                      style={{ background: "rgba(35,178,164,0.1)", border: "none", borderRadius: 6, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#23b2a4", whiteSpace: "nowrap", flexShrink: 0 }}
+                    >
+                      ⬇ Télécharger
+                    </button>
                   </div>
                 );
               })}

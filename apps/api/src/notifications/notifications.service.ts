@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventsGateway } from '../events/events.gateway';
 import { Prisma, NotifType } from '../../prisma/generated/prisma/client';
-import { MailerService } from '@nestjs-modules/mailer';
+import { MailService } from '../mail/mail.service';
 
 const SMILEY_LABELS = ['Très bien', 'Bien', 'Moyen', 'Préoccupant', 'Critique'];
 const SMILEY_EMOJIS = ['😊', '🙂', '😐', '🙁', '😟'];
@@ -13,7 +13,7 @@ export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventsGateway: EventsGateway,
-    private readonly mailerService: MailerService,
+    private readonly mailService: MailService,
   ) {}
 
   async createAndEmit(
@@ -33,7 +33,7 @@ export class NotificationsService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (user?.email) {
       const { subject, html } = this.buildObjectiveEmail(type, payload, user.first_name);
-      await this.mailerService.sendMail({ to: user.email, subject, html });
+      await this.mailService.send(user.email, subject, html);
     }
 
     this.eventsGateway.server.to(`user:${userId}`).emit('notification', notif);
@@ -106,11 +106,7 @@ export class NotificationsService {
 </body>
 </html>`;
 
-    await this.mailerService.sendMail({
-      to: student.email,
-      subject: `Feedback RE — ${label}`,
-      html,
-    });
+    await this.mailService.send(student.email, `Feedback RE — ${label}`, html);
   }
 
   private buildObjectiveEmail(

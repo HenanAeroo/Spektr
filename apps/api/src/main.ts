@@ -2,13 +2,24 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 
 async function bootstrap() {
+  const frontUrl = process.env.FRONT_URL;
+  if (!frontUrl) throw new Error('FRONT_URL environment variable is not set');
+
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.use(helmet());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   app.use(cookieParser());
   app.enableCors({
-    origin: process.env.FRONT_URL,
+    origin: frontUrl,
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 3000);

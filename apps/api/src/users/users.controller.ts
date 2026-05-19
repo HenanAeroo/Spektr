@@ -65,6 +65,20 @@ export class UsersController {
     });
   }
 
+  @Patch('me/password')
+  async changePassword(
+    @Body() body: { oldPassword: string; newPassword: string },
+    @CurrentUser() user: UserModel,
+  ) {
+    const result = await this.usersService.changePassword(
+      user.id,
+      body.oldPassword,
+      body.newPassword,
+    );
+    await this.notificationsService.sendPasswordChangedEmail(user.id);
+    return result;
+  }
+
   @Post(':id/feedback')
   @Roles(RoleModel.ADMIN)
   @UseGuards(RolesGuard)

@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useProfile } from "@/features/profile/hooks/use-profile";
 import { useAuthContext } from "@/shared/components/auth-provider";
+import { useAuth } from "@/features/auth/hooks/use-auth";
+import { changePassword } from "@/features/profile/actions/changePassword";
+import { useMutation } from "@tanstack/react-query";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -29,10 +32,26 @@ const labelStyle: React.CSSProperties = {
 export default function ProfilePage() {
   const { user } = useAuthContext();
   const { profile, loading, saving, handleUpdate } = useProfile();
+  const { handleLogout } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [activeSection, setActiveSection] = useState<"profile" | "security">("profile");
+
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwdError, setPwdError] = useState<string | null>(null);
+
+  const { mutate: submitPasswordChange, isPending: pwdPending, isSuccess: pwdSuccess } = useMutation({
+    mutationFn: () => changePassword(oldPassword, newPassword),
+    onSuccess: () => {
+      setTimeout(() => handleLogout(), 2000);
+    },
+    onError: (err: Error) => {
+      setPwdError(err.message ?? "Une erreur est survenue.");
+    },
+  });
 
   const handleStartEdit = () => {
     setFirstName(profile?.first_name ?? "");
@@ -175,14 +194,101 @@ export default function ProfilePage() {
           {activeSection === "security" && (
             <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", padding: 28 }}>
               <h2 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 16, color: "#1d1d1e", marginBottom: 6 }}>Sécurité</h2>
-              <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginBottom: 20 }}>
-                Gérez votre mot de passe et les paramètres de sécurité.
+              <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginBottom: 24 }}>
+                Modifiez votre mot de passe. Vous serez déconnecté après confirmation.
               </p>
-              <div style={{ background: "#f5f5f5", borderRadius: 10, padding: 16, border: "1px solid #e8e8e8" }}>
-                <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", textAlign: "center" }}>
-                  Fonctionnalité de changement de mot de passe à venir.
-                </p>
-              </div>
+
+              {pwdSuccess ? (
+                <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "20px 24px", display: "flex", alignItems: "center", gap: 14 }}>
+                  <span style={{ fontSize: 28 }}>✅</span>
+                  <div>
+                    <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, color: "#16a34a" }}>Mot de passe modifié !</div>
+                    <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#4ade80", marginTop: 3 }}>
+                      Un email de confirmation a été envoyé. Déconnexion en cours…
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 400 }}>
+                  <div>
+                    <label style={labelStyle}>Mot de passe actuel</label>
+                    <input
+                      type="password"
+                      value={oldPassword}
+                      onChange={(e) => { setOldPassword(e.target.value); setPwdError(null); }}
+                      placeholder="••••••••"
+                      style={inputStyle}
+                      onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
+                      onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Nouveau mot de passe</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => { setNewPassword(e.target.value); setPwdError(null); }}
+                      placeholder="••••••••"
+                      style={inputStyle}
+                      onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
+                      onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+                    />
+                    {newPassword.length > 0 && newPassword.length < 8 && (
+                      <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#d97706", marginTop: 4 }}>
+                        Minimum 8 caractères
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Confirmer le nouveau mot de passe</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => { setConfirmPassword(e.target.value); setPwdError(null); }}
+                      placeholder="••••••••"
+                      style={{
+                        ...inputStyle,
+                        borderColor: confirmPassword && confirmPassword !== newPassword ? "#e05252" : "#e8e8e8",
+                      }}
+                      onFocus={(e) => (e.target.style.borderColor = confirmPassword !== newPassword ? "#e05252" : "#23b2a4")}
+                      onBlur={(e) => (e.target.style.borderColor = confirmPassword !== newPassword ? "#e05252" : "#e8e8e8")}
+                    />
+                    {confirmPassword && confirmPassword !== newPassword && (
+                      <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#e05252", marginTop: 4 }}>
+                        Les mots de passe ne correspondent pas
+                      </p>
+                    )}
+                  </div>
+
+                  {pwdError && (
+                    <div style={{ background: "#fee2e2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#dc2626" }}>
+                      {pwdError}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      if (!oldPassword || !newPassword || newPassword.length < 8 || newPassword !== confirmPassword) return;
+                      submitPasswordChange();
+                    }}
+                    disabled={pwdPending || !oldPassword || !newPassword || newPassword.length < 8 || newPassword !== confirmPassword}
+                    style={{
+                      padding: "11px 24px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: pwdPending || !oldPassword || newPassword.length < 8 || newPassword !== confirmPassword ? "#e8e8e8" : "#23b2a4",
+                      color: pwdPending || !oldPassword || newPassword.length < 8 || newPassword !== confirmPassword ? "#9ca3af" : "#fff",
+                      fontFamily: "Montserrat, sans-serif",
+                      fontWeight: 700,
+                      fontSize: 14,
+                      cursor: pwdPending || !oldPassword || newPassword.length < 8 || newPassword !== confirmPassword ? "not-allowed" : "pointer",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {pwdPending ? "Modification en cours…" : "🔐 Modifier le mot de passe"}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

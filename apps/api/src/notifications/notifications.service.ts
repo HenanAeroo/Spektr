@@ -179,6 +179,69 @@ export class NotificationsService {
     };
   }
 
+  async sendPasswordChangedEmail(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.email) return;
+
+    const firstName = user.first_name ?? 'Étudiant';
+    const date = new Date().toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Segoe UI',Arial,sans-serif;">
+  <div style="max-width:580px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <div style="background:#1d1d1e;padding:24px 32px;">
+      <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;">
+        Spek<span style="color:#23b2a4;">tr</span>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;letter-spacing:2px;margin-top:2px;">YNOV CAMPUS RENNES</div>
+    </div>
+
+    <div style="padding:32px;">
+      <div style="font-size:28px;margin-bottom:12px;">🔐</div>
+      <h1 style="margin:0 0 6px;font-size:20px;color:#1d1d1e;">Bonjour ${firstName},</h1>
+      <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+        Le mot de passe de votre compte Spektr a été modifié avec succès.
+      </p>
+
+      <div style="background:#f0fdf9;border:1px solid rgba(35,178,164,0.2);border-left:3px solid #23b2a4;border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:24px;">
+        <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Détails de la modification</div>
+        <div style="font-size:14px;color:#1d1d1e;">📅 <strong>${date}</strong></div>
+        <div style="font-size:13px;color:#6b7280;margin-top:4px;">Compte : ${user.email}</div>
+      </div>
+
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
+        <div style="font-size:13px;color:#d97706;font-weight:600;margin-bottom:4px;">⚠️ Ce n'était pas vous ?</div>
+        <p style="margin:0;font-size:13px;color:#92400e;line-height:1.6;">
+          Si vous n'êtes pas à l'origine de cette modification, contactez immédiatement votre chargé RE.
+        </p>
+      </div>
+
+      <p style="font-size:13px;color:#6b7280;line-height:1.6;margin:0;">
+        Vous avez été déconnecté de tous vos appareils par mesure de sécurité. Reconnectez-vous avec votre nouveau mot de passe.
+      </p>
+    </div>
+
+    <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e8e8e8;text-align:center;">
+      <p style="margin:0;font-size:11px;color:#9ca3af;">
+        Ce message a été envoyé automatiquement par Spektr · Ynov Campus Rennes
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    await this.mailService.send(user.email, '🔐 Mot de passe modifié — Spektr', html);
+  }
+
   async findAllForUser(userId: number) {
     return this.prisma.notification.findMany({
       where: { userId },

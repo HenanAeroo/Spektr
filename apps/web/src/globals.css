@@ -4,6 +4,38 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Spektr design tokens */
+:root {
+  --spektr-teal: #23b2a4;
+  --spektr-teal-hover: #1d9d91;
+  --spektr-teal-light: rgba(35, 178, 164, 0.1);
+  --spektr-dark: #1d1d1e;
+  --spektr-bg: #f5f5f5;
+  --spektr-border: #e8e8e8;
+  --spektr-red: #e05252;
+  --spektr-orange: #f59e0b;
+  --spektr-green: #22c55e;
+  --spektr-sidebar-width: 220px;
+}
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .font-montserrat {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Force light color scheme so inputs always show dark text */
+:root {
+  color-scheme: light;
+}
+
+input, textarea, select {
+  color: #1d1d1e !important;
+  background-color: #fff;
+}
+
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);

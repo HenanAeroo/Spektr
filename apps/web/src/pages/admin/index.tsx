@@ -726,7 +726,7 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
     handleCreate({
       title: title.trim(),
       description: description.trim() || undefined,
-      deadline: deadline ? format(deadline, "yyyy-MM-dd") : undefined,
+      deadline: deadline ? deadline.toISOString() : undefined,
       promoId: Number(promoId),
     });
   };

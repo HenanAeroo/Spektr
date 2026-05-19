@@ -1,5 +1,6 @@
 import { useAuthContext } from "@/shared/components/auth-provider";
 import Sidebar from "@/shared/components/layout/sidebar";
+import { refresh } from "@/features/auth/actions/refresh";
 import { getToken } from "@/shared/lib/auth";
 import {
   createFileRoute,
@@ -10,9 +11,13 @@ import {
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/_protected")({
-  beforeLoad: () => {
+  beforeLoad: async () => {
     if (!getToken()) {
-      throw redirect({ to: "/login" });
+      try {
+        await refresh();
+      } catch {
+        throw redirect({ to: "/login" });
+      }
     }
   },
 
@@ -27,8 +32,13 @@ export const Route = createFileRoute("/_protected")({
       }
     }, [isInitialized]);
 
-    if (!isInitialized || !token) {
-      return null;
+    if (!isInitialized) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f5f5f5" }}>
+          <div style={{ width: 32, height: 32, border: "3px solid #e8e8e8", borderTopColor: "#23b2a4", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      );
     }
 
     return (

@@ -12,8 +12,11 @@ import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { User as UserModel } from '../../prisma/generated/prisma/client';
+import { Role } from '../../prisma/generated/prisma/client';
 
 @UseGuards(JwtAuthGuard)
 @Controller('applications')
@@ -31,6 +34,13 @@ export class ApplicationsController {
   @Get('me')
   findMyApplications(@CurrentUser() user: UserModel) {
     return this.applicationsService.findMyApplications(user.id);
+  }
+
+  @Get('user/:userId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  findByUser(@Param('userId') userId: string) {
+    return this.applicationsService.findMyApplications(+userId);
   }
 
   @Get(':id')

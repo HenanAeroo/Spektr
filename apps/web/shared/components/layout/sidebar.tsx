@@ -10,14 +10,14 @@ import {
   User,
   Settings,
   LogOut,
-  Bell,
 } from "lucide-react";
+import NotificationBell from "@/features/notifications/components/NotificationBell";
 
 const StudentNav = [
   { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/candidatures", label: "Candidatures", icon: CheckSquare },
   { href: "/docs", label: "Documents", icon: FileText },
-  { href: "/objectifs", label: "Objectifs", icon: Bell },
+  { href: "/objectifs", label: "Objectifs", icon: CheckSquare },
 ];
 
 const AdminNav = [
@@ -156,6 +156,16 @@ const Sidebar = () => {
           </>
         )}
       </nav>
+
+      {/* Notification bell (students only) */}
+      {!isAdmin && (
+        <div style={{ padding: "8px 12px", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", fontFamily: "Montserrat, sans-serif" }}>
+            NOTIFS
+          </span>
+          <NotificationBell />
+        </div>
+      )}
 
       {/* User footer with dropdown */}
       <div style={{ position: "relative", borderTop: "1px solid rgba(255,255,255,0.07)" }}>

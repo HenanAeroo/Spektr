@@ -4,9 +4,9 @@ import { deletePromo } from "@/features/promos/actions/deletePromo";
 import { fetchPromos } from "@/features/promos/actions/fetchPromos";
 import { fetchUsers } from "@/features/promos/actions/fetchUsers";
 import { fetchObjectives } from "@/features/objectives/actions/fetchObjectives";
+import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
 import { createObjective, CreateObjectiveData } from "@/features/objectives/actions/createObjective";
 import { deleteObjective } from "@/features/objectives/actions/deleteObjective";
-import { fetchUserApplications } from "@/features/applications/actions/fetchUserApplications";
 import { getUserDocuments } from "@/features/documents/actions/getUserDocuments";
 import { useProfile } from "@/features/profile/hooks/use-profile";
 import { useAuthContext } from "@/shared/components/auth-provider";
@@ -89,6 +89,17 @@ const inputStyle: React.CSSProperties = {
 function Dashboard({ navigate, users, promos }: { navigate: (p: string) => void; users: any[]; promos: any[] }) {
   const students = users.filter((u) => u.role === "STUDENT");
   const { data: objectives = [] } = useQuery({ queryKey: ["objectives", "all"], queryFn: fetchObjectives });
+  const { data: objectivesWithCompletions = [] } = useQuery({ queryKey: ["objectives", "completions"], queryFn: fetchAllCompletions });
+
+  // Build a map: userId -> { done, total }
+  const studentProgress = students.reduce<Record<number, { done: number; total: number }>>((acc, u) => {
+    const promoObjectives = objectivesWithCompletions.filter((obj: any) => obj.promoId === u.promoId);
+    const done = promoObjectives.filter((obj: any) =>
+      obj.completions?.some((c: any) => c.user.id === u.id && c.done)
+    ).length;
+    acc[u.id] = { done, total: promoObjectives.length };
+    return acc;
+  }, {});
 
   const metrics = [
     { label: "Étudiants suivis",    value: students.length, delta: "Total enregistrés", icon: "👤" },
@@ -131,9 +142,11 @@ function Dashboard({ navigate, users, promos }: { navigate: (p: string) => void;
               {students.slice(0, 6).map((u) => {
                 const initials = `${u.first_name?.[0] ?? ""}${u.last_name?.[0] ?? ""}`.toUpperCase() || "?";
                 const promo = promos.find((p: any) => p.id === u.promoId);
+                const progress = studentProgress[u.id] ?? { done: 0, total: 0 };
+                const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
                 return (
                   <div key={u.id}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 10px", borderBottom: "1px solid #f5f5f5", borderRadius: 8, cursor: "pointer", transition: "background 0.15s" }}
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 10px", borderBottom: "1px solid #f5f5f5", borderRadius: 8, cursor: "pointer", transition: "background 0.15s" }}
                     onClick={() => navigate(`student-detail:${u.id}`)}
                     onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
@@ -142,8 +155,17 @@ function Dashboard({ navigate, users, promos }: { navigate: (p: string) => void;
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, color: "#1d1d1e" }}>{u.first_name} {u.last_name}</div>
                       <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af" }}>{promo?.name ?? "Sans promo"}</div>
+                      {progress.total > 0 && (
+                        <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                          <div style={{ flex: 1, height: 4, borderRadius: 999, background: "#e8e8e8", overflow: "hidden" }}>
+                            <div style={{ height: "100%", borderRadius: 999, background: pct === 100 ? "#16a34a" : "#23b2a4", width: `${pct}%`, transition: "width 0.4s" }} />
+                          </div>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: pct === 100 ? "#16a34a" : "#23b2a4", whiteSpace: "nowrap" }}>
+                            {progress.done}/{progress.total}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <StatusBadge status="ok" label="Actif" />
                   </div>
                 );
               })}
@@ -204,6 +226,8 @@ function StudentsList({ users, promos, navigate }: { users: any[]; promos: any[]
   const [subject, setSubject] = useState("Suivi — Votre recherche d'alternance");
   const [message, setMessage] = useState("Bonjour,\n\nNous souhaitons faire le point sur votre recherche d'alternance.\n\nN'hésitez pas à nous contacter pour planifier un rendez-vous.\n\nCordialement,\nL'équipe Relations Entreprises — Ynov Campus Rennes");
 
+  const { data: objectivesWithCompletions = [] } = useQuery({ queryKey: ["objectives", "completions"], queryFn: fetchAllCompletions });
+
   const students = users.filter((u) => u.role === "STUDENT");
   const filtered = students.filter((u) => {
     if (!search) return true;
@@ -249,7 +273,7 @@ function StudentsList({ users, promos, navigate }: { users: any[]; promos: any[]
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ background: "#fafafa" }}>
-                  {["Étudiant", "Email", "Promotion", "Statut", "Actions"].map((h) => (
+                  {["Étudiant", "Email", "Promotion", "Objectifs", "Actions"].map((h) => (
                     <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid #e8e8e8" }}>{h}</th>
                   ))}
                 </tr>
@@ -258,6 +282,11 @@ function StudentsList({ users, promos, navigate }: { users: any[]; promos: any[]
                 {filtered.map((u) => {
                   const initials = `${u.first_name?.[0] ?? ""}${u.last_name?.[0] ?? ""}`.toUpperCase() || "?";
                   const promo = promos.find((p: any) => p.id === u.promoId);
+                  const promoObjectives = objectivesWithCompletions.filter((obj: any) => obj.promoId === u.promoId);
+                  const doneCount = promoObjectives.filter((obj: any) =>
+                    obj.completions?.some((c: any) => c.user.id === u.id && c.done)
+                  ).length;
+                  const pct = promoObjectives.length > 0 ? Math.round((doneCount / promoObjectives.length) * 100) : 0;
                   return (
                     <tr key={u.id} style={{ borderBottom: "1px solid #e8e8e8", transition: "background 0.15s", cursor: "pointer" }}
                       onClick={() => navigate(`student-detail:${u.id}`)}
@@ -278,8 +307,21 @@ function StudentsList({ users, promos, navigate }: { users: any[]; promos: any[]
                           <span style={{ color: "#9ca3af", fontSize: 12 }}>—</span>
                         )}
                       </td>
-                      <td style={{ padding: "14px 16px" }}>
-                        <StatusBadge status="ok" label="Actif" />
+                      <td style={{ padding: "14px 16px", minWidth: 120 }}>
+                        {promoObjectives.length > 0 ? (
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
+                              <div style={{ flex: 1, height: 5, borderRadius: 999, background: "#e8e8e8", overflow: "hidden" }}>
+                                <div style={{ height: "100%", borderRadius: 999, background: pct === 100 ? "#16a34a" : "#23b2a4", width: `${pct}%`, transition: "width 0.4s" }} />
+                              </div>
+                              <span style={{ fontSize: 11, fontWeight: 700, color: pct === 100 ? "#16a34a" : "#23b2a4", whiteSpace: "nowrap" }}>
+                                {doneCount}/{promoObjectives.length}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <span style={{ color: "#9ca3af", fontSize: 12 }}>—</span>
+                        )}
                       </td>
                       <td style={{ padding: "14px 16px" }} onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => navigate(`student-detail:${u.id}`)}
@@ -363,7 +405,7 @@ function StudentsList({ users, promos, navigate }: { users: any[]; promos: any[]
 
 /* ── Student Detail ── */
 function StudentDetail({ userId, promos, navigate }: { userId: number; promos: any[]; navigate: (p: string) => void }) {
-  const [activeTab, setActiveTab] = useState<"profile" | "candidatures" | "documents">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "objectifs" | "documents">("profile");
   const [feedbackScore, setFeedbackScore] = useState<number | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
@@ -371,10 +413,10 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
   const { data: users = [] } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
   const user = users.find((u: any) => u.id === userId);
 
-  const { data: applications = [], isLoading: appsLoading } = useQuery({
-    queryKey: ["applications", "user", userId],
-    queryFn: () => fetchUserApplications(userId),
-    enabled: activeTab === "candidatures",
+  const { data: objectivesWithCompletions = [], isLoading: objLoading } = useQuery({
+    queryKey: ["objectives", "completions"],
+    queryFn: fetchAllCompletions,
+    enabled: activeTab === "objectifs",
   });
 
   const { data: documents = [], isLoading: docsLoading } = useQuery({
@@ -400,7 +442,7 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
 
   const tabs = [
     { id: "profile" as const, label: "Profil" },
-    { id: "candidatures" as const, label: "Candidatures" },
+    { id: "objectifs" as const, label: "Objectifs" },
     { id: "documents" as const, label: "Documents" },
   ];
 
@@ -509,56 +551,115 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
         </div>
       )}
 
-      {activeTab === "candidatures" && (
+      {activeTab === "objectifs" && (
         <Card>
           <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, marginBottom: 16 }}>
-            Candidatures de {user.first_name} {user.last_name}
-            <span style={{ fontFamily: "Source Sans 3, sans-serif", fontWeight: 400, fontSize: 12, color: "#9ca3af", marginLeft: 8 }}>{applications.length} au total</span>
+            Objectifs de {user.first_name} {user.last_name}
           </div>
-          {appsLoading ? (
+          {objLoading ? (
             <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af" }}>Chargement…</div>
-          ) : applications.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
-              <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 14, color: "#6b7280" }}>Aucune candidature</p>
-            </div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ background: "#fafafa" }}>
-                    {["Entreprise", "Statut", "Date", "Contact"].map((h) => (
-                      <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid #e8e8e8" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {applications.map((app) => {
-                    const colors = STATUT_COLORS[app.statut] ?? { bg: "#f3f4f6", color: "#6b7280" };
+          ) : (() => {
+            // Filter objectives for this student's promo
+            const studentObjectives = objectivesWithCompletions.filter(
+              (obj: any) => obj.promoId === user.promoId
+            );
+            const doneCount = studentObjectives.filter((obj: any) =>
+              obj.completions?.some((c: any) => c.user.id === userId && c.done)
+            ).length;
+
+            if (studentObjectives.length === 0) {
+              return (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>🎯</div>
+                  <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 14, color: "#6b7280" }}>Aucun objectif pour cette promo</p>
+                </div>
+              );
+            }
+
+            return (
+              <div>
+                {/* Progress bar */}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+                  <div style={{ flex: 1, height: 8, borderRadius: 999, background: "#e8e8e8", overflow: "hidden" }}>
+                    <div style={{ height: "100%", borderRadius: 999, background: "#23b2a4", width: `${studentObjectives.length ? (doneCount / studentObjectives.length) * 100 : 0}%`, transition: "width 0.4s ease" }} />
+                  </div>
+                  <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, color: "#23b2a4", whiteSpace: "nowrap" }}>
+                    {doneCount} / {studentObjectives.length}
+                  </span>
+                </div>
+
+                {/* Objectives list */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {studentObjectives.map((obj: any) => {
+                    const completion = obj.completions?.find((c: any) => c.user.id === userId);
+                    const done = completion?.done ?? false;
+                    const deadline = obj.deadline ? new Date(obj.deadline) : null;
+                    const isExpired = deadline && deadline < new Date() && !done;
+
                     return (
-                      <tr key={app.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
-                        <td style={{ padding: "12px 14px" }}>
-                          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, color: "#1d1d1e" }}>{app.entreprise}</div>
-                          {app.lien && <a href={app.lien} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#23b2a4", textDecoration: "none" }}>Voir l'offre →</a>}
-                        </td>
-                        <td style={{ padding: "12px 14px" }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: colors.bg, color: colors.color }}>
-                            {STATUT_LABELS[app.statut] ?? app.statut}
-                          </span>
-                        </td>
-                        <td style={{ padding: "12px 14px", fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#6b7280" }}>
-                          {app.date_candidature ? new Date(app.date_candidature).toLocaleDateString("fr-FR") : "—"}
-                        </td>
-                        <td style={{ padding: "12px 14px", fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#6b7280" }}>
-                          {app.contact_nom ? `${app.contact_nom}${app.contact_email ? ` · ${app.contact_email}` : ""}` : "—"}
-                        </td>
-                      </tr>
+                      <div
+                        key={obj.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
+                          padding: "14px 16px",
+                          borderRadius: 10,
+                          border: "1px solid #e8e8e8",
+                          background: done ? "#f0fdf4" : "#fff",
+                          borderLeft: done ? "3px solid #16a34a" : isExpired ? "3px solid #e05252" : "3px solid #23b2a4",
+                        }}
+                      >
+                        {/* Status icon */}
+                        <div style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          background: done ? "#dcfce7" : "#f5f5f5",
+                          flexShrink: 0,
+                          fontSize: 14,
+                        }}>
+                          {done ? "✓" : "○"}
+                        </div>
+
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{
+                            fontFamily: "Montserrat, sans-serif",
+                            fontWeight: 600,
+                            fontSize: 13,
+                            color: done ? "#6b7280" : "#1d1d1e",
+                            textDecoration: done ? "line-through" : "none",
+                          }}>
+                            {obj.title}
+                          </div>
+                          {deadline && (
+                            <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                              📅 {deadline.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                            </div>
+                          )}
+                        </div>
+
+                        <span style={{
+                          padding: "3px 10px",
+                          borderRadius: 999,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          background: done ? "#dcfce7" : isExpired ? "#fee2e2" : "#f5f5f5",
+                          color: done ? "#16a34a" : isExpired ? "#dc2626" : "#9ca3af",
+                          whiteSpace: "nowrap",
+                        }}>
+                          {done ? "Fait" : isExpired ? "Expiré" : "En cours"}
+                        </span>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                </div>
+              </div>
+            );
+          })()}
         </Card>
       )}
 

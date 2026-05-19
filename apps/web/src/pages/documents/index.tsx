@@ -161,7 +161,7 @@ const DocumentsPage = () => {
               <input
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
+                onKeyDown={(e) => e.key === "Enter" && newFolderName.trim() && addFolder(newFolderName.trim())}
                 placeholder="Mon CV"
                 autoFocus
                 style={{ width: "100%", padding: "9px 12px", border: "1.5px solid #e8e8e8", borderRadius: 8, fontFamily: "Source Sans 3, sans-serif", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 8, color: "#1d1d1e", background: "#fff" }}

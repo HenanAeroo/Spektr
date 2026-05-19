@@ -1,13 +1,14 @@
 import { fetchMyObjectives } from "@/features/objectives/actions/fetchMyObjectives";
 import { fetchObjectives } from "@/features/objectives/actions/fetchObjectives";
+import { toggleObjectiveCompletion } from "@/features/objectives/actions/toggleObjectiveCompletion";
 import { Objective } from "@/features/objectives/types";
 import { useRole } from "@/shared/hooks/useRole";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-function ObjectiveCard({ obj }: { obj: Objective }) {
+function ObjectiveCard({ obj, onToggle }: { obj: Objective; onToggle?: () => void }) {
   const now = new Date();
   const deadline = obj.deadline ? new Date(obj.deadline) : null;
-  const isExpired = deadline && deadline < now;
+  const isExpired = deadline && deadline < now && !obj.done;
   const daysLeft = deadline
     ? Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     : null;
@@ -18,11 +19,13 @@ function ObjectiveCard({ obj }: { obj: Objective }) {
       borderRadius: 10,
       border: "1px solid #e8e8e8",
       padding: 20,
-      borderLeft: isExpired ? "3px solid #e05252" : "3px solid #23b2a4",
+      borderLeft: obj.done ? "3px solid #16a34a" : isExpired ? "3px solid #e05252" : "3px solid #23b2a4",
+      opacity: obj.done ? 0.85 : 1,
+      transition: "all 0.2s",
     }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, color: "#1d1d1e" }}>
+          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, textDecoration: obj.done ? "line-through" : "none", color: obj.done ? "#9ca3af" : "#1d1d1e" }}>
             {obj.title}
           </div>
           {obj.description && (
@@ -30,36 +33,62 @@ function ObjectiveCard({ obj }: { obj: Objective }) {
               {obj.description}
             </p>
           )}
+          {deadline && (
+            <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
+              📅 {deadline.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+            </div>
+          )}
         </div>
-        {deadline && (
-          <div style={{
-            padding: "4px 12px",
-            borderRadius: 10,
-            background: isExpired ? "#fee2e2" : daysLeft! <= 7 ? "#fff7ed" : "#f0fdf4",
-            color: isExpired ? "#dc2626" : daysLeft! <= 7 ? "#d97706" : "#16a34a",
-            fontSize: 11,
-            fontWeight: 700,
-            whiteSpace: "nowrap",
-          }}>
-            {isExpired
-              ? "Expiré"
-              : daysLeft === 0
-                ? "Aujourd'hui"
-                : `J-${daysLeft}`}
-          </div>
-        )}
+
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
+          {deadline && !obj.done && (
+            <div style={{
+              padding: "4px 12px",
+              borderRadius: 10,
+              background: isExpired ? "#fee2e2" : daysLeft! <= 7 ? "#fff7ed" : "#f0fdf4",
+              color: isExpired ? "#dc2626" : daysLeft! <= 7 ? "#d97706" : "#16a34a",
+              fontSize: 11,
+              fontWeight: 700,
+              whiteSpace: "nowrap",
+            }}>
+              {isExpired ? "Expiré" : daysLeft === 0 ? "Aujourd'hui" : `J-${daysLeft}`}
+            </div>
+          )}
+          {obj.done && (
+            <div style={{ padding: "4px 12px", borderRadius: 10, background: "#dcfce7", color: "#16a34a", fontSize: 11, fontWeight: 700 }}>
+              ✓ Terminé
+            </div>
+          )}
+
+          {onToggle && (
+            <button
+              onClick={onToggle}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 8,
+                border: obj.done ? "1.5px solid #e8e8e8" : "1.5px solid #23b2a4",
+                background: obj.done ? "transparent" : "#23b2a4",
+                color: obj.done ? "#9ca3af" : "#fff",
+                fontFamily: "Montserrat, sans-serif",
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: "pointer",
+                transition: "all 0.15s",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {obj.done ? "Marquer non fait" : "Marquer fait ✓"}
+            </button>
+          )}
+        </div>
       </div>
-      {deadline && (
-        <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
-          📅 Deadline : {deadline.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
-        </div>
-      )}
     </div>
   );
 }
 
 const ObjectivesPage = () => {
   const role = useRole();
+  const queryClient = useQueryClient();
 
   const { data: queryAdmin = [], isLoading: adminLoading } = useQuery({
     queryKey: ["objectives", "all"],
@@ -71,6 +100,11 @@ const ObjectivesPage = () => {
     queryKey: ["objectives", "mine"],
     queryFn: fetchMyObjectives,
     enabled: role === "STUDENT",
+  });
+
+  const { mutate: toggle } = useMutation({
+    mutationFn: toggleObjectiveCompletion,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["objectives", "mine"] }),
   });
 
   const isLoading = role === "ADMIN" ? adminLoading : studentLoading;
@@ -116,6 +150,8 @@ const ObjectivesPage = () => {
     );
   }
 
+  const doneCount = objectives.filter((o) => o.done).length;
+
   return (
     <div style={{ padding: "28px 32px", background: "#f5f5f5", minHeight: "100%" }}>
       <div style={{ marginBottom: 24 }}>
@@ -123,8 +159,13 @@ const ObjectivesPage = () => {
           Mes objectifs
         </h1>
         <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>
-          Vos objectifs fixés par votre chargé RE
+          {objectives.length > 0 ? `${doneCount} / ${objectives.length} accomplis` : "Vos objectifs fixés par votre chargé RE"}
         </p>
+        {objectives.length > 0 && (
+          <div style={{ marginTop: 10, height: 6, borderRadius: 999, background: "#e8e8e8", overflow: "hidden", maxWidth: 320 }}>
+            <div style={{ height: "100%", borderRadius: 999, background: "#23b2a4", width: `${(doneCount / objectives.length) * 100}%`, transition: "width 0.4s ease" }} />
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -141,7 +182,9 @@ const ObjectivesPage = () => {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {objectives.map((obj) => <ObjectiveCard key={obj.id} obj={obj} />)}
+          {objectives.map((obj) => (
+            <ObjectiveCard key={obj.id} obj={obj} onToggle={() => toggle(obj.id)} />
+          ))}
         </div>
       )}
     </div>

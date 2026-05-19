@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useProfile } from "@/features/profile/hooks/use-profile";
 import { useAuthContext } from "@/shared/components/auth-provider";
 
@@ -34,12 +34,11 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState("");
   const [activeSection, setActiveSection] = useState<"profile" | "security">("profile");
 
-  useEffect(() => {
-    if (profile) {
-      setFirstName(profile.first_name ?? "");
-      setLastName(profile.last_name ?? "");
-    }
-  }, [profile]);
+  const handleStartEdit = () => {
+    setFirstName(profile?.first_name ?? "");
+    setLastName(profile?.last_name ?? "");
+    setEditMode(true);
+  };
 
   const initials = user
     ? `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase() || "U"
@@ -114,7 +113,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => setEditMode(!editMode)}
+                  onClick={() => editMode ? setEditMode(false) : handleStartEdit()}
                   style={{ padding: "8px 16px", borderRadius: 8, border: "1.5px solid #23b2a4", background: "transparent", color: "#23b2a4", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
                 >
                   {editMode ? "Annuler" : "Modifier"}

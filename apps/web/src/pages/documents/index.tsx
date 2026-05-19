@@ -6,7 +6,7 @@ import { createFolder } from "@/features/documents/actions/createFolder";
 import { deleteDocument } from "@/features/documents/actions/deleteDocument";
 import { uploadDocument } from "@/features/documents/actions/uploadDocument";
 import { getDocumentUrl } from "@/features/documents/actions/getDocumentUrl";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Document, Folder } from "@/features/documents/types";
 
 function formatSize(bytes: number): string {
@@ -27,7 +27,6 @@ const DocumentsPage = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [uploading, setUploading] = useState(false);
 
   const { data: folders = [] } = useQuery({
     queryKey: ["folders"],
@@ -39,36 +38,39 @@ const DocumentsPage = () => {
     queryFn: getDocuments,
   });
 
-  async function handleDeleteFolder(id: number) {
-    await deleteFolder(id);
-    if (selectedFolderId === id) setSelectedFolderId(null);
-    queryClient.invalidateQueries({ queryKey: ["folders"] });
-  }
+  const { mutate: removeFolder } = useMutation({
+    mutationFn: deleteFolder,
+    onSuccess: (_, id) => {
+      if (selectedFolderId === id) setSelectedFolderId(null);
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
+    },
+  });
 
-  async function handleCreateFolder() {
-    if (!newFolderName.trim()) return;
-    await createFolder(newFolderName.trim());
-    queryClient.invalidateQueries({ queryKey: ["folders"] });
-    setNewFolderName("");
-    setShowNewFolder(false);
-  }
+  const { mutate: addFolder } = useMutation({
+    mutationFn: (name: string) => createFolder(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
+      setNewFolderName("");
+      setShowNewFolder(false);
+    },
+  });
 
-  async function handleDeleteDocument(id: number) {
-    await deleteDocument(id);
-    queryClient.invalidateQueries({ queryKey: ["documents"] });
-  }
+  const { mutate: removeDocument } = useMutation({
+    mutationFn: deleteDocument,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] }),
+  });
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  const { mutate: upload, isPending: uploading } = useMutation({
+    mutationFn: ({ file, folderId }: { file: File; folderId?: number }) =>
+      uploadDocument(file, folderId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] }),
+  });
+
+  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
-    try {
-      await uploadDocument(file, selectedFolderId ?? undefined);
-      queryClient.invalidateQueries({ queryKey: ["documents"] });
-    } finally {
-      setUploading(false);
-      e.target.value = "";
-    }
+    upload({ file, folderId: selectedFolderId ?? undefined });
+    e.target.value = "";
   }
 
   async function handleDownload(doc: Document) {
@@ -140,7 +142,7 @@ const DocumentsPage = () => {
                       <span style={{ fontSize: 11, color: "#9ca3af" }}>{count}</span>
                     </button>
                     <button
-                      onClick={() => handleDeleteFolder(folder.id)}
+                      onClick={() => removeFolder(folder.id)}
                       style={{ padding: "6px 8px", border: "none", background: "transparent", cursor: "pointer", color: "#dc2626", fontSize: 12 }}
                       title="Supprimer"
                     >
@@ -167,7 +169,7 @@ const DocumentsPage = () => {
                 onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
               />
               <div style={{ display: "flex", gap: 6 }}>
-                <button onClick={handleCreateFolder} style={{ flex: 1, padding: "8px", borderRadius: 7, border: "none", background: "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                <button onClick={() => newFolderName.trim() && addFolder(newFolderName.trim())} style={{ flex: 1, padding: "8px", borderRadius: 7, border: "none", background: "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
                   Créer
                 </button>
                 <button onClick={() => { setShowNewFolder(false); setNewFolderName(""); }} style={{ flex: 1, padding: "8px", borderRadius: 7, border: "1.5px solid #e8e8e8", background: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer", color: "#6b7280" }}>
@@ -227,7 +229,7 @@ const DocumentsPage = () => {
                       ⬇ Télécharger
                     </button>
                     <button
-                      onClick={() => handleDeleteDocument(doc.id)}
+                      onClick={() => removeDocument(doc.id)}
                       style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#dc2626" }}
                     >
                       Supprimer

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Post,
@@ -23,8 +24,38 @@ import { Role } from '../../prisma/generated/prisma/client';
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
+  private static readonly ALLOWED_MIME_TYPES = new Set([
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain',
+  ]);
+
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+      fileFilter: (
+        _req: unknown,
+        file: Express.Multer.File,
+        cb: (error: Error | null, acceptFile: boolean) => void,
+      ) => {
+        if (DocumentsController.ALLOWED_MIME_TYPES.has(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException(`Type de fichier non autorisé : ${file.mimetype}`), false);
+        }
+      },
+    }),
+  )
   uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Body('folderId') folderId: string | undefined,

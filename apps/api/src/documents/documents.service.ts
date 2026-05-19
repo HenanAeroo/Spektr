@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MinioService } from '../minio/minio.service';
 import 'multer';
+import { extname } from 'path';
+import { randomUUID } from 'crypto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotifType } from '../../prisma/generated/prisma/client';
 
@@ -18,7 +20,9 @@ export class DocumentsService {
     folderId: number | undefined,
     userId: number,
   ) {
-    const storageKey = `${userId}/${Date.now()}-${file.originalname}`;
+    const ext = extname(file.originalname).replace(/[^a-zA-Z0-9.]/g, '').toLowerCase();
+    const safeFilename = `${randomUUID()}${ext}`;
+    const storageKey = `${userId}/${Date.now()}-${safeFilename}`;
     await this.minio.uploadFile(
       storageKey,
       file.buffer,
@@ -27,7 +31,7 @@ export class DocumentsService {
     );
     const doc = await this.prisma.document.create({
       data: {
-        name: file.originalname,
+        name: file.originalname.replace(/[<>"'/\\]/g, '_'),
         mimeType: file.mimetype,
         size: file.size,
         storageKey,

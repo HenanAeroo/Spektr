@@ -8,6 +8,15 @@ const SMILEY_LABELS = ['Très bien', 'Bien', 'Moyen', 'Préoccupant', 'Critique'
 const SMILEY_EMOJIS = ['😊', '🙂', '😐', '🙁', '😟'];
 const SMILEY_COLORS = ['#16a34a', '#65a30d', '#d97706', '#ea580c', '#dc2626'];
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 @Injectable()
 export class NotificationsService {
   constructor(
@@ -52,7 +61,7 @@ export class NotificationsService {
     const label = SMILEY_LABELS[score] ?? 'Non précisé';
     const emoji = SMILEY_EMOJIS[score] ?? '📋';
     const color = SMILEY_COLORS[score] ?? '#6b7280';
-    const firstName = student.first_name ?? 'Étudiant';
+    const firstName = escapeHtml(student.first_name ?? 'Étudiant');
 
     const html = `
 <!DOCTYPE html>
@@ -88,7 +97,7 @@ export class NotificationsService {
       ${comment ? `
       <div style="background:#f9fafb;border:1px solid #e8e8e8;border-left:3px solid #23b2a4;border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px;">
         <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Commentaire</div>
-        <p style="margin:0;font-size:14px;color:#1d1d1e;line-height:1.6;">${comment.replace(/\n/g, '<br>')}</p>
+        <p style="margin:0;font-size:14px;color:#1d1d1e;line-height:1.6;">${escapeHtml(comment).replace(/\n/g, '<br>')}</p>
       </div>
       ` : ''}
 
@@ -114,11 +123,11 @@ export class NotificationsService {
     payload: Record<string, unknown>,
     firstName: string | null,
   ): { subject: string; html: string } {
-    const name = firstName ?? 'Étudiant';
+    const name = escapeHtml(firstName ?? 'Étudiant');
 
     if (type === NotifType.OBJECTIVE_CREATED) {
-      const title = String(payload.title ?? '');
-      const description = payload.description ? String(payload.description) : null;
+      const title = escapeHtml(String(payload.title ?? ''));
+      const description = payload.description ? escapeHtml(String(payload.description)) : null;
       const deadline = payload.deadline
         ? new Date(String(payload.deadline)).toLocaleDateString('fr-FR', {
             day: 'numeric',
@@ -183,7 +192,7 @@ export class NotificationsService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.email) return;
 
-    const firstName = user.first_name ?? 'Étudiant';
+    const firstName = escapeHtml(user.first_name ?? 'Étudiant');
     const date = new Date().toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'long',
@@ -215,7 +224,7 @@ export class NotificationsService {
       <div style="background:#f0fdf9;border:1px solid rgba(35,178,164,0.2);border-left:3px solid #23b2a4;border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:24px;">
         <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Détails de la modification</div>
         <div style="font-size:14px;color:#1d1d1e;">📅 <strong>${date}</strong></div>
-        <div style="font-size:13px;color:#6b7280;margin-top:4px;">Compte : ${user.email}</div>
+        <div style="font-size:13px;color:#6b7280;margin-top:4px;">Compte : ${escapeHtml(user.email)}</div>
       </div>
 
       <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:16px 20px;margin-bottom:24px;">

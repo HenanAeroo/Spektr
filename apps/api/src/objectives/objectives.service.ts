@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
 import { UpdateObjectiveDto } from './dto/update-objective.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,6 +7,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ObjectivesService {
+  private readonly logger = new Logger(ObjectivesService.name);
+
   constructor(
     private readonly prismaService: PrismaService,
     private readonly notificationsService: NotificationsService,
@@ -29,15 +31,19 @@ export class ObjectivesService {
       },
     });
 
-    await Promise.all(
-      students.map((student) =>
-        this.notificationsService.createAndEmit(
-          student.id,
-          NotifType.OBJECTIVE_CREATED,
-          { objectiveId: objective.id, title: objective.title },
+    try {
+      await Promise.all(
+        students.map((student) =>
+          this.notificationsService.createAndEmit(
+            student.id,
+            NotifType.OBJECTIVE_CREATED,
+            { objectiveId: objective.id, title: objective.title },
+          ),
         ),
-      ),
-    );
+      );
+    } catch (err) {
+      this.logger.warn(`Notifications non envoyées pour l'objectif ${objective.id} : ${err}`);
+    }
 
     return objective;
   }

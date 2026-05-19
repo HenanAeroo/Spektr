@@ -32,9 +32,12 @@ export const Route = createFileRoute("/_protected")({
     }
 
     return (
-      <div className="flex h-screen">
+      <div className="flex h-screen" style={{ background: "#f5f5f5" }}>
         <Sidebar />
-        <main className="flex-1 overflow-auto">
+        <main
+          className="flex-1 overflow-auto"
+          style={{ marginLeft: "220px" }}
+        >
           <Outlet />
         </main>
       </div>

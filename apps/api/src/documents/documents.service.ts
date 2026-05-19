@@ -49,8 +49,10 @@ export class DocumentsService {
     return this.prisma.document.findMany({ where: { userId } });
   }
 
-  async getDownloadUrl(id: number, userId: number) {
-    const doc = await this.prisma.document.findFirst({ where: { id, userId } });
+  async getDownloadUrl(id: number, userId?: number) {
+    const doc = await this.prisma.document.findFirst({
+      where: userId !== undefined ? { id, userId } : { id },
+    });
 
     if (!doc) throw new NotFoundException();
 

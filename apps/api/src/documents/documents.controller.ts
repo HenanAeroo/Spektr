@@ -51,7 +51,8 @@ export class DocumentsController {
 
   @Get(':id/url')
   getDownloadUrl(@Param('id') id: string, @CurrentUser() user: UserModel) {
-    return this.documentsService.getDownloadUrl(parseInt(id), user.id);
+    const userId = user.role === Role.ADMIN ? undefined : user.id;
+    return this.documentsService.getDownloadUrl(parseInt(id), userId);
   }
 
   @Delete(':id')

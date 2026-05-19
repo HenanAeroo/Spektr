@@ -694,18 +694,25 @@ function PromoManager({ users, promos }: { users: any[]; promos: any[] }) {
 /* ── Objectives Admin ── */
 function ObjectivesAdmin({ promos }: { promos: any[] }) {
   const queryClient = useQueryClient();
+  const tanstackNavigate = useNavigate();
   const { data: objectives = [] } = useQuery({ queryKey: ["objectives", "all"], queryFn: fetchObjectives });
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [promoId, setPromoId] = useState<string>("");
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const { mutate: handleCreate, isPending: creating } = useMutation({
     mutationFn: (data: CreateObjectiveData) => createObjective(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["objectives", "all"] });
-      setTitle(""); setDescription(""); setDeadline(undefined); setPromoId(""); setShowForm(false);
+      setTitle(""); setDescription(""); setDeadline(undefined); setPromoId(""); setShowForm(false); setCreateError(null);
+      tanstackNavigate({ to: "/michel", search: { p: "objectifs" } });
+    },
+    onError: (err: Error) => {
+      setCreateError(err.message ?? "Une erreur est survenue");
     },
   });
 
@@ -778,7 +785,7 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
             </div>
             <div>
               <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Deadline (optionnel)</label>
-              <Popover>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
@@ -792,7 +799,7 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
                   <Calendar
                     mode="single"
                     selected={deadline}
-                    onSelect={setDeadline}
+                    onSelect={(date) => { setDeadline(date); setCalendarOpen(false); }}
                     locale={fr}
                     disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                     initialFocus
@@ -801,7 +808,7 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
                     <div style={{ padding: "8px 12px", borderTop: "1px solid #f0f0f0" }}>
                       <button
                         type="button"
-                        onClick={() => setDeadline(undefined)}
+                        onClick={() => { setDeadline(undefined); setCalendarOpen(false); }}
                         style={{ fontSize: 12, color: "#e05252", background: "none", border: "none", cursor: "pointer", fontFamily: "Source Sans 3, sans-serif" }}
                       >
                         Effacer la date
@@ -825,8 +832,13 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
               />
             </div>
           </div>
+          {createError && (
+            <div style={{ background: "#fee2e2", color: "#dc2626", borderRadius: 8, padding: "10px 14px", fontSize: 13, fontFamily: "Source Sans 3, sans-serif", marginBottom: 12 }}>
+              {createError}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-            <button onClick={() => setShowForm(false)} style={{ padding: "9px 18px", borderRadius: 8, border: "1.5px solid #e8e8e8", background: "#fff", color: "#6b7280", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Annuler</button>
+            <button onClick={() => { setShowForm(false); setCreateError(null); }} style={{ padding: "9px 18px", borderRadius: 8, border: "1.5px solid #e8e8e8", background: "#fff", color: "#6b7280", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Annuler</button>
             <button
               onClick={handleSubmit}
               disabled={!title.trim() || !promoId || creating}

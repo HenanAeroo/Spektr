@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { LocalRegisterDto } from './dto/local-register.dto';
-import { randomBytes, createHash } from 'crypto';
+import { randomBytes, createHmac } from 'crypto';
 import { Profile } from 'passport-google-oauth20';
 
 @Injectable()
@@ -25,9 +25,11 @@ export class AuthService {
 
   // ----- HELPERS -----
 
-  // SHA-256 hash for DB storage and lookup — the 64-byte random token provides the entropy
+  // HMAC-SHA256 with JWT_SECRET for DB storage — prevents rainbow table attacks on stolen DB
   private hashTokenForStorage(token: string): string {
-    return createHash('sha256').update(token).digest('hex');
+    return createHmac('sha256', this.config.get<string>('JWT_SECRET')!)
+      .update(token)
+      .digest('hex');
   }
 
   // Generate an access token which expires in 15min
@@ -116,15 +118,17 @@ export class AuthService {
   }
 
   async refresh(rawRefreshToken: string) {
-    let record;
-    try {
-      record = await this.prisma.refreshToken.delete({
-        where: { token: this.hashTokenForStorage(rawRefreshToken) },
-        include: { user: true },
-      });
-    } catch {
-      throw new UnauthorizedException('Refresh token invalide ou expiré');
-    }
+    const hashed = this.hashTokenForStorage(rawRefreshToken);
+
+    const record = await this.prisma.refreshToken.findUnique({
+      where: { token: hashed },
+      include: { user: true },
+    });
+
+    if (!record) throw new UnauthorizedException('Refresh token invalide ou expiré');
+
+    // Delete token first to prevent reuse, then check expiry
+    await this.prisma.refreshToken.delete({ where: { token: hashed } });
 
     if (record.expires_at < new Date())
       throw new UnauthorizedException('Refresh token invalide ou expiré');

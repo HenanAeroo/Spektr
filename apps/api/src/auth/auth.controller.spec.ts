@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -18,6 +19,7 @@ describe('AuthController', () => {
         { provide: JwtService, useValue: {} },
         { provide: ConfigService, useValue: {} },
         { provide: UsersService, useValue: {} },
+        { provide: MailService, useValue: { send: jest.fn() } },
       ],
     }).compile();
 

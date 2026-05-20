@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Application, Statut } from "@/features/applications/types";
@@ -48,6 +49,7 @@ export type ModalProps = {
 };
 
 export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -116,7 +118,7 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
                 control={form.control}
                 name="date_candidature"
                 render={({ field }) => (
-                  <Popover>
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <PopoverTrigger asChild>
                       <button
                         type="button"
@@ -127,11 +129,14 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
                           : "Sélectionner une date"}
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent>
+                    <PopoverContent className="z-[1001]">
                       <Calendar
                         mode="single"
                         selected={field.value}
-                        onSelect={field.onChange}
+                        onSelect={(date) => {
+                          field.onChange(date);
+                          setCalendarOpen(false);
+                        }}
                       />
                     </PopoverContent>
                   </Popover>
@@ -197,6 +202,11 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
               onClick={form.handleSubmit((data) =>
                 onSave({
                   ...data,
+                  lien: data.lien || undefined,
+                  contact_nom: data.contact_nom || undefined,
+                  contact_email: data.contact_email || undefined,
+                  contact_tel: data.contact_tel || undefined,
+                  commentaire: data.commentaire || undefined,
                   date_candidature: data.date_candidature?.toISOString(),
                 }),
               )}

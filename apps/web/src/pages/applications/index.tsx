@@ -162,7 +162,7 @@ const ApplicationsPage = () => {
             {!search && filterStatut === "tous" && (
               <button
                 onClick={() => setShowCreate(true)}
-                className="mt-3 px-5 py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer"
+                className="mt-3 mb-4 px-5 py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer"
               >
                 Ajouter ma première candidature
               </button>

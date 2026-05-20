@@ -270,7 +270,7 @@ export class AuthService {
       throw new BadRequestException('Token invalide');
     }
 
-    if (user.verificationExpiry! < new Date()) {
+    if (!user.verificationExpiry || user.verificationExpiry < new Date()) {
       throw new BadRequestException('Token expiré');
     }
 

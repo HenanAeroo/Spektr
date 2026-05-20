@@ -22,71 +22,46 @@ import { useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 
 /* ── shared types ── */
-const STATUT_LABELS: Record<string, string> = {
-  A_CONTACTER: "À contacter",
-  ENVOYE: "Envoyé",
-  RELANCE: "Relancé",
-  EN_DISCUSSION: "En discussion",
-  REPONSE_POSITIVE: "Réponse positive",
-  REFUS: "Refus",
-};
-
-const STATUT_COLORS: Record<string, { bg: string; color: string }> = {
-  A_CONTACTER: { bg: "#f3f4f6", color: "#6b7280" },
-  ENVOYE: { bg: "#eff6ff", color: "#3b82f6" },
-  RELANCE: { bg: "#fff7ed", color: "#d97706" },
-  EN_DISCUSSION: { bg: "#f5f3ff", color: "#8b5cf6" },
-  REPONSE_POSITIVE: { bg: "#dcfce7", color: "#16a34a" },
-  REFUS: { bg: "#fee2e2", color: "#dc2626" },
-};
-
 const STATUT_STATUS_COLORS = {
-  ok:     { bg: "#dcfce7", color: "#16a34a", border: "#bbf7d0" },
-  suivre: { bg: "#fff7ed", color: "#d97706", border: "#fed7aa" },
-  retard: { bg: "#fee2e2", color: "#dc2626", border: "#fecaca" },
+  ok:     { cls: "bg-green-100 text-green-600 border-green-200", dot: "bg-green-600" },
+  suivre: { cls: "bg-amber-50 text-amber-600 border-amber-200",  dot: "bg-amber-600" },
+  retard: { cls: "bg-red-100 text-red-600 border-red-200",       dot: "bg-red-600" },
 } as const;
+
+const inputCls =
+  "w-full px-3 py-[9px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] text-spektr-dark bg-white focus:outline-none focus:border-spektr-teal box-border";
+
+const labelCls =
+  "font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] block mb-1";
 
 function StatusBadge({ status, label }: { status: keyof typeof STATUT_STATUS_COLORS; label: string }) {
   const c = STATUT_STATUS_COLORS[status];
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.color, display: "inline-block" }} />
+    <span className={`inline-flex items-center gap-[5px] px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${c.cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full inline-block ${c.dot}`} />
       {label}
     </span>
   );
 }
 
-function ProgressBar({ pct, color = "#23b2a4" }: { pct: number; color?: string }) {
+function ProgressBar({ pct, color = "bg-spektr-teal" }: { pct: number; color?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{ flex: 1, height: 6, background: "#f0f0f0", borderRadius: 10, overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 10 }} />
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 bg-[#f0f0f0] rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span style={{ fontSize: 11, fontWeight: 600, color, minWidth: 32 }}>{pct}%</span>
+      <span className={`text-[11px] font-semibold min-w-[32px] ${color === "bg-green-600" ? "text-green-600" : "text-spektr-teal"}`}>{pct}%</span>
     </div>
   );
 }
 
-function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #e8e8e8", borderRadius: 10, padding: 20, ...style }}>
+    <div className={`bg-white border border-spektr-border rounded-[10px] p-5 ${className}`}>
       {children}
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "9px 12px",
-  border: "1.5px solid #e8e8e8",
-  borderRadius: 8,
-  fontFamily: "Source Sans 3, sans-serif",
-  fontSize: 13,
-  outline: "none",
-  boxSizing: "border-box",
-  color: "#1d1d1e",
-  background: "#fff",
-};
 
 /* ── Dashboard ── */
 function Dashboard({ navigate, users, promos }: { navigate: (p: string) => void; users: any[]; promos: any[] }) {
@@ -94,7 +69,6 @@ function Dashboard({ navigate, users, promos }: { navigate: (p: string) => void;
   const { data: objectives = [] } = useQuery({ queryKey: ["objectives", "all"], queryFn: fetchObjectives });
   const { data: objectivesWithCompletions = [] } = useQuery({ queryKey: ["objectives", "completions"], queryFn: fetchAllCompletions });
 
-  // Build a map: userId -> { done, total }
   const studentProgress = students.reduce<Record<number, { done: number; total: number }>>((acc, u) => {
     const promoObjectives = objectivesWithCompletions.filter((obj: any) => obj.promoId === u.promoId);
     const done = promoObjectives.filter((obj: any) =>
@@ -105,43 +79,43 @@ function Dashboard({ navigate, users, promos }: { navigate: (p: string) => void;
   }, {});
 
   const metrics = [
-    { label: "Étudiants suivis",    value: students.length, delta: "Total enregistrés", icon: "👤" },
-    { label: "Promos actives",       value: promos.length,  delta: "Filières",           icon: "🎓" },
-    { label: "Objectifs définis",    value: objectives.length, delta: "Pour les étudiants", icon: "🎯" },
+    { label: "Étudiants suivis",   value: students.length,   delta: "Total enregistrés",    icon: "👤" },
+    { label: "Promos actives",     value: promos.length,     delta: "Filières",              icon: "🎓" },
+    { label: "Objectifs définis",  value: objectives.length, delta: "Pour les étudiants",    icon: "🎯" },
   ];
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 22, color: "#1d1d1e", letterSpacing: "-0.3px" }}>
+      <div className="mb-6">
+        <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark tracking-[-0.3px]">
           Tableau de bord RE
         </h1>
-        <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>
+        <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">
           Vue d'ensemble de votre promotion
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 20 }}>
+      <div className="grid grid-cols-3 gap-4 mb-5">
         {metrics.map((m, i) => (
           <Card key={i}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>{m.icon}</div>
-            <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 36, color: "#1d1d1e", letterSpacing: "-1px" }}>{m.value}</div>
-            <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 4 }}>{m.label}</div>
-            <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{m.delta}</div>
+            <div className="text-[28px] mb-2">{m.icon}</div>
+            <div className="font-montserrat font-extrabold text-[36px] text-spektr-dark tracking-[-1px]">{m.value}</div>
+            <div className="font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] mt-1">{m.label}</div>
+            <div className="font-source-sans text-xs text-gray-400 mt-0.5">{m.delta}</div>
           </Card>
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}>
+      <div className="grid grid-cols-[1fr_320px] gap-4">
         <Card>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14 }}>Étudiants</span>
-            <button onClick={() => navigate("students")} style={{ fontSize: 12, color: "#23b2a4", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>Voir tous →</button>
+          <div className="flex justify-between items-center mb-4">
+            <span className="font-montserrat font-bold text-sm">Étudiants</span>
+            <button onClick={() => navigate("students")} className="text-xs text-spektr-teal font-semibold bg-transparent border-none cursor-pointer">Voir tous →</button>
           </div>
           {students.length === 0 ? (
-            <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "24px 0" }}>Aucun étudiant enregistré</p>
+            <p className="font-source-sans text-[13px] text-gray-400 text-center py-6">Aucun étudiant enregistré</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="flex flex-col gap-2.5">
               {students.slice(0, 6).map((u) => {
                 const initials = `${u.first_name?.[0] ?? ""}${u.last_name?.[0] ?? ""}`.toUpperCase() || "?";
                 const promo = promos.find((p: any) => p.id === u.promoId);
@@ -149,21 +123,19 @@ function Dashboard({ navigate, users, promos }: { navigate: (p: string) => void;
                 const pct = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0;
                 return (
                   <div key={u.id}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 10px", borderBottom: "1px solid #f5f5f5", borderRadius: 8, cursor: "pointer", transition: "background 0.15s" }}
+                    className="flex items-center gap-3 px-2.5 py-2.5 border-b border-spektr-bg rounded-lg cursor-pointer transition-colors hover:bg-[#f9fafb]"
                     onClick={() => navigate(`student-detail:${u.id}`)}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                   >
-                    <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#dcfce7", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{initials}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, color: "#1d1d1e" }}>{u.first_name} {u.last_name}</div>
-                      <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af" }}>{promo?.name ?? "Sans promo"}</div>
+                    <div className="w-[34px] h-[34px] rounded-full bg-green-100 text-green-600 flex items-center justify-center font-montserrat font-bold text-xs flex-shrink-0">{initials}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-montserrat font-semibold text-[13px] text-spektr-dark">{u.first_name} {u.last_name}</div>
+                      <div className="font-source-sans text-[11px] text-gray-400">{promo?.name ?? "Sans promo"}</div>
                       {progress.total > 0 && (
-                        <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
-                          <div style={{ flex: 1, height: 4, borderRadius: 999, background: "#e8e8e8", overflow: "hidden" }}>
-                            <div style={{ height: "100%", borderRadius: 999, background: pct === 100 ? "#16a34a" : "#23b2a4", width: `${pct}%`, transition: "width 0.4s" }} />
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <div className="flex-1 h-1 rounded-full bg-spektr-border overflow-hidden">
+                            <div className={`h-full rounded-full transition-[width] duration-400 ${pct === 100 ? "bg-green-600" : "bg-spektr-teal"}`} style={{ width: `${pct}%` }} />
                           </div>
-                          <span style={{ fontSize: 10, fontWeight: 700, color: pct === 100 ? "#16a34a" : "#23b2a4", whiteSpace: "nowrap" }}>
+                          <span className={`text-[10px] font-bold whitespace-nowrap ${pct === 100 ? "text-green-600" : "text-spektr-teal"}`}>
                             {progress.done}/{progress.total}
                           </span>
                         </div>
@@ -176,21 +148,21 @@ function Dashboard({ navigate, users, promos }: { navigate: (p: string) => void;
           )}
         </Card>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="flex flex-col gap-4">
           <Card>
-            <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>Répartition par promo</div>
+            <div className="font-montserrat font-bold text-[13px] mb-3">Répartition par promo</div>
             {promos.length === 0 ? (
-              <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#9ca3af" }}>Aucune promo</p>
+              <p className="font-source-sans text-[13px] text-gray-400">Aucune promo</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div className="flex flex-col gap-2.5">
                 {promos.map((p: any) => {
                   const count = users.filter((u) => u.promoId === p.id).length;
                   const pct = students.length > 0 ? Math.round((count / students.length) * 100) : 0;
                   return (
                     <div key={p.id}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12 }}>{p.name}</span>
-                        <span style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af" }}>{count} étudiant{count !== 1 ? "s" : ""}</span>
+                      <div className="flex justify-between mb-1">
+                        <span className="font-montserrat font-semibold text-xs">{p.name}</span>
+                        <span className="font-source-sans text-[11px] text-gray-400">{count} étudiant{count !== 1 ? "s" : ""}</span>
                       </div>
                       <ProgressBar pct={pct} />
                     </div>
@@ -201,15 +173,15 @@ function Dashboard({ navigate, users, promos }: { navigate: (p: string) => void;
           </Card>
 
           <Card>
-            <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Objectifs</div>
+            <div className="font-montserrat font-bold text-[13px] mb-2.5">Objectifs</div>
             {objectives.length === 0 ? (
-              <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#9ca3af" }}>Aucun objectif défini</p>
+              <p className="font-source-sans text-[13px] text-gray-400">Aucun objectif défini</p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="flex flex-col gap-2">
                 {objectives.slice(0, 4).map((obj) => (
-                  <div key={obj.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 14 }}>🎯</span>
-                    <span style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#1d1d1e" }}>{obj.title}</span>
+                  <div key={obj.id} className="flex items-center gap-2">
+                    <span className="text-sm">🎯</span>
+                    <span className="font-source-sans text-xs text-spektr-dark">{obj.title}</span>
                   </div>
                 ))}
               </div>
@@ -245,39 +217,37 @@ function StudentsList({ users, promos, navigate }: { users: any[]; promos: any[]
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 22, color: "#1d1d1e" }}>Étudiants</h1>
-          <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>{students.length} étudiant{students.length !== 1 ? "s" : ""} suivis</p>
+          <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark">Étudiants</h1>
+          <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">{students.length} étudiant{students.length !== 1 ? "s" : ""} suivis</p>
         </div>
-        <button onClick={() => setShowContact(true)} style={{ padding: "10px 16px", borderRadius: 8, border: "1.5px solid #23b2a4", background: "transparent", color: "#23b2a4", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+        <button onClick={() => setShowContact(true)} className="px-4 py-2.5 rounded-lg border-[1.5px] border-spektr-teal bg-transparent text-spektr-teal font-montserrat font-bold text-[13px] cursor-pointer">
           ✉ Contacter des étudiants
         </button>
       </div>
 
-      <Card style={{ padding: 0 }}>
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid #e8e8e8", display: "flex", gap: 12, alignItems: "center" }}>
-          <div style={{ position: "relative", flex: 1, maxWidth: 320 }}>
-            <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", pointerEvents: "none" }}>🔍</span>
+      <Card className="p-0">
+        <div className="px-5 py-3.5 border-b border-spektr-border flex gap-3 items-center">
+          <div className="relative flex-1 max-w-[320px]">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">🔍</span>
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher un étudiant..."
-              style={{ ...inputStyle, paddingLeft: 30 }}
-              onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-              onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+              className={`${inputCls} pl-[30px]`} />
           </div>
         </div>
 
         {filtered.length === 0 ? (
-          <div style={{ padding: "60px 40px", textAlign: "center" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>👥</div>
-            <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 14, color: "#6b7280" }}>Aucun étudiant trouvé</p>
+          <div className="py-[60px] px-10 text-center">
+            <div className="text-[40px] mb-3">👥</div>
+            <p className="font-montserrat font-semibold text-sm text-gray-500">Aucun étudiant trouvé</p>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
               <thead>
-                <tr style={{ background: "#fafafa" }}>
+                <tr className="bg-[#fafafa]">
                   {["Étudiant", "Email", "Promotion", "Objectifs", "Actions"].map((h) => (
-                    <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid #e8e8e8" }}>{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-[0.5px] border-b border-spektr-border">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -291,44 +261,42 @@ function StudentsList({ users, promos, navigate }: { users: any[]; promos: any[]
                   ).length;
                   const pct = promoObjectives.length > 0 ? Math.round((doneCount / promoObjectives.length) * 100) : 0;
                   return (
-                    <tr key={u.id} style={{ borderBottom: "1px solid #e8e8e8", transition: "background 0.15s", cursor: "pointer" }}
+                    <tr key={u.id} className="border-b border-spektr-border transition-colors cursor-pointer hover:bg-[#fafafa]"
                       onClick={() => navigate(`student-detail:${u.id}`)}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
-                      <td style={{ padding: "14px 16px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#dcfce7", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{initials}</div>
-                          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13 }}>{u.first_name} {u.last_name}</div>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-montserrat font-bold text-xs flex-shrink-0">{initials}</div>
+                          <div className="font-montserrat font-semibold text-[13px]">{u.first_name} {u.last_name}</div>
                         </div>
                       </td>
-                      <td style={{ padding: "14px 16px", fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#6b7280" }}>{u.email}</td>
-                      <td style={{ padding: "14px 16px" }}>
+                      <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500">{u.email}</td>
+                      <td className="px-4 py-3.5">
                         {promo ? (
-                          <span style={{ background: "rgba(35,178,164,0.1)", color: "#23b2a4", fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 10 }}>{promo.name}</span>
+                          <span className="bg-spektr-teal/10 text-spektr-teal text-[11px] font-semibold px-2.5 py-0.5 rounded-[10px]">{promo.name}</span>
                         ) : (
-                          <span style={{ color: "#9ca3af", fontSize: 12 }}>—</span>
+                          <span className="text-gray-400 text-xs">—</span>
                         )}
                       </td>
-                      <td style={{ padding: "14px 16px", minWidth: 120 }}>
+                      <td className="px-4 py-3.5 min-w-[120px]">
                         {promoObjectives.length > 0 ? (
                           <div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3 }}>
-                              <div style={{ flex: 1, height: 5, borderRadius: 999, background: "#e8e8e8", overflow: "hidden" }}>
-                                <div style={{ height: "100%", borderRadius: 999, background: pct === 100 ? "#16a34a" : "#23b2a4", width: `${pct}%`, transition: "width 0.4s" }} />
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <div className="flex-1 h-[5px] rounded-full bg-spektr-border overflow-hidden">
+                                <div className={`h-full rounded-full transition-[width] duration-400 ${pct === 100 ? "bg-green-600" : "bg-spektr-teal"}`} style={{ width: `${pct}%` }} />
                               </div>
-                              <span style={{ fontSize: 11, fontWeight: 700, color: pct === 100 ? "#16a34a" : "#23b2a4", whiteSpace: "nowrap" }}>
+                              <span className={`text-[11px] font-bold whitespace-nowrap ${pct === 100 ? "text-green-600" : "text-spektr-teal"}`}>
                                 {doneCount}/{promoObjectives.length}
                               </span>
                             </div>
                           </div>
                         ) : (
-                          <span style={{ color: "#9ca3af", fontSize: 12 }}>—</span>
+                          <span className="text-gray-400 text-xs">—</span>
                         )}
                       </td>
-                      <td style={{ padding: "14px 16px" }} onClick={(e) => e.stopPropagation()}>
+                      <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => navigate(`student-detail:${u.id}`)}
-                          style={{ background: "rgba(35,178,164,0.1)", border: "none", borderRadius: 6, padding: "6px 10px", cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#23b2a4" }}>
+                          className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-xs font-semibold text-spektr-teal">
                           👁 Voir
                         </button>
                       </td>
@@ -343,58 +311,54 @@ function StudentsList({ users, promos, navigate }: { users: any[]; promos: any[]
 
       {/* Contact modal */}
       {showContact && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "#fff", borderRadius: 16, width: 640, maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 80px rgba(0,0,0,0.2)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 28px", borderBottom: "1px solid #e8e8e8" }}>
+        <div className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center">
+          <div className="bg-white rounded-2xl w-[640px] max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]">
+            <div className="flex justify-between items-center px-7 py-[22px] border-b border-spektr-border">
               <div>
-                <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 17 }}>Contacter des étudiants</div>
-                <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
-                  Le message s'ouvrira dans votre client email
-                </div>
+                <div className="font-montserrat font-extrabold text-[17px]">Contacter des étudiants</div>
+                <div className="font-source-sans text-xs text-gray-400 mt-0.5">Le message s'ouvrira dans votre client email</div>
               </div>
-              <button onClick={() => setShowContact(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#9ca3af" }}>✕</button>
+              <button onClick={() => setShowContact(false)} className="bg-transparent border-none cursor-pointer text-xl text-gray-400">✕</button>
             </div>
-            <div style={{ padding: "22px 28px", display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="px-7 py-[22px] flex flex-col gap-4">
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13 }}>
-                    Destinataires <span style={{ color: "#23b2a4" }}>{selected.length}</span> sélectionné{selected.length > 1 ? "s" : ""}
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-montserrat font-bold text-[13px]">
+                    Destinataires <span className="text-spektr-teal">{selected.length}</span> sélectionné{selected.length > 1 ? "s" : ""}
                   </span>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <button onClick={() => setSelected(students.map((u) => u.id))} style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", background: "none", border: "none", cursor: "pointer" }}>Tous</button>
-                    <button onClick={() => setSelected([])} style={{ fontSize: 11, fontWeight: 600, color: "#dc2626", background: "none", border: "none", cursor: "pointer" }}>Effacer</button>
+                  <div className="flex gap-2.5">
+                    <button onClick={() => setSelected(students.map((u) => u.id))} className="text-[11px] font-semibold text-gray-500 bg-transparent border-none cursor-pointer">Tous</button>
+                    <button onClick={() => setSelected([])} className="text-[11px] font-semibold text-[#dc2626] bg-transparent border-none cursor-pointer">Effacer</button>
                   </div>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 160, overflowY: "auto", border: "1px solid #e8e8e8", borderRadius: 10, padding: 8 }}>
+                <div className="flex flex-col gap-1 max-h-[160px] overflow-y-auto border border-spektr-border rounded-[10px] p-2">
                   {students.map((u) => {
                     const initials = `${u.first_name?.[0] ?? ""}${u.last_name?.[0] ?? ""}`.toUpperCase() || "?";
                     return (
-                      <label key={u.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", borderRadius: 8, cursor: "pointer", background: selected.includes(u.id) ? "rgba(35,178,164,0.08)" : "transparent" }}>
+                      <label key={u.id} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg cursor-pointer ${selected.includes(u.id) ? "bg-spektr-teal/[0.08]" : "bg-transparent"}`}>
                         <input type="checkbox" checked={selected.includes(u.id)} onChange={() => setSelected((prev) => prev.includes(u.id) ? prev.filter((x) => x !== u.id) : [...prev, u.id])}
-                          style={{ accentColor: "#23b2a4", width: 15, height: 15, cursor: "pointer" }} />
-                        <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#dcfce7", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700 }}>{initials}</div>
-                        <span style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13 }}>{u.first_name} {u.last_name}</span>
-                        <span style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af" }}>{u.email}</span>
+                          className="accent-spektr-teal w-[15px] h-[15px] cursor-pointer" />
+                        <div className="w-[26px] h-[26px] rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[11px] font-bold">{initials}</div>
+                        <span className="font-source-sans text-[13px]">{u.first_name} {u.last_name}</span>
+                        <span className="font-source-sans text-[11px] text-gray-400">{u.email}</span>
                       </label>
                     );
                   })}
                 </div>
               </div>
               <div>
-                <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, display: "block", marginBottom: 5, color: "#1d1d1e" }}>Objet</label>
-                <input value={subject} onChange={(e) => setSubject(e.target.value)} style={{ ...inputStyle }}
-                  onFocus={(e) => (e.target.style.borderColor = "#23b2a4")} onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+                <label className={labelCls}>Objet</label>
+                <input value={subject} onChange={(e) => setSubject(e.target.value)} className={inputCls} />
               </div>
               <div>
-                <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, display: "block", marginBottom: 5, color: "#1d1d1e" }}>Message</label>
+                <label className={labelCls}>Message</label>
                 <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={6}
-                  style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
-                  onFocus={(e) => (e.target.style.borderColor = "#23b2a4")} onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+                  className={`${inputCls} resize-y leading-relaxed`} />
               </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-                <button onClick={() => setShowContact(false)} style={{ padding: "10px 20px", borderRadius: 8, border: "1.5px solid #e8e8e8", background: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer", color: "#6b7280" }}>Annuler</button>
+              <div className="flex justify-end gap-2.5">
+                <button onClick={() => setShowContact(false)} className="px-5 py-2.5 rounded-lg border-[1.5px] border-spektr-border bg-white font-montserrat font-semibold text-[13px] cursor-pointer text-gray-500">Annuler</button>
                 <button onClick={handleSendOutlook} disabled={selected.length === 0}
-                  style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: selected.length === 0 ? "#88d5cf" : "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: selected.length === 0 ? "not-allowed" : "pointer" }}>
+                  className={`px-5 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white ${selected.length === 0 ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer"}`}>
                   ✉ Ouvrir dans Outlook ({selected.length})
                 </button>
               </div>
@@ -433,10 +397,10 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
 
   if (!user) {
     return (
-      <div style={{ textAlign: "center", padding: "60px 0", color: "#9ca3af" }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-        <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 14 }}>Étudiant introuvable</p>
-        <button onClick={() => navigate("students")} style={{ marginTop: 16, padding: "8px 16px", borderRadius: 8, border: "1.5px solid #23b2a4", background: "transparent", color: "#23b2a4", cursor: "pointer", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13 }}>Retour</button>
+      <div className="text-center py-[60px] text-gray-400">
+        <div className="text-[40px] mb-3">🔍</div>
+        <p className="font-montserrat font-semibold text-sm">Étudiant introuvable</p>
+        <button onClick={() => navigate("students")} className="mt-4 px-4 py-2 rounded-lg border-[1.5px] border-spektr-teal bg-transparent text-spektr-teal cursor-pointer font-montserrat font-bold text-[13px]">Retour</button>
       </div>
     );
   }
@@ -454,33 +418,25 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-        <button onClick={() => navigate("students")} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, color: "#6b7280", fontFamily: "Source Sans 3, sans-serif", fontSize: 13 }}>
+      <div className="flex items-center gap-3 mb-5">
+        <button onClick={() => navigate("students")} className="bg-transparent border-none cursor-pointer flex items-center gap-1.5 text-gray-500 font-source-sans text-[13px]">
           ← Retour
         </button>
-        <span style={{ color: "#e8e8e8" }}>|</span>
-        <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 20, color: "#1d1d1e" }}>{user.first_name} {user.last_name}</h1>
+        <span className="text-spektr-border">|</span>
+        <h1 className="font-montserrat font-extrabold text-xl text-spektr-dark">{user.first_name} {user.last_name}</h1>
         <StatusBadge status="ok" label="Actif" />
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", padding: 6, width: "fit-content" }}>
+      <div className="flex gap-1 mb-5 bg-white rounded-[10px] border border-spektr-border p-1.5 w-fit">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            style={{
-              padding: "8px 18px",
-              borderRadius: 7,
-              border: "none",
-              cursor: "pointer",
-              fontFamily: "Montserrat, sans-serif",
-              fontWeight: activeTab === tab.id ? 700 : 500,
-              fontSize: 13,
-              background: activeTab === tab.id ? "#23b2a4" : "transparent",
-              color: activeTab === tab.id ? "#fff" : "#6b7280",
-              transition: "all 0.15s",
-            }}
+            className={[
+              "px-[18px] py-2 rounded-[7px] border-none cursor-pointer font-montserrat text-[13px] transition-all",
+              activeTab === tab.id ? "font-bold bg-spektr-teal text-white" : "font-medium bg-transparent text-gray-500",
+            ].join(" ")}
           >
             {tab.label}
           </button>
@@ -488,11 +444,11 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
       </div>
 
       {activeTab === "profile" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="grid grid-cols-[1fr_260px] gap-4">
+          <div className="flex flex-col gap-4">
             <Card>
-              <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Informations</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="font-montserrat font-bold text-sm mb-3.5">Informations</div>
+              <div className="grid grid-cols-2 gap-3.5">
                 {[
                   { label: "Prénom", value: user.first_name },
                   { label: "Nom", value: user.last_name },
@@ -500,55 +456,53 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
                   { label: "Promotion", value: promo?.name ?? "—" },
                 ].map((f) => (
                   <div key={f.label}>
-                    <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 3 }}>{f.label}</div>
-                    <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, fontWeight: 600, color: "#1d1d1e" }}>{f.value || "—"}</div>
+                    <div className="font-montserrat font-semibold text-[11px] text-gray-400 uppercase tracking-[0.5px] mb-0.5">{f.label}</div>
+                    <div className="font-source-sans text-[13px] font-semibold text-spektr-dark">{f.value || "—"}</div>
                   </div>
                 ))}
               </div>
             </Card>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div className="flex flex-col gap-4">
             <Card>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 52, height: 52, borderRadius: "50%", background: "#23b2a4", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 18 }}>{initials}</div>
-                <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, color: "#1d1d1e" }}>{user.first_name} {user.last_name}</div>
-                <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af" }}>{promo?.name ?? "Sans promo"}</div>
-                <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#23b2a4" }}>{user.email}</div>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-[52px] h-[52px] rounded-full bg-spektr-teal text-white flex items-center justify-center font-montserrat font-bold text-lg">{initials}</div>
+                <div className="font-montserrat font-bold text-sm text-spektr-dark">{user.first_name} {user.last_name}</div>
+                <div className="font-source-sans text-[11px] text-gray-400">{promo?.name ?? "Sans promo"}</div>
+                <div className="font-source-sans text-[11px] text-spektr-teal">{user.email}</div>
               </div>
             </Card>
 
             <Card>
-              <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>Feedback RE</div>
+              <div className="font-montserrat font-bold text-[13px] mb-3">Feedback RE</div>
               {feedbackSent ? (
-                <div style={{ textAlign: "center", padding: "16px 0" }}>
-                  <div style={{ fontSize: 28, marginBottom: 6 }}>✅</div>
-                  <div style={{ fontSize: 12, color: "#16a34a", fontWeight: 600 }}>Feedback envoyé !</div>
+                <div className="text-center py-4">
+                  <div className="text-[28px] mb-1.5">✅</div>
+                  <div className="text-xs text-green-600 font-semibold">Feedback envoyé !</div>
                 </div>
               ) : (
                 <>
-                  <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 8 }}>Évaluer la situation :</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <div className="text-[11px] text-gray-500 mb-2">Évaluer la situation :</div>
+                  <div className="flex justify-between mb-1.5">
                     {smileys.map((em, i) => (
                       <button key={i} onClick={() => setFeedbackScore(i)}
-                        style={{ background: "none", border: `2px solid ${feedbackScore === i ? "#23b2a4" : "transparent"}`, borderRadius: 8, cursor: "pointer", padding: 4, fontSize: 20 }}
+                        className={`bg-transparent rounded-lg cursor-pointer p-1 text-xl border-2 ${feedbackScore === i ? "border-spektr-teal" : "border-transparent"}`}
                         title={smileyLabels[i]}>
                         {em}
                       </button>
                     ))}
                   </div>
                   {feedbackScore !== null && (
-                    <div style={{ fontSize: 10, color: "#23b2a4", textAlign: "center", marginBottom: 8, fontWeight: 600 }}>{smileyLabels[feedbackScore]}</div>
+                    <div className="text-[10px] text-spektr-teal text-center mb-2 font-semibold">{smileyLabels[feedbackScore]}</div>
                   )}
                   <textarea value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)}
                     placeholder="Ajouter un commentaire..."
-                    style={{ width: "100%", height: 70, border: "1px solid #e8e8e8", borderRadius: 8, padding: 10, fontSize: 12, fontFamily: "Source Sans 3, sans-serif", resize: "none", outline: "none", boxSizing: "border-box", color: "#1d1d1e" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                    onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+                    className="w-full h-[70px] border border-spektr-border rounded-lg p-2.5 text-xs font-source-sans resize-none focus:outline-none focus:border-spektr-teal box-border text-spektr-dark" />
                   <button
                     onClick={() => feedbackScore !== null && submitFeedback()}
                     disabled={feedbackScore === null || feedbackPending}
-                    style={{ width: "100%", padding: "8px", borderRadius: 8, border: "none", background: feedbackScore !== null && !feedbackPending ? "#23b2a4" : "#e8e8e8", color: feedbackScore !== null && !feedbackPending ? "#fff" : "#9ca3af", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 12, cursor: feedbackScore !== null && !feedbackPending ? "pointer" : "default", marginTop: 8 }}>
+                    className={`w-full py-2 rounded-lg border-none font-montserrat font-bold text-xs mt-2 ${feedbackScore !== null && !feedbackPending ? "bg-spektr-teal text-white cursor-pointer" : "bg-spektr-border text-gray-400 cursor-default"}`}>
                     {feedbackPending ? "Envoi…" : "✉ Envoyer le feedback"}
                   </button>
                 </>
@@ -560,13 +514,12 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
 
       {activeTab === "objectifs" && (
         <Card>
-          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, marginBottom: 16 }}>
+          <div className="font-montserrat font-bold text-sm mb-4">
             Objectifs de {user.first_name} {user.last_name}
           </div>
           {objLoading ? (
-            <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af" }}>Chargement…</div>
+            <div className="text-center py-8 text-gray-400">Chargement…</div>
           ) : (() => {
-            // Filter objectives for this student's promo
             const studentObjectives = objectivesWithCompletions.filter(
               (obj: any) => obj.promoId === user.promoId
             );
@@ -576,88 +529,51 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
 
             if (studentObjectives.length === 0) {
               return (
-                <div style={{ textAlign: "center", padding: "40px 0" }}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>🎯</div>
-                  <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 14, color: "#6b7280" }}>Aucun objectif pour cette promo</p>
+                <div className="text-center py-10">
+                  <div className="text-[32px] mb-2">🎯</div>
+                  <p className="font-montserrat font-semibold text-sm text-gray-500">Aucun objectif pour cette promo</p>
                 </div>
               );
             }
 
             return (
               <div>
-                {/* Progress bar */}
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-                  <div style={{ flex: 1, height: 8, borderRadius: 999, background: "#e8e8e8", overflow: "hidden" }}>
-                    <div style={{ height: "100%", borderRadius: 999, background: "#23b2a4", width: `${studentObjectives.length ? (doneCount / studentObjectives.length) * 100 : 0}%`, transition: "width 0.4s ease" }} />
+                <div className="flex items-center gap-3 mb-[18px]">
+                  <div className="flex-1 h-2 rounded-full bg-spektr-border overflow-hidden">
+                    <div className="h-full rounded-full bg-spektr-teal transition-[width] duration-400 ease-in-out" style={{ width: `${studentObjectives.length ? (doneCount / studentObjectives.length) * 100 : 0}%` }} />
                   </div>
-                  <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, color: "#23b2a4", whiteSpace: "nowrap" }}>
+                  <span className="font-montserrat font-bold text-[13px] text-spektr-teal whitespace-nowrap">
                     {doneCount} / {studentObjectives.length}
                   </span>
                 </div>
 
-                {/* Objectives list */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div className="flex flex-col gap-2.5">
                   {studentObjectives.map((obj: any) => {
                     const completion = obj.completions?.find((c: any) => c.user.id === userId);
                     const done = completion?.done ?? false;
                     const deadline = obj.deadline ? new Date(obj.deadline) : null;
                     const isExpired = deadline && deadline < new Date() && !done;
+                    const borderColor = done ? "border-l-green-600" : isExpired ? "border-l-spektr-red" : "border-l-spektr-teal";
 
                     return (
                       <div
                         key={obj.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 14,
-                          padding: "14px 16px",
-                          borderRadius: 10,
-                          border: "1px solid #e8e8e8",
-                          background: done ? "#f0fdf4" : "#fff",
-                          borderLeft: done ? "3px solid #16a34a" : isExpired ? "3px solid #e05252" : "3px solid #23b2a4",
-                        }}
+                        className={`flex items-center gap-3.5 px-4 py-3.5 rounded-[10px] border border-spektr-border border-l-[3px] ${borderColor} ${done ? "bg-[#f0fdf4]" : "bg-white"}`}
                       >
-                        {/* Status icon */}
-                        <div style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background: done ? "#dcfce7" : "#f5f5f5",
-                          flexShrink: 0,
-                          fontSize: 14,
-                        }}>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-sm ${done ? "bg-green-100" : "bg-spektr-bg"}`}>
                           {done ? "✓" : "○"}
                         </div>
-
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{
-                            fontFamily: "Montserrat, sans-serif",
-                            fontWeight: 600,
-                            fontSize: 13,
-                            color: done ? "#6b7280" : "#1d1d1e",
-                            textDecoration: done ? "line-through" : "none",
-                          }}>
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-montserrat font-semibold text-[13px] ${done ? "text-gray-500 line-through" : "text-spektr-dark"}`}>
                             {obj.title}
                           </div>
                           {deadline && (
-                            <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                            <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
                               📅 {deadline.toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                             </div>
                           )}
                         </div>
-
-                        <span style={{
-                          padding: "3px 10px",
-                          borderRadius: 999,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          background: done ? "#dcfce7" : isExpired ? "#fee2e2" : "#f5f5f5",
-                          color: done ? "#16a34a" : isExpired ? "#dc2626" : "#9ca3af",
-                          whiteSpace: "nowrap",
-                        }}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold whitespace-nowrap ${done ? "bg-green-100 text-green-600" : isExpired ? "bg-red-100 text-red-600" : "bg-spektr-bg text-gray-400"}`}>
                           {done ? "Fait" : isExpired ? "Expiré" : "En cours"}
                         </span>
                       </div>
@@ -672,28 +588,28 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
 
       {activeTab === "documents" && (
         <Card>
-          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, marginBottom: 16 }}>
+          <div className="font-montserrat font-bold text-sm mb-4">
             Documents de {user.first_name} {user.last_name}
-            <span style={{ fontFamily: "Source Sans 3, sans-serif", fontWeight: 400, fontSize: 12, color: "#9ca3af", marginLeft: 8 }}>{documents.length} fichier{documents.length !== 1 ? "s" : ""}</span>
+            <span className="font-source-sans font-normal text-xs text-gray-400 ml-2">{documents.length} fichier{documents.length !== 1 ? "s" : ""}</span>
           </div>
           {docsLoading ? (
-            <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af" }}>Chargement…</div>
+            <div className="text-center py-8 text-gray-400">Chargement…</div>
           ) : documents.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📂</div>
-              <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 14, color: "#6b7280" }}>Aucun document</p>
+            <div className="text-center py-10">
+              <div className="text-[32px] mb-2">📂</div>
+              <p className="font-montserrat font-semibold text-sm text-gray-500">Aucun document</p>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="flex flex-col gap-2">
               {documents.map((doc) => {
                 const sizeKb = Math.round(doc.size / 1024);
                 const ext = doc.name.split(".").pop()?.toUpperCase() ?? "FILE";
                 return (
-                  <div key={doc.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#fafafa", borderRadius: 8, border: "1px solid #e8e8e8" }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(35,178,164,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#23b2a4", flexShrink: 0 }}>{ext}</div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, color: "#1d1d1e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{doc.name}</div>
-                      <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af", marginTop: 1 }}>
+                  <div key={doc.id} className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border">
+                    <div className="w-[38px] h-[38px] rounded-lg bg-spektr-teal/10 flex items-center justify-center text-[10px] font-bold text-spektr-teal flex-shrink-0">{ext}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">{doc.name}</div>
+                      <div className="font-source-sans text-[11px] text-gray-400 mt-px">
                         {sizeKb} Ko · {doc.created_at ? new Date(doc.created_at).toLocaleDateString("fr-FR") : "—"}
                       </div>
                     </div>
@@ -703,7 +619,7 @@ function StudentDetail({ userId, promos, navigate }: { userId: number; promos: a
                         const { url } = await getDocumentUrl(doc.id);
                         window.open(url, "_blank");
                       }}
-                      style={{ background: "rgba(35,178,164,0.1)", border: "none", borderRadius: 6, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#23b2a4", whiteSpace: "nowrap", flexShrink: 0 }}
+                      className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-spektr-teal whitespace-nowrap flex-shrink-0"
                     >
                       ⬇ Télécharger
                     </button>
@@ -740,36 +656,34 @@ function PromoManager({ users, promos }: { users: any[]; promos: any[] }) {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 22, color: "#1d1d1e" }}>Gestion des promotions</h1>
-        <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>Créez des promos et assignez des étudiants</p>
+      <div className="mb-6">
+        <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark">Gestion des promotions</h1>
+        <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">Créez des promos et assignez des étudiants</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="grid grid-cols-2 gap-4">
         <Card>
-          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Promotions</div>
-          <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          <div className="font-montserrat font-bold text-sm mb-3.5">Promotions</div>
+          <div className="flex gap-2 mb-3.5">
             <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nom de la promo"
-              style={{ ...inputStyle, flex: 1 }}
-              onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-              onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+              className={`${inputCls} flex-1`}
               onKeyDown={(e) => e.key === "Enter" && newName.trim() && (handleCreate({ name: newName }), setNewName(""))} />
             <button onClick={() => { if (newName.trim()) { handleCreate({ name: newName }); setNewName(""); } }}
-              style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+              className="px-4 py-[9px] rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer">
               Créer
             </button>
           </div>
           {promos.length === 0 ? (
-            <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#9ca3af" }}>Aucune promo créée</p>
+            <p className="font-source-sans text-[13px] text-gray-400">Aucune promo créée</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="flex flex-col gap-2">
               {promos.map((p: any) => {
                 const count = users.filter((u) => u.promoId === p.id).length;
                 return (
-                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#fafafa", borderRadius: 8, border: "1px solid #e8e8e8" }}>
-                    <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, flex: 1 }}>{p.name}</span>
-                    <span style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af" }}>{count} étudiant{count !== 1 ? "s" : ""}</span>
-                    <button onClick={() => handleDelete(p.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#dc2626" }}>
+                  <div key={p.id} className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border">
+                    <span className="font-montserrat font-semibold text-[13px] flex-1">{p.name}</span>
+                    <span className="font-source-sans text-[11px] text-gray-400">{count} étudiant{count !== 1 ? "s" : ""}</span>
+                    <button onClick={() => handleDelete(p.id)} className="bg-[#fee2e2] border-none rounded-md px-2.5 py-[5px] cursor-pointer text-[11px] font-semibold text-[#dc2626]">
                       Supprimer
                     </button>
                   </div>
@@ -780,21 +694,20 @@ function PromoManager({ users, promos }: { users: any[]; promos: any[] }) {
         </Card>
 
         <Card>
-          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Assigner des étudiants</div>
+          <div className="font-montserrat font-bold text-sm mb-3.5">Assigner des étudiants</div>
           {users.filter((u) => u.role === "STUDENT").length === 0 ? (
-            <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#9ca3af" }}>Aucun étudiant enregistré</p>
+            <p className="font-source-sans text-[13px] text-gray-400">Aucun étudiant enregistré</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 400, overflowY: "auto" }}>
+            <div className="flex flex-col gap-2 max-h-[400px] overflow-y-auto">
               {users.filter((u) => u.role === "STUDENT").map((u) => {
-                const currentPromo = promos.find((p: any) => p.id === u.promoId);
                 return (
-                  <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "#fafafa", borderRadius: 8, border: "1px solid #e8e8e8" }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12 }}>{u.first_name} {u.last_name}</div>
-                      <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af" }}>{u.email}</div>
+                  <div key={u.id} className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border">
+                    <div className="flex-1">
+                      <div className="font-montserrat font-semibold text-xs">{u.first_name} {u.last_name}</div>
+                      <div className="font-source-sans text-[11px] text-gray-400">{u.email}</div>
                     </div>
                     <select value={u.promoId ?? ""} onChange={(e) => handleAssign({ promoId: parseInt(e.target.value), userId: u.id })}
-                      style={{ padding: "5px 8px", border: "1px solid #e8e8e8", borderRadius: 6, fontSize: 12, fontFamily: "Source Sans 3, sans-serif", cursor: "pointer", outline: "none", color: "#1d1d1e", background: "#fff" }}>
+                      className="px-2 py-[5px] border border-spektr-border rounded-md text-xs font-source-sans cursor-pointer focus:outline-none text-spektr-dark bg-white">
                       <option value="">Sans promo</option>
                       {promos.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
@@ -854,17 +767,19 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
     return acc;
   }, {});
 
+  const canCreate = !title.trim() || !promoId || creating;
+
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 22, color: "#1d1d1e" }}>Objectifs</h1>
-          <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>{objectives.length} objectif{objectives.length !== 1 ? "s" : ""} définis</p>
+          <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark">Objectifs</h1>
+          <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">{objectives.length} objectif{objectives.length !== 1 ? "s" : ""} définis</p>
         </div>
         <button
           onClick={() => setShowForm((v) => !v)}
           aria-expanded={showForm}
-          style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+          className="px-4 py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer"
         >
           {showForm ? "Annuler" : "+ Créer un objectif"}
         </button>
@@ -872,48 +787,33 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
 
       {/* Create form */}
       {showForm && (
-        <Card style={{ marginBottom: 20, borderLeft: "3px solid #23b2a4" }}>
-          <h2 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, color: "#1d1d1e", marginBottom: 16 }}>Nouvel objectif</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label htmlFor="obj-title" style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Titre *</label>
-              <input
-                id="obj-title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Ex : Envoyer 5 candidatures cette semaine"
-                style={{ ...inputStyle }}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
-              />
+        <Card className="mb-5 border-l-[3px] border-l-spektr-teal">
+          <h2 className="font-montserrat font-bold text-sm text-spektr-dark mb-4">Nouvel objectif</h2>
+          <div className="grid grid-cols-2 gap-3.5 mb-3.5">
+            <div className="col-span-2">
+              <label htmlFor="obj-title" className={labelCls}>Titre *</label>
+              <input id="obj-title" value={title} onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex : Envoyer 5 candidatures cette semaine" className={inputCls} />
             </div>
             <div>
-              <label htmlFor="obj-promo" style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Promotion *</label>
-              <select
-                id="obj-promo"
-                value={promoId}
-                onChange={(e) => setPromoId(e.target.value)}
-                style={{ ...inputStyle, cursor: "pointer" }}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
-              >
+              <label htmlFor="obj-promo" className={labelCls}>Promotion *</label>
+              <select id="obj-promo" value={promoId} onChange={(e) => setPromoId(e.target.value)}
+                className={`${inputCls} cursor-pointer`}>
                 <option value="">Choisir une promotion</option>
                 {promos.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Deadline (optionnel)</label>
+              <label className={labelCls}>Deadline (optionnel)</label>
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    style={{ ...inputStyle, textAlign: "left", cursor: "pointer", color: deadline ? "#1d1d1e" : "#9ca3af", display: "flex", alignItems: "center", gap: 8 }}
-                  >
-                    <span style={{ fontSize: 14 }}>📅</span>
+                  <button type="button"
+                    className={`${inputCls} text-left cursor-pointer flex items-center gap-2 ${deadline ? "text-spektr-dark" : "text-gray-400"}`}>
+                    <span className="text-sm">📅</span>
                     {deadline ? format(deadline, "dd MMMM yyyy", { locale: fr }) : "Choisir une date"}
                   </button>
                 </PopoverTrigger>
-                <PopoverContent align="start" style={{ width: "auto", padding: 0 }}>
+                <PopoverContent align="start" className="w-auto p-0">
                   <Calendar
                     mode="single"
                     selected={deadline}
@@ -923,12 +823,9 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
                     initialFocus
                   />
                   {deadline && (
-                    <div style={{ padding: "8px 12px", borderTop: "1px solid #f0f0f0" }}>
-                      <button
-                        type="button"
-                        onClick={() => { setDeadline(undefined); setCalendarOpen(false); }}
-                        style={{ fontSize: 12, color: "#e05252", background: "none", border: "none", cursor: "pointer", fontFamily: "Source Sans 3, sans-serif" }}
-                      >
+                    <div className="px-3 py-2 border-t border-[#f0f0f0]">
+                      <button type="button" onClick={() => { setDeadline(undefined); setCalendarOpen(false); }}
+                        className="text-xs text-spektr-red bg-transparent border-none cursor-pointer font-source-sans">
                         Effacer la date
                       </button>
                     </div>
@@ -936,33 +833,22 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
                 </PopoverContent>
               </Popover>
             </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label htmlFor="obj-desc" style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Description (optionnel)</label>
-              <textarea
-                id="obj-desc"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Décrivez l'objectif en détail..."
-                rows={3}
-                style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
-              />
+            <div className="col-span-2">
+              <label htmlFor="obj-desc" className={labelCls}>Description (optionnel)</label>
+              <textarea id="obj-desc" value={description} onChange={(e) => setDescription(e.target.value)}
+                placeholder="Décrivez l'objectif en détail..." rows={3}
+                className={`${inputCls} resize-y leading-relaxed`} />
             </div>
           </div>
           {createError && (
-            <div style={{ background: "#fee2e2", color: "#dc2626", borderRadius: 8, padding: "10px 14px", fontSize: 13, fontFamily: "Source Sans 3, sans-serif", marginBottom: 12 }}>
+            <div className="bg-[#fee2e2] text-[#dc2626] rounded-lg px-3.5 py-2.5 text-[13px] font-source-sans mb-3">
               {createError}
             </div>
           )}
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-            <button onClick={() => { setShowForm(false); setCreateError(null); }} style={{ padding: "9px 18px", borderRadius: 8, border: "1.5px solid #e8e8e8", background: "#fff", color: "#6b7280", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Annuler</button>
-            <button
-              onClick={handleSubmit}
-              disabled={!title.trim() || !promoId || creating}
-              aria-busy={creating}
-              style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: (!title.trim() || !promoId || creating) ? "#88d5cf" : "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: (!title.trim() || !promoId || creating) ? "not-allowed" : "pointer" }}
-            >
+          <div className="flex gap-2.5 justify-end">
+            <button onClick={() => { setShowForm(false); setCreateError(null); }} className="px-[18px] py-[9px] rounded-lg border-[1.5px] border-spektr-border bg-white text-gray-500 font-montserrat font-semibold text-[13px] cursor-pointer">Annuler</button>
+            <button onClick={handleSubmit} disabled={canCreate} aria-busy={creating}
+              className={`px-[18px] py-[9px] rounded-lg border-none font-montserrat font-bold text-[13px] text-white ${canCreate ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer"}`}>
               {creating ? "Création…" : "Créer l'objectif"}
             </button>
           </div>
@@ -971,42 +857,39 @@ function ObjectivesAdmin({ promos }: { promos: any[] }) {
 
       {objectives.length === 0 && !showForm ? (
         <Card>
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
-            <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 14, color: "#6b7280" }}>Aucun objectif défini</p>
-            <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#9ca3af", marginTop: 4 }}>Cliquez sur "+ Créer un objectif" pour commencer</p>
+          <div className="text-center py-10">
+            <div className="text-[40px] mb-3">🎯</div>
+            <p className="font-montserrat font-semibold text-sm text-gray-500">Aucun objectif défini</p>
+            <p className="font-source-sans text-[13px] text-gray-400 mt-1">Cliquez sur "+ Créer un objectif" pour commencer</p>
           </div>
         </Card>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {Object.entries(grouped).map(([promoId, objs]) => {
-            const promo = promos.find((p: any) => p.id === Number(promoId));
+        <div className="flex flex-col gap-6">
+          {Object.entries(grouped).map(([gPromoId, objs]) => {
+            const promo = promos.find((p: any) => p.id === Number(gPromoId));
             return (
-              <div key={promoId}>
-                <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, color: "#1d1d1e", marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ background: "rgba(35,178,164,0.1)", color: "#23b2a4", padding: "3px 10px", borderRadius: 20, fontSize: 12 }}>
-                    {promo?.name ?? `Promo ${promoId}`}
+              <div key={gPromoId}>
+                <div className="font-montserrat font-bold text-sm text-spektr-dark mb-2.5 flex items-center gap-2">
+                  <span className="bg-spektr-teal/10 text-spektr-teal px-2.5 py-0.5 rounded-full text-xs">
+                    {promo?.name ?? `Promo ${gPromoId}`}
                   </span>
-                  <span style={{ fontWeight: 400, color: "#9ca3af", fontSize: 12 }}>{objs.length} objectif{objs.length !== 1 ? "s" : ""}</span>
+                  <span className="font-normal text-gray-400 text-xs">{objs.length} objectif{objs.length !== 1 ? "s" : ""}</span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div className="flex flex-col gap-2.5">
                   {objs.map((obj) => (
-                    <Card key={obj.id} style={{ borderLeft: "3px solid #23b2a4" }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, color: "#1d1d1e", marginBottom: 4 }}>{obj.title}</div>
-                          {obj.description && <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280" }}>{obj.description}</p>}
+                    <Card key={obj.id} className="border-l-[3px] border-l-spektr-teal">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="font-montserrat font-bold text-[13px] text-spektr-dark mb-1">{obj.title}</div>
+                          {obj.description && <p className="font-source-sans text-[13px] text-gray-500">{obj.description}</p>}
                           {obj.deadline && (
-                            <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#9ca3af", marginTop: 6 }}>
+                            <div className="font-source-sans text-xs text-gray-400 mt-1.5">
                               📅 {new Date(obj.deadline).toLocaleDateString("fr-FR")}
                             </div>
                           )}
                         </div>
-                        <button
-                          onClick={() => handleDelete(obj.id)}
-                          aria-label={`Supprimer l'objectif "${obj.title}"`}
-                          style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#dc2626", flexShrink: 0 }}
-                        >
+                        <button onClick={() => handleDelete(obj.id)} aria-label={`Supprimer l'objectif "${obj.title}"`}
+                          className="bg-[#fee2e2] border-none rounded-md px-2.5 py-[5px] cursor-pointer text-[11px] font-semibold text-[#dc2626] flex-shrink-0">
                           Supprimer
                         </button>
                       </div>
@@ -1042,7 +925,6 @@ function AdminProfil() {
     onError: (err: Error) => { setPwdError(err.message ?? "Une erreur est survenue."); },
   });
 
-  // Sync form fields when profile loads
   const profileFirstName = profile?.first_name ?? authUser?.first_name ?? "";
   const profileLastName = profile?.last_name ?? authUser?.last_name ?? "";
 
@@ -1050,109 +932,67 @@ function AdminProfil() {
     ? `${authUser.first_name?.[0] ?? ""}${authUser.last_name?.[0] ?? ""}`.toUpperCase() || "RE"
     : "RE";
 
-  const handleEdit = () => {
-    setFirstName(profileFirstName);
-    setLastName(profileLastName);
-    setEditMode(true);
-  };
-
-  const handleSave = async () => {
-    await handleUpdate({ first_name: firstName, last_name: lastName });
-    setEditMode(false);
-  };
+  const pwdInvalid = pwdPending || !oldPassword || !newPassword || newPassword.length < 8 || newPassword !== confirmPassword;
 
   if (loading) {
-    return (
-      <div style={{ padding: "60px 0", textAlign: "center", color: "#9ca3af" }}>Chargement…</div>
-    );
+    return <div className="py-[60px] text-center text-gray-400">Chargement…</div>;
   }
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 22, color: "#1d1d1e" }}>Mon profil</h1>
-        <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>Informations de votre compte chargé RE</p>
+      <div className="mb-6">
+        <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark">Mon profil</h1>
+        <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">Informations de votre compte chargé RE</p>
       </div>
       <Card>
-        {/* Avatar + header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 28, paddingBottom: 24, borderBottom: "1px solid #e8e8e8" }}>
-          <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#23b2a4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 700, color: "#fff", fontFamily: "Montserrat, sans-serif", flexShrink: 0 }}>
+        <div className="flex items-center gap-5 mb-7 pb-6 border-b border-spektr-border">
+          <div className="w-[72px] h-[72px] rounded-full bg-spektr-teal flex items-center justify-center text-2xl font-bold text-white font-montserrat flex-shrink-0">
             {initials}
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 20, color: "#1d1d1e" }}>
-              {profileFirstName} {profileLastName}
-            </div>
-            <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#9ca3af", marginTop: 2 }}>
-              {profile?.email ?? authUser?.email}
-            </div>
-            <div style={{ marginTop: 8 }}>
-              <span style={{ background: "rgba(35,178,164,0.1)", color: "#23b2a4", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, border: "1px solid rgba(35,178,164,0.2)" }}>Chargé RE</span>
+          <div className="flex-1">
+            <div className="font-montserrat font-extrabold text-xl text-spektr-dark">{profileFirstName} {profileLastName}</div>
+            <div className="font-source-sans text-[13px] text-gray-400 mt-0.5">{profile?.email ?? authUser?.email}</div>
+            <div className="mt-2">
+              <span className="bg-spektr-teal/10 text-spektr-teal text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-spektr-teal/20">Chargé RE</span>
             </div>
           </div>
           {!editMode && (
-            <button
-              onClick={handleEdit}
-              style={{ padding: "8px 16px", borderRadius: 8, border: "1.5px solid #23b2a4", background: "transparent", color: "#23b2a4", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
-            >
+            <button onClick={() => { setFirstName(profileFirstName); setLastName(profileLastName); setEditMode(true); }}
+              className="px-4 py-2 rounded-lg border-[1.5px] border-spektr-teal bg-transparent text-spektr-teal font-montserrat font-bold text-[13px] cursor-pointer">
               Modifier
             </button>
           )}
         </div>
 
-        {/* Fields */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+        <div className="grid grid-cols-2 gap-4 mb-5">
           <div>
-            <label htmlFor="re-firstname" style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Prénom</label>
+            <label htmlFor="re-firstname" className={labelCls}>Prénom</label>
             {editMode ? (
-              <input
-                id="re-firstname"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                style={{ ...inputStyle }}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
-              />
+              <input id="re-firstname" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputCls} />
             ) : (
-              <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 14, fontWeight: 600, color: "#1d1d1e" }}>{profileFirstName || "—"}</div>
+              <div className="font-source-sans text-sm font-semibold text-spektr-dark">{profileFirstName || "—"}</div>
             )}
           </div>
           <div>
-            <label htmlFor="re-lastname" style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Nom</label>
+            <label htmlFor="re-lastname" className={labelCls}>Nom</label>
             {editMode ? (
-              <input
-                id="re-lastname"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                style={{ ...inputStyle }}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
-              />
+              <input id="re-lastname" value={lastName} onChange={(e) => setLastName(e.target.value)} className={inputCls} />
             ) : (
-              <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 14, fontWeight: 600, color: "#1d1d1e" }}>{profileLastName || "—"}</div>
+              <div className="font-source-sans text-sm font-semibold text-spektr-dark">{profileLastName || "—"}</div>
             )}
           </div>
-          <div style={{ gridColumn: "1 / -1" }}>
-            <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: 4 }}>Adresse email</label>
-            <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 14, color: "#6b7280" }}>{profile?.email ?? authUser?.email ?? "—"}</div>
-            <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#9ca3af", marginTop: 3 }}>L'adresse email ne peut pas être modifiée.</p>
+          <div className="col-span-2">
+            <label className={labelCls}>Adresse email</label>
+            <div className="font-source-sans text-sm text-gray-500">{profile?.email ?? authUser?.email ?? "—"}</div>
+            <p className="font-source-sans text-xs text-gray-400 mt-0.5">L'adresse email ne peut pas être modifiée.</p>
           </div>
         </div>
 
         {editMode && (
-          <div style={{ display: "flex", gap: 10 }}>
-            <button
-              onClick={() => setEditMode(false)}
-              style={{ padding: "10px 18px", borderRadius: 8, border: "1.5px solid #e8e8e8", background: "#fff", color: "#6b7280", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer" }}
-            >
-              Annuler
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              aria-busy={saving}
-              style={{ padding: "10px 24px", borderRadius: 8, border: "none", background: saving ? "#88d5cf" : "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, cursor: saving ? "not-allowed" : "pointer" }}
-            >
+          <div className="flex gap-2.5">
+            <button onClick={() => setEditMode(false)} className="px-[18px] py-2.5 rounded-lg border-[1.5px] border-spektr-border bg-white text-gray-500 font-montserrat font-semibold text-[13px] cursor-pointer">Annuler</button>
+            <button onClick={async () => { await handleUpdate({ first_name: firstName, last_name: lastName }); setEditMode(false); }} disabled={saving} aria-busy={saving}
+              className={`px-6 py-2.5 rounded-lg border-none font-montserrat font-bold text-sm text-white ${saving ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer"}`}>
               {saving ? "Enregistrement…" : "Enregistrer les modifications"}
             </button>
           </div>
@@ -1160,52 +1000,46 @@ function AdminProfil() {
       </Card>
 
       {/* Password change */}
-      <Card style={{ marginTop: 16 }}>
-        <h2 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 15, color: "#1d1d1e", marginBottom: 6 }}>Sécurité</h2>
-        <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginBottom: 20 }}>
-          Modifiez votre mot de passe. Vous serez déconnecté après confirmation.
-        </p>
+      <Card className="mt-4">
+        <h2 className="font-montserrat font-bold text-[15px] text-spektr-dark mb-1.5">Sécurité</h2>
+        <p className="font-source-sans text-[13px] text-gray-500 mb-5">Modifiez votre mot de passe. Vous serez déconnecté après confirmation.</p>
 
         {pwdSuccess ? (
-          <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "16px 20px", display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 24 }}>✅</span>
+          <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-[10px] px-5 py-4 flex items-center gap-3">
+            <span className="text-2xl">✅</span>
             <div>
-              <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, color: "#16a34a" }}>Mot de passe modifié !</div>
-              <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#4ade80", marginTop: 2 }}>Un email de confirmation a été envoyé. Déconnexion en cours…</div>
+              <div className="font-montserrat font-bold text-sm text-green-600">Mot de passe modifié !</div>
+              <div className="font-source-sans text-[13px] text-green-400 mt-0.5">Un email de confirmation a été envoyé. Déconnexion en cours…</div>
             </div>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 400 }}>
+          <div className="flex flex-col gap-3.5 max-w-[400px]">
             <div>
-              <label style={{ display: "block", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Mot de passe actuel</label>
-              <input type="password" value={oldPassword} onChange={(e) => { setOldPassword(e.target.value); setPwdError(null); }} placeholder="••••••••"
-                style={{ ...inputStyle }} onFocus={(e) => (e.target.style.borderColor = "#23b2a4")} onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+              <label className={labelCls}>Mot de passe actuel</label>
+              <input type="password" value={oldPassword} onChange={(e) => { setOldPassword(e.target.value); setPwdError(null); }} placeholder="••••••••" className={inputCls} />
             </div>
             <div>
-              <label style={{ display: "block", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Nouveau mot de passe</label>
-              <input type="password" value={newPassword} onChange={(e) => { setNewPassword(e.target.value); setPwdError(null); }} placeholder="••••••••"
-                style={{ ...inputStyle }} onFocus={(e) => (e.target.style.borderColor = "#23b2a4")} onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+              <label className={labelCls}>Nouveau mot de passe</label>
+              <input type="password" value={newPassword} onChange={(e) => { setNewPassword(e.target.value); setPwdError(null); }} placeholder="••••••••" className={inputCls} />
               {newPassword.length > 0 && newPassword.length < 8 && (
-                <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#d97706", marginTop: 4 }}>Minimum 8 caractères</p>
+                <p className="font-source-sans text-xs text-amber-600 mt-1">Minimum 8 caractères</p>
               )}
             </div>
             <div>
-              <label style={{ display: "block", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>Confirmer le nouveau mot de passe</label>
+              <label className={labelCls}>Confirmer le nouveau mot de passe</label>
               <input type="password" value={confirmPassword} onChange={(e) => { setConfirmPassword(e.target.value); setPwdError(null); }} placeholder="••••••••"
-                style={{ ...inputStyle, borderColor: confirmPassword && confirmPassword !== newPassword ? "#e05252" : "#e8e8e8" }}
-                onFocus={(e) => (e.target.style.borderColor = confirmPassword !== newPassword ? "#e05252" : "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = confirmPassword !== newPassword ? "#e05252" : "#e8e8e8")} />
+                className={`${inputCls} ${confirmPassword && confirmPassword !== newPassword ? "border-spektr-red focus:border-spektr-red" : ""}`} />
               {confirmPassword && confirmPassword !== newPassword && (
-                <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#e05252", marginTop: 4 }}>Les mots de passe ne correspondent pas</p>
+                <p className="font-source-sans text-xs text-spektr-red mt-1">Les mots de passe ne correspondent pas</p>
               )}
             </div>
             {pwdError && (
-              <div style={{ background: "#fee2e2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#dc2626" }}>{pwdError}</div>
+              <div className="bg-[#fee2e2] border border-[#fecaca] rounded-lg px-3.5 py-2.5 font-source-sans text-[13px] text-[#dc2626]">{pwdError}</div>
             )}
             <button
-              onClick={() => { if (!oldPassword || !newPassword || newPassword.length < 8 || newPassword !== confirmPassword) return; submitPasswordChange(); }}
-              disabled={pwdPending || !oldPassword || !newPassword || newPassword.length < 8 || newPassword !== confirmPassword}
-              style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: pwdPending || !oldPassword || newPassword.length < 8 || newPassword !== confirmPassword ? "#e8e8e8" : "#23b2a4", color: pwdPending || !oldPassword || newPassword.length < 8 || newPassword !== confirmPassword ? "#9ca3af" : "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", width: "fit-content" }}
+              onClick={() => { if (pwdInvalid) return; submitPasswordChange(); }}
+              disabled={pwdInvalid}
+              className={`px-5 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] w-fit ${pwdInvalid ? "bg-spektr-border text-gray-400 cursor-not-allowed" : "bg-spektr-teal text-white cursor-pointer"}`}
             >
               {pwdPending ? "Modification en cours…" : "🔐 Modifier le mot de passe"}
             </button>
@@ -1219,7 +1053,6 @@ function AdminProfil() {
 /* ── Main Admin App ── */
 const AdminPage = () => {
   const tanstackNavigate = useNavigate();
-  // useSearch is reactive — re-renders on every URL search param change
   const search = useSearch({ strict: false }) as { p?: string; uid?: number | string };
   const page = search.p ?? "dashboard";
   const uid = search.uid;
@@ -1227,7 +1060,6 @@ const AdminPage = () => {
   const { data: promos = [] } = useQuery({ queryKey: ["promos"], queryFn: fetchPromos });
   const { data: users = [] } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
 
-  // navigate helper — for internal page nav (student-detail uses "student-detail:123" format)
   const navigate = (target: string) => {
     if (target.startsWith("student-detail:")) {
       const userId = target.split(":")[1];
@@ -1257,7 +1089,7 @@ const AdminPage = () => {
   };
 
   return (
-    <div style={{ padding: "28px 32px", background: "#f5f5f5", minHeight: "100%" }}>
+    <div className="py-7 px-8 bg-spektr-bg min-h-full">
       {renderPage()}
     </div>
   );

@@ -34,20 +34,16 @@ export const Route = createFileRoute("/_protected")({
 
     if (!isInitialized) {
       return (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f5f5f5" }}>
-          <div style={{ width: 32, height: 32, border: "3px solid #e8e8e8", borderTopColor: "#23b2a4", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div className="flex items-center justify-center h-screen bg-spektr-bg">
+          <div className="w-8 h-8 rounded-full border-[3px] border-spektr-border border-t-spektr-teal animate-spin" />
         </div>
       );
     }
 
     return (
-      <div className="flex h-screen" style={{ background: "#f5f5f5" }}>
+      <div className="flex h-screen bg-spektr-bg">
         <Sidebar />
-        <main
-          className="flex-1 overflow-auto"
-          style={{ marginLeft: "220px" }}
-        >
+        <main className="flex-1 overflow-auto ml-[220px]">
           <Outlet />
         </main>
       </div>

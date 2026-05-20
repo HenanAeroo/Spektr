@@ -33,7 +33,6 @@ function NotificationBell() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
-  // Connect socket and listen for real-time notifications
   useEffect(() => {
     if (!socket.connected) {
       socket.auth = { token: getToken() };
@@ -47,7 +46,6 @@ function NotificationBell() {
     return () => { socket.off("notification"); };
   }, [queryClient]);
 
-  // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -74,69 +72,31 @@ function NotificationBell() {
   }
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div ref={ref} className="relative">
       <button
         onClick={handleOpen}
         title="Notifications"
-        style={{
-          position: "relative",
-          background: open ? "rgba(35,178,164,0.15)" : "transparent",
-          border: "none",
-          borderRadius: 8,
-          cursor: "pointer",
-          padding: "8px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "background 0.15s",
-        }}
-        onMouseEnter={(e) => !open && (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
-        onMouseLeave={(e) => !open && (e.currentTarget.style.background = "transparent")}
+        className={[
+          "relative border-none rounded-lg cursor-pointer p-2 flex items-center justify-center transition-colors",
+          open ? "bg-spektr-teal/15" : "bg-transparent hover:bg-white/[0.08]",
+        ].join(" ")}
       >
         <Bell size={18} color={open ? "#23b2a4" : "rgba(255,255,255,0.6)"} />
         {unreadCount > 0 && (
-          <span style={{
-            position: "absolute",
-            top: 4,
-            right: 4,
-            width: 16,
-            height: 16,
-            borderRadius: "50%",
-            background: "#ef4444",
-            color: "#fff",
-            fontSize: 9,
-            fontWeight: 800,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: "Montserrat, sans-serif",
-            border: "2px solid #1d1d1e",
-          }}>
+          <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-extrabold flex items-center justify-center font-montserrat border-2 border-spektr-dark">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div style={{
-          position: "fixed",
-          left: 228,
-          top: "auto",
-          bottom: 60,
-          width: 320,
-          background: "#fff",
-          borderRadius: 12,
-          border: "1px solid #e8e8e8",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.16)",
-          zIndex: 500,
-          overflow: "hidden",
-        }}>
+        <div className="fixed left-[228px] bottom-[60px] w-80 bg-white rounded-xl border border-spektr-border shadow-[0_8px_32px_rgba(0,0,0,0.16)] z-[500] overflow-hidden">
           {/* Header */}
-          <div style={{ padding: "14px 16px", borderBottom: "1px solid #f0f0f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, color: "#1d1d1e" }}>
+          <div className="px-4 py-3.5 border-b border-[#f0f0f0] flex items-center justify-between">
+            <span className="font-montserrat font-bold text-[13px] text-spektr-dark">
               Notifications
               {unreadCount > 0 && (
-                <span style={{ marginLeft: 8, background: "#ef4444", color: "#fff", fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 999 }}>
+                <span className="ml-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-px rounded-full">
                   {unreadCount}
                 </span>
               )}
@@ -144,7 +104,7 @@ function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                style={{ background: "none", border: "none", cursor: "pointer", fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#23b2a4", fontWeight: 600 }}
+                className="bg-transparent border-none cursor-pointer font-source-sans text-xs text-spektr-teal font-semibold"
               >
                 Tout marquer lu
               </button>
@@ -152,11 +112,11 @@ function NotificationBell() {
           </div>
 
           {/* List */}
-          <div style={{ maxHeight: 360, overflowY: "auto" }}>
+          <div className="max-h-[360px] overflow-y-auto">
             {notifications.length === 0 ? (
-              <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>🔔</div>
-                <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, color: "#6b7280" }}>
+              <div className="py-10 px-5 text-center">
+                <div className="text-[28px] mb-2">🔔</div>
+                <p className="font-montserrat font-semibold text-[13px] text-gray-500">
                   Aucune notification
                 </p>
               </div>
@@ -164,46 +124,40 @@ function NotificationBell() {
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 12,
-                    padding: "12px 16px",
-                    borderBottom: "1px solid #f8f8f8",
-                    background: n.read ? "transparent" : "rgba(35,178,164,0.04)",
-                    cursor: n.read ? "default" : "pointer",
-                    transition: "background 0.15s",
-                  }}
+                  className={[
+                    "flex items-start gap-3 px-4 py-3 border-b border-[#f8f8f8] transition-colors",
+                    n.read
+                      ? "bg-transparent cursor-default"
+                      : "bg-spektr-teal/[0.04] cursor-pointer hover:bg-spektr-teal/[0.08]",
+                  ].join(" ")}
                   onClick={n.read ? undefined : (e) => handleMarkRead(n.id, e)}
-                  onMouseEnter={(e) => !n.read && (e.currentTarget.style.background = "rgba(35,178,164,0.08)")}
-                  onMouseLeave={(e) => !n.read && (e.currentTarget.style.background = "rgba(35,178,164,0.04)")}
                 >
-                  <div style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 8,
-                    background: n.read ? "#f5f5f5" : "rgba(35,178,164,0.12)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 14,
-                    flexShrink: 0,
-                  }}>
+                  <div
+                    className={[
+                      "w-8 h-8 rounded-lg flex items-center justify-center text-[14px] flex-shrink-0",
+                      n.read ? "bg-spektr-bg" : "bg-spektr-teal/12",
+                    ].join(" ")}
+                  >
                     {n.type === "OBJECTIVE_CREATED" ? "🎯" : n.type === "DOCUMENT_ADDED" ? "📄" : "📋"}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: n.read ? "#6b7280" : "#1d1d1e", fontWeight: n.read ? 400 : 600, lineHeight: 1.4 }}>
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className={[
+                        "font-source-sans text-[13px] leading-snug",
+                        n.read ? "text-gray-500 font-normal" : "text-spektr-dark font-semibold",
+                      ].join(" ")}
+                    >
                       {NOTIF_LABELS[n.type] ?? n.type}
                       {n.type === "OBJECTIVE_CREATED" && typeof n.payload?.title === "string" && (
-                        <span style={{ color: "#23b2a4", fontWeight: 700 }}> : {n.payload.title}</span>
+                        <span className="text-spektr-teal font-bold"> : {n.payload.title}</span>
                       )}
                     </div>
-                    <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                    <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
                       {timeAgo(n.created_at)}
                     </div>
                   </div>
                   {!n.read && (
-                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#23b2a4", flexShrink: 0, marginTop: 4 }} />
+                    <div className="w-[7px] h-[7px] rounded-full bg-spektr-teal flex-shrink-0 mt-1" />
                   )}
                 </div>
               ))

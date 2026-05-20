@@ -7,7 +7,7 @@ import { deleteDocument } from "@/features/documents/actions/deleteDocument";
 import { uploadDocument } from "@/features/documents/actions/uploadDocument";
 import { getDocumentUrl } from "@/features/documents/actions/getDocumentUrl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Document, Folder } from "@/features/documents/types";
+import { Document } from "@/features/documents/types";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} o`;
@@ -16,20 +16,20 @@ function formatSize(bytes: number): string {
 }
 
 function FileIcon({ mimeType }: { mimeType: string }) {
-  if (mimeType.includes("pdf")) return <span style={{ fontSize: 20 }}>📄</span>;
-  if (mimeType.includes("image")) return <span style={{ fontSize: 20 }}>🖼️</span>;
-  if (mimeType.includes("word") || mimeType.includes("document")) return <span style={{ fontSize: 20 }}>📝</span>;
-  return <span style={{ fontSize: 20 }}>📁</span>;
+  if (mimeType.includes("pdf")) return <span className="text-xl">📄</span>;
+  if (mimeType.includes("image")) return <span className="text-xl">🖼️</span>;
+  if (mimeType.includes("word") || mimeType.includes("document")) return <span className="text-xl">📝</span>;
+  return <span className="text-xl">📁</span>;
 }
 
 function ErrorBanner({ message, onClose }: { message: string; onClose: () => void }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, background: "#fee2e2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", marginBottom: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 15 }}>⚠️</span>
-        <span style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#dc2626", fontWeight: 600 }}>{message}</span>
+    <div className="flex items-center justify-between gap-3 bg-[#fee2e2] border border-[#fecaca] rounded-lg px-3.5 py-2.5 mb-4">
+      <div className="flex items-center gap-2">
+        <span className="text-[15px]">⚠️</span>
+        <span className="font-source-sans text-[13px] text-[#dc2626] font-semibold">{message}</span>
       </div>
-      <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", fontSize: 16, lineHeight: 1 }}>✕</button>
+      <button onClick={onClose} className="bg-transparent border-none cursor-pointer text-[#dc2626] text-base leading-none">✕</button>
     </div>
   );
 }
@@ -141,25 +141,30 @@ const DocumentsPage = () => {
   const selectedFolder = folders.find((f) => f.id === selectedFolderId);
 
   return (
-    <div style={{ padding: "28px 32px", background: "#f5f5f5", minHeight: "100%" }}>
+    <div className="py-7 px-8 bg-spektr-bg min-h-full">
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 22, color: "#1d1d1e", letterSpacing: "-0.3px" }}>Documents</h1>
-          <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>
+          <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark tracking-[-0.3px]">Documents</h1>
+          <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">
             Gérez vos CV, lettres de motivation et certifications
           </p>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div className="flex gap-2.5">
           <button
             onClick={() => setShowNewFolder(true)}
-            style={{ padding: "10px 16px", borderRadius: 8, border: "1.5px solid #23b2a4", background: "transparent", color: "#23b2a4", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+            className="px-4 py-2.5 rounded-lg border-[1.5px] border-spektr-teal bg-transparent text-spektr-teal font-montserrat font-bold text-[13px] cursor-pointer"
           >
             + Nouveau dossier
           </button>
-          <label style={{ padding: "10px 16px", borderRadius: 8, border: "none", background: uploading ? "#88d5cf" : "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: uploading ? "not-allowed" : "pointer" }}>
+          <label
+            className={[
+              "px-4 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white",
+              uploading ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer",
+            ].join(" ")}
+          >
             {uploading ? "Envoi…" : "⬆ Importer un fichier"}
-            <input type="file" style={{ display: "none" }} onChange={handleUpload} disabled={uploading}
+            <input type="file" className="hidden" onChange={handleUpload} disabled={uploading}
               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" />
           </label>
         </div>
@@ -168,7 +173,6 @@ const DocumentsPage = () => {
       {/* Error banner */}
       {error && <ErrorBanner message={error} onClose={() => setError(null)} />}
 
-      {/* Load errors */}
       {(foldersError || docsError) && !error && (
         <ErrorBanner
           message="Impossible de charger vos fichiers. Vérifiez votre connexion."
@@ -176,21 +180,26 @@ const DocumentsPage = () => {
         />
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 16 }}>
-        {/* Sidebar dossiers */}
+      <div className="grid grid-cols-[240px_1fr] gap-4">
+        {/* Folder sidebar */}
         <div>
-          <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", overflow: "hidden" }}>
-            <div style={{ padding: "14px 16px", borderBottom: "1px solid #e8e8e8" }}>
-              <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, color: "#1d1d1e" }}>Dossiers</span>
+          <div className="bg-white rounded-[10px] border border-spektr-border overflow-hidden">
+            <div className="px-4 py-3.5 border-b border-spektr-border">
+              <span className="font-montserrat font-bold text-[13px] text-spektr-dark">Dossiers</span>
             </div>
-            <div style={{ padding: 8 }}>
+            <div className="p-2">
               <button
                 onClick={() => setSelectedFolderId(null)}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: "Source Sans 3, sans-serif", fontSize: 13, background: selectedFolderId === null ? "rgba(35,178,164,0.1)" : "transparent", color: selectedFolderId === null ? "#23b2a4" : "#1d1d1e", fontWeight: selectedFolderId === null ? 600 : 400 }}
+                className={[
+                  "w-full flex items-center gap-2.5 px-3 py-[9px] rounded-lg border-none cursor-pointer font-source-sans text-[13px]",
+                  selectedFolderId === null
+                    ? "bg-spektr-teal/10 text-spektr-teal font-semibold"
+                    : "bg-transparent text-spektr-dark font-normal",
+                ].join(" ")}
               >
                 <span>📂</span>
-                <span style={{ flex: 1, textAlign: "left" }}>Tous les fichiers</span>
-                <span style={{ fontSize: 11, color: "#9ca3af" }}>{documents.length}</span>
+                <span className="flex-1 text-left">Tous les fichiers</span>
+                <span className="text-[11px] text-gray-400">{documents.length}</span>
               </button>
 
               {folders.map((folder) => {
@@ -199,20 +208,26 @@ const DocumentsPage = () => {
                 return (
                   <div
                     key={folder.id}
-                    style={{ display: "flex", alignItems: "center", gap: 2, borderRadius: 8, background: isSelected ? "rgba(35,178,164,0.1)" : "transparent" }}
+                    className={[
+                      "flex items-center gap-0.5 rounded-lg",
+                      isSelected ? "bg-spektr-teal/10" : "bg-transparent",
+                    ].join(" ")}
                   >
                     <button
                       onClick={() => setSelectedFolderId(folder.id)}
-                      style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", border: "none", cursor: "pointer", background: "transparent", fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: isSelected ? "#23b2a4" : "#1d1d1e", fontWeight: isSelected ? 600 : 400 }}
+                      className={[
+                        "flex-1 flex items-center gap-2.5 px-3 py-[9px] border-none cursor-pointer bg-transparent font-source-sans text-[13px]",
+                        isSelected ? "text-spektr-teal font-semibold" : "text-spektr-dark font-normal",
+                      ].join(" ")}
                     >
                       <span>📁</span>
-                      <span style={{ flex: 1, textAlign: "left" }}>{folder.name}</span>
-                      <span style={{ fontSize: 11, color: "#9ca3af" }}>{count}</span>
+                      <span className="flex-1 text-left">{folder.name}</span>
+                      <span className="text-[11px] text-gray-400">{count}</span>
                     </button>
                     <button
                       onClick={() => removeFolder(folder.id)}
                       disabled={removingFolder}
-                      style={{ padding: "6px 8px", border: "none", background: "transparent", cursor: "pointer", color: "#dc2626", fontSize: 12 }}
+                      className="px-2 py-1.5 border-none bg-transparent cursor-pointer text-[#dc2626] text-xs"
                       title="Supprimer le dossier"
                     >
                       ✕
@@ -223,10 +238,12 @@ const DocumentsPage = () => {
             </div>
           </div>
 
-          {/* Formulaire nouveau dossier */}
+          {/* New folder form */}
           {showNewFolder && (
-            <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", padding: 14, marginTop: 10 }}>
-              <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, display: "block", marginBottom: 6, color: "#1d1d1e" }}>Nom du dossier</label>
+            <div className="bg-white rounded-[10px] border border-spektr-border p-3.5 mt-2.5">
+              <label className="font-montserrat font-semibold text-xs block mb-1.5 text-spektr-dark">
+                Nom du dossier
+              </label>
               <input
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
@@ -234,21 +251,22 @@ const DocumentsPage = () => {
                 placeholder="Mon CV"
                 autoFocus
                 maxLength={50}
-                style={{ width: "100%", padding: "9px 12px", border: "1.5px solid #e8e8e8", borderRadius: 8, fontFamily: "Source Sans 3, sans-serif", fontSize: 13, outline: "none", boxSizing: "border-box", marginBottom: 8, color: "#1d1d1e", background: "#fff" }}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+                className="w-full px-3 py-[9px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] focus:outline-none focus:border-spektr-teal box-border mb-2 text-spektr-dark bg-white"
               />
-              <div style={{ display: "flex", gap: 6 }}>
+              <div className="flex gap-1.5">
                 <button
                   onClick={handleCreateFolder}
                   disabled={creatingFolder}
-                  style={{ flex: 1, padding: "8px", borderRadius: 7, border: "none", background: creatingFolder ? "#88d5cf" : "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 12, cursor: creatingFolder ? "not-allowed" : "pointer" }}
+                  className={[
+                    "flex-1 py-2 rounded-[7px] border-none font-montserrat font-bold text-xs text-white",
+                    creatingFolder ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer",
+                  ].join(" ")}
                 >
                   {creatingFolder ? "Création…" : "Créer"}
                 </button>
                 <button
                   onClick={() => { setShowNewFolder(false); setNewFolderName(""); }}
-                  style={{ flex: 1, padding: "8px", borderRadius: 7, border: "1.5px solid #e8e8e8", background: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, cursor: "pointer", color: "#6b7280" }}
+                  className="flex-1 py-2 rounded-[7px] border-[1.5px] border-spektr-border bg-white font-montserrat font-semibold text-xs cursor-pointer text-gray-500"
                 >
                   Annuler
                 </button>
@@ -257,76 +275,77 @@ const DocumentsPage = () => {
           )}
         </div>
 
-        {/* Liste des documents */}
-        <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8" }}>
-          <div style={{ padding: "14px 20px", borderBottom: "1px solid #e8e8e8", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13 }}>
+        {/* Document list */}
+        <div className="bg-white rounded-[10px] border border-spektr-border">
+          <div className="px-5 py-3.5 border-b border-spektr-border flex items-center justify-between">
+            <span className="font-montserrat font-bold text-[13px]">
               {selectedFolder ? selectedFolder.name : "Tous les fichiers"}{" "}
-              <span style={{ fontWeight: 400, color: "#9ca3af" }}>({visibleDocs.length})</span>
+              <span className="font-normal text-gray-400">({visibleDocs.length})</span>
             </span>
             {selectedFolder && (
-              <span style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#9ca3af" }}>
+              <span className="font-source-sans text-xs text-gray-400">
                 📁 {selectedFolder.name}
               </span>
             )}
           </div>
 
           {uploading && (
-            <div style={{ padding: "12px 20px", background: "rgba(35,178,164,0.05)", borderBottom: "1px solid #e8e8e8", display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid #23b2a4", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
-              <span style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#23b2a4", fontWeight: 600 }}>Import en cours…</span>
+            <div className="px-5 py-3 bg-spektr-teal/[0.05] border-b border-spektr-border flex items-center gap-2.5">
+              <div className="w-4 h-4 rounded-full border-2 border-spektr-teal border-t-transparent animate-spin" />
+              <span className="font-source-sans text-[13px] text-spektr-teal font-semibold">Import en cours…</span>
             </div>
           )}
 
           {docsLoading ? (
-            <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>Chargement…</div>
+            <div className="py-10 text-center text-gray-400">Chargement…</div>
           ) : visibleDocs.length === 0 ? (
-            <div style={{ padding: "60px 40px", textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-              <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 14, color: "#6b7280" }}>
+            <div className="py-[60px] px-10 text-center">
+              <div className="text-[40px] mb-3">📭</div>
+              <p className="font-montserrat font-semibold text-sm text-gray-500">
                 {selectedFolder ? `Aucun fichier dans "${selectedFolder.name}"` : "Aucun fichier importé"}
               </p>
-              <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#9ca3af", marginTop: 4 }}>
+              <p className="font-source-sans text-[13px] text-gray-400 mt-1">
                 {selectedFolder
                   ? "Importez un fichier en le sélectionnant ci-dessus"
                   : "Cliquez sur « Importer un fichier » pour commencer"}
               </p>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            <div className="flex flex-col">
               {visibleDocs.map((doc, idx) => (
                 <div
                   key={doc.id}
-                  style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 20px", borderBottom: idx < visibleDocs.length - 1 ? "1px solid #f5f5f5" : "none", transition: "background 0.15s" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                  className={[
+                    "flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-[#fafafa]",
+                    idx < visibleDocs.length - 1 ? "border-b border-spektr-bg" : "",
+                  ].join(" ")}
                 >
-                  <div style={{ width: 40, height: 40, borderRadius: 8, background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div className="w-10 h-10 rounded-lg bg-spektr-bg flex items-center justify-center flex-shrink-0">
                     <FileIcon mimeType={doc.mimeType} />
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, color: "#1d1d1e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
                       {doc.name}
                     </div>
-                    <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                    <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
                       {formatSize(doc.size)} · {new Date(doc.created_at).toLocaleDateString("fr-FR")}
                       {doc.folderId && folders.find((f) => f.id === doc.folderId) && (
-                        <span style={{ marginLeft: 6, color: "#23b2a4" }}>
+                        <span className="ml-1.5 text-spektr-teal">
                           · 📁 {folders.find((f) => f.id === doc.folderId)!.name}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div className="flex gap-1.5">
                     <button
                       onClick={() => handleDownload(doc)}
-                      style={{ background: "rgba(35,178,164,0.1)", border: "none", borderRadius: 6, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#23b2a4" }}
+                      className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-spektr-teal"
                     >
                       ⬇ Télécharger
                     </button>
                     <button
                       onClick={() => removeDocument(doc.id)}
-                      style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "6px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#dc2626" }}
+                      className="bg-[#fee2e2] border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-[#dc2626]"
                     >
                       Supprimer
                     </button>
@@ -337,8 +356,6 @@ const DocumentsPage = () => {
           )}
         </div>
       </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 };

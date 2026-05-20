@@ -5,29 +5,11 @@ import { useAuth } from "@/features/auth/hooks/use-auth";
 import { changePassword } from "@/features/profile/actions/changePassword";
 import { useMutation } from "@tanstack/react-query";
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 12px",
-  border: "1.5px solid #e8e8e8",
-  borderRadius: 8,
-  fontFamily: "Source Sans 3, sans-serif",
-  fontSize: 13,
-  outline: "none",
-  boxSizing: "border-box",
-  background: "#fff",
-  color: "#1d1d1e",
-};
+const inputCls =
+  "w-full px-3 py-[10px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] bg-white text-spektr-dark focus:outline-none focus:border-spektr-teal box-border";
 
-const labelStyle: React.CSSProperties = {
-  fontFamily: "Montserrat, sans-serif",
-  fontWeight: 600,
-  fontSize: 11,
-  color: "#6b7280",
-  textTransform: "uppercase",
-  letterSpacing: "0.5px",
-  display: "block",
-  marginBottom: 4,
-};
+const labelCls =
+  "font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] block mb-1";
 
 export default function ProfilePage() {
   const { user } = useAuthContext();
@@ -36,9 +18,7 @@ export default function ProfilePage() {
   const [editMode, setEditMode] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [activeSection, setActiveSection] = useState<"profile" | "security">(
-    "profile",
-  );
+  const [activeSection, setActiveSection] = useState<"profile" | "security">("profile");
 
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -66,87 +46,44 @@ export default function ProfilePage() {
   };
 
   const initials = user
-    ? `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase() ||
-      "U"
+    ? `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase() || "U"
     : "U";
+
+  const pwdInvalid =
+    pwdPending || !oldPassword || !newPassword || newPassword.length < 8 || newPassword !== confirmPassword;
 
   if (loading) {
     return (
-      <div
-        style={{
-          padding: "28px 32px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#9ca3af",
-          minHeight: "60vh",
-        }}
-      >
+      <div className="py-7 px-8 flex items-center justify-center text-gray-400 min-h-[60vh]">
         Chargement…
       </div>
     );
   }
 
   return (
-    <div
-      style={{ padding: "28px 32px", background: "#f5f5f5", minHeight: "100%" }}
-    >
-      <div style={{ marginBottom: 24 }}>
-        <h1
-          style={{
-            fontFamily: "Montserrat, sans-serif",
-            fontWeight: 800,
-            fontSize: 22,
-            color: "#1d1d1e",
-            letterSpacing: "-0.3px",
-          }}
-        >
+    <div className="py-7 px-8 bg-spektr-bg min-h-full">
+      <div className="mb-6">
+        <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark tracking-[-0.3px]">
           Mon profil
         </h1>
-        <p
-          style={{
-            fontFamily: "Source Sans 3, sans-serif",
-            fontSize: 13,
-            color: "#6b7280",
-            marginTop: 3,
-          }}
-        >
+        <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">
           Gérez vos informations personnelles et paramètres de compte
         </p>
       </div>
 
-      <div
-        style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 16 }}
-      >
+      <div className="grid grid-cols-[200px_1fr] gap-4">
         {/* Nav */}
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 10,
-            border: "1px solid #e8e8e8",
-            padding: 8,
-            height: "fit-content",
-          }}
-        >
+        <div className="bg-white rounded-[10px] border border-spektr-border p-2 h-fit">
           {(["profile", "security"] as const).map((s) => (
             <button
               key={s}
               onClick={() => setActiveSection(s)}
-              style={{
-                width: "100%",
-                textAlign: "left",
-                padding: "10px 14px",
-                borderRadius: 8,
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "Source Sans 3, sans-serif",
-                fontSize: 13,
-                fontWeight: activeSection === s ? 600 : 400,
-                background:
-                  activeSection === s ? "rgba(35,178,164,0.1)" : "transparent",
-                color: activeSection === s ? "#23b2a4" : "#6b7280",
-                marginBottom: 2,
-              }}
+              className={[
+                "w-full text-left px-3.5 py-2.5 rounded-lg border-none cursor-pointer font-source-sans text-[13px] mb-0.5",
+                activeSection === s
+                  ? "bg-spektr-teal/10 text-spektr-teal font-semibold"
+                  : "bg-transparent text-gray-500 font-normal",
+              ].join(" ")}
             >
               {s === "profile" ? "Mon profil" : "Sécurité"}
             </button>
@@ -156,174 +93,69 @@ export default function ProfilePage() {
         {/* Content */}
         <div>
           {activeSection === "profile" && (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 10,
-                border: "1px solid #e8e8e8",
-                padding: 28,
-              }}
-            >
+            <div className="bg-white rounded-[10px] border border-spektr-border p-7">
               {/* Avatar + info */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 20,
-                  marginBottom: 28,
-                  paddingBottom: 24,
-                  borderBottom: "1px solid #e8e8e8",
-                }}
-              >
-                <div
-                  style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: "50%",
-                    background: "#23b2a4",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 24,
-                    fontWeight: 700,
-                    color: "#fff",
-                    fontFamily: "Montserrat, sans-serif",
-                    flexShrink: 0,
-                  }}
-                >
+              <div className="flex items-center gap-5 mb-7 pb-6 border-b border-spektr-border">
+                <div className="w-[72px] h-[72px] rounded-full bg-spektr-teal flex items-center justify-center text-2xl font-bold text-white font-montserrat flex-shrink-0">
                   {initials}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      fontFamily: "Montserrat, sans-serif",
-                      fontWeight: 800,
-                      fontSize: 20,
-                      color: "#1d1d1e",
-                    }}
-                  >
+                <div className="flex-1">
+                  <div className="font-montserrat font-extrabold text-xl text-spektr-dark">
                     {firstName} {lastName}
                   </div>
-                  <div
-                    style={{
-                      fontFamily: "Source Sans 3, sans-serif",
-                      fontSize: 13,
-                      color: "#9ca3af",
-                      marginTop: 2,
-                    }}
-                  >
+                  <div className="font-source-sans text-[13px] text-gray-400 mt-0.5">
                     {profile?.email}
                   </div>
-                  <div style={{ marginTop: 8 }}>
-                    <span
-                      style={{
-                        background: "rgba(35,178,164,0.1)",
-                        color: "#23b2a4",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        padding: "3px 10px",
-                        borderRadius: 20,
-                        border: "1px solid rgba(35,178,164,0.2)",
-                      }}
-                    >
+                  <div className="mt-2">
+                    <span className="bg-spektr-teal/10 text-spektr-teal text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-spektr-teal/20">
                       Étudiant
                     </span>
                   </div>
                 </div>
                 <button
-                  onClick={() =>
-                    editMode ? setEditMode(false) : handleStartEdit()
-                  }
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 8,
-                    border: "1.5px solid #23b2a4",
-                    background: "transparent",
-                    color: "#23b2a4",
-                    fontFamily: "Montserrat, sans-serif",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: "pointer",
-                  }}
+                  onClick={() => editMode ? setEditMode(false) : handleStartEdit()}
+                  className="px-4 py-2 rounded-lg border-[1.5px] border-spektr-teal bg-transparent text-spektr-teal font-montserrat font-bold text-[13px] cursor-pointer"
                 >
                   {editMode ? "Annuler" : "Modifier"}
                 </button>
               </div>
 
               {/* Form */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 16,
-                  marginBottom: 20,
-                }}
-              >
+              <div className="grid grid-cols-2 gap-4 mb-5">
                 <div>
-                  <label style={labelStyle}>Prénom</label>
+                  <label className={labelCls}>Prénom</label>
                   {editMode ? (
                     <input
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      style={inputStyle}
-                      onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                      onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+                      className={inputCls}
                     />
                   ) : (
-                    <div
-                      style={{
-                        fontFamily: "Source Sans 3, sans-serif",
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: "#1d1d1e",
-                      }}
-                    >
+                    <div className="font-source-sans text-sm font-semibold text-spektr-dark">
                       {firstName || "—"}
                     </div>
                   )}
                 </div>
                 <div>
-                  <label style={labelStyle}>Nom</label>
+                  <label className={labelCls}>Nom</label>
                   {editMode ? (
                     <input
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      style={inputStyle}
-                      onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                      onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+                      className={inputCls}
                     />
                   ) : (
-                    <div
-                      style={{
-                        fontFamily: "Source Sans 3, sans-serif",
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: "#1d1d1e",
-                      }}
-                    >
+                    <div className="font-source-sans text-sm font-semibold text-spektr-dark">
                       {lastName || "—"}
                     </div>
                   )}
                 </div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <label style={labelStyle}>Adresse email</label>
-                  <div
-                    style={{
-                      fontFamily: "Source Sans 3, sans-serif",
-                      fontSize: 14,
-                      color: "#6b7280",
-                    }}
-                  >
+                <div className="col-span-2">
+                  <label className={labelCls}>Adresse email</label>
+                  <div className="font-source-sans text-sm text-gray-500">
                     {profile?.email || "—"}
                   </div>
-                  <p
-                    style={{
-                      fontFamily: "Source Sans 3, sans-serif",
-                      fontSize: 12,
-                      color: "#9ca3af",
-                      marginTop: 3,
-                    }}
-                  >
+                  <p className="font-source-sans text-xs text-gray-400 mt-0.5">
                     L'adresse email ne peut pas être modifiée.
                   </p>
                 </div>
@@ -332,267 +164,108 @@ export default function ProfilePage() {
               {editMode && (
                 <button
                   onClick={async () => {
-                    await handleUpdate({
-                      first_name: firstName,
-                      last_name: lastName,
-                    });
+                    await handleUpdate({ first_name: firstName, last_name: lastName });
                     setEditMode(false);
                   }}
                   disabled={saving}
-                  style={{
-                    padding: "11px 24px",
-                    borderRadius: 8,
-                    border: "none",
-                    background: saving ? "#88d5cf" : "#23b2a4",
-                    color: "#fff",
-                    fontFamily: "Montserrat, sans-serif",
-                    fontWeight: 700,
-                    fontSize: 14,
-                    cursor: saving ? "not-allowed" : "pointer",
-                  }}
+                  className={[
+                    "px-6 py-[11px] rounded-lg border-none font-montserrat font-bold text-sm text-white",
+                    saving ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer",
+                  ].join(" ")}
                 >
-                  {saving
-                    ? "Enregistrement…"
-                    : "✅ Enregistrer les modifications"}
+                  {saving ? "Enregistrement…" : "✅ Enregistrer les modifications"}
                 </button>
               )}
             </div>
           )}
 
           {activeSection === "security" && (
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: 10,
-                border: "1px solid #e8e8e8",
-                padding: 28,
-              }}
-            >
-              <h2
-                style={{
-                  fontFamily: "Montserrat, sans-serif",
-                  fontWeight: 700,
-                  fontSize: 16,
-                  color: "#1d1d1e",
-                  marginBottom: 6,
-                }}
-              >
+            <div className="bg-white rounded-[10px] border border-spektr-border p-7">
+              <h2 className="font-montserrat font-bold text-base text-spektr-dark mb-1.5">
                 Sécurité
               </h2>
-              <p
-                style={{
-                  fontFamily: "Source Sans 3, sans-serif",
-                  fontSize: 13,
-                  color: "#6b7280",
-                  marginBottom: 24,
-                }}
-              >
-                Modifiez votre mot de passe. Vous serez déconnecté après
-                confirmation.
+              <p className="font-source-sans text-[13px] text-gray-500 mb-6">
+                Modifiez votre mot de passe. Vous serez déconnecté après confirmation.
               </p>
 
               {pwdSuccess ? (
-                <div
-                  style={{
-                    background: "#f0fdf4",
-                    border: "1px solid #bbf7d0",
-                    borderRadius: 10,
-                    padding: "20px 24px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                  }}
-                >
-                  <span style={{ fontSize: 28 }}>✅</span>
+                <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-[10px] px-6 py-5 flex items-center gap-3.5">
+                  <span className="text-[28px]">✅</span>
                   <div>
-                    <div
-                      style={{
-                        fontFamily: "Montserrat, sans-serif",
-                        fontWeight: 700,
-                        fontSize: 14,
-                        color: "#16a34a",
-                      }}
-                    >
+                    <div className="font-montserrat font-bold text-sm text-green-600">
                       Mot de passe modifié !
                     </div>
-                    <div
-                      style={{
-                        fontFamily: "Source Sans 3, sans-serif",
-                        fontSize: 13,
-                        color: "#4ade80",
-                        marginTop: 3,
-                      }}
-                    >
-                      Un email de confirmation a été envoyé. Déconnexion en
-                      cours…
+                    <div className="font-source-sans text-[13px] text-green-400 mt-0.5">
+                      Un email de confirmation a été envoyé. Déconnexion en cours…
                     </div>
                   </div>
                 </div>
               ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 16,
-                    maxWidth: 400,
-                  }}
-                >
+                <div className="flex flex-col gap-4 max-w-[400px]">
                   <div>
-                    <label style={labelStyle}>Mot de passe actuel</label>
+                    <label className={labelCls}>Mot de passe actuel</label>
                     <input
                       type="password"
                       value={oldPassword}
-                      onChange={(e) => {
-                        setOldPassword(e.target.value);
-                        setPwdError(null);
-                      }}
+                      onChange={(e) => { setOldPassword(e.target.value); setPwdError(null); }}
                       placeholder="••••••••"
-                      style={inputStyle}
-                      onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                      onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+                      className={inputCls}
                     />
                   </div>
                   <div>
-                    <label style={labelStyle}>Nouveau mot de passe</label>
+                    <label className={labelCls}>Nouveau mot de passe</label>
                     <input
                       type="password"
                       value={newPassword}
-                      onChange={(e) => {
-                        setNewPassword(e.target.value);
-                        setPwdError(null);
-                      }}
+                      onChange={(e) => { setNewPassword(e.target.value); setPwdError(null); }}
                       placeholder="••••••••"
-                      style={inputStyle}
-                      onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                      onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+                      className={inputCls}
                     />
                     {newPassword.length > 0 && newPassword.length < 8 && (
-                      <p
-                        style={{
-                          fontFamily: "Source Sans 3, sans-serif",
-                          fontSize: 12,
-                          color: "#d97706",
-                          marginTop: 4,
-                        }}
-                      >
-                        Minimum 8 caractères
-                      </p>
+                      <p className="font-source-sans text-xs text-amber-600 mt-1">Minimum 8 caractères</p>
                     )}
                   </div>
                   <div>
-                    <label style={labelStyle}>
-                      Confirmer le nouveau mot de passe
-                    </label>
+                    <label className={labelCls}>Confirmer le nouveau mot de passe</label>
                     <input
                       type="password"
                       value={confirmPassword}
-                      onChange={(e) => {
-                        setConfirmPassword(e.target.value);
-                        setPwdError(null);
-                      }}
+                      onChange={(e) => { setConfirmPassword(e.target.value); setPwdError(null); }}
                       placeholder="••••••••"
-                      style={{
-                        ...inputStyle,
-                        borderColor:
-                          confirmPassword && confirmPassword !== newPassword
-                            ? "#e05252"
-                            : "#e8e8e8",
-                      }}
-                      onFocus={(e) =>
-                        (e.target.style.borderColor =
-                          confirmPassword !== newPassword
-                            ? "#e05252"
-                            : "#23b2a4")
-                      }
-                      onBlur={(e) =>
-                        (e.target.style.borderColor =
-                          confirmPassword !== newPassword
-                            ? "#e05252"
-                            : "#e8e8e8")
-                      }
+                      className={[
+                        inputCls,
+                        confirmPassword && confirmPassword !== newPassword
+                          ? "border-spektr-red focus:border-spektr-red"
+                          : "",
+                      ].join(" ")}
                     />
                     {confirmPassword && confirmPassword !== newPassword && (
-                      <p
-                        style={{
-                          fontFamily: "Source Sans 3, sans-serif",
-                          fontSize: 12,
-                          color: "#e05252",
-                          marginTop: 4,
-                        }}
-                      >
+                      <p className="font-source-sans text-xs text-spektr-red mt-1">
                         Les mots de passe ne correspondent pas
                       </p>
                     )}
                   </div>
 
                   {pwdError && (
-                    <div
-                      style={{
-                        background: "#fee2e2",
-                        border: "1px solid #fecaca",
-                        borderRadius: 8,
-                        padding: "10px 14px",
-                        fontFamily: "Source Sans 3, sans-serif",
-                        fontSize: 13,
-                        color: "#dc2626",
-                      }}
-                    >
+                    <div className="bg-[#fee2e2] border border-[#fecaca] rounded-lg px-3.5 py-2.5 font-source-sans text-[13px] text-[#dc2626]">
                       {pwdError}
                     </div>
                   )}
 
                   <button
                     onClick={() => {
-                      if (
-                        !oldPassword ||
-                        !newPassword ||
-                        newPassword.length < 8 ||
-                        newPassword !== confirmPassword
-                      )
-                        return;
+                      if (pwdInvalid) return;
                       submitPasswordChange();
                     }}
-                    disabled={
-                      pwdPending ||
-                      !oldPassword ||
-                      !newPassword ||
-                      newPassword.length < 8 ||
-                      newPassword !== confirmPassword
-                    }
-                    style={{
-                      padding: "11px 24px",
-                      borderRadius: 8,
-                      border: "none",
-                      background:
-                        pwdPending ||
-                        !oldPassword ||
-                        newPassword.length < 8 ||
-                        newPassword !== confirmPassword
-                          ? "#e8e8e8"
-                          : "#23b2a4",
-                      color:
-                        pwdPending ||
-                        !oldPassword ||
-                        newPassword.length < 8 ||
-                        newPassword !== confirmPassword
-                          ? "#9ca3af"
-                          : "#fff",
-                      fontFamily: "Montserrat, sans-serif",
-                      fontWeight: 700,
-                      fontSize: 14,
-                      cursor:
-                        pwdPending ||
-                        !oldPassword ||
-                        newPassword.length < 8 ||
-                        newPassword !== confirmPassword
-                          ? "not-allowed"
-                          : "pointer",
-                      transition: "all 0.15s",
-                    }}
+                    disabled={pwdInvalid}
+                    className={[
+                      "px-6 py-[11px] rounded-lg border-none font-montserrat font-bold text-sm transition-all",
+                      pwdInvalid
+                        ? "bg-spektr-border text-gray-400 cursor-not-allowed"
+                        : "bg-spektr-teal text-white cursor-pointer",
+                    ].join(" ")}
                   >
-                    {pwdPending
-                      ? "Modification en cours…"
-                      : "🔐 Modifier le mot de passe"}
+                    {pwdPending ? "Modification en cours…" : "🔐 Modifier le mot de passe"}
                   </button>
                 </div>
               )}

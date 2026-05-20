@@ -45,32 +45,19 @@ function StudentNavItem({
   return (
     <Link
       to={href}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "10px 20px",
-        cursor: "pointer",
-        transition: "all 0.15s",
-        textDecoration: "none",
-        borderLeft: isActive ? "3px solid #23b2a4" : "3px solid transparent",
-        background: isActive ? "rgba(35,178,164,0.12)" : "transparent",
-      }}
-      onMouseEnter={(e) =>
-        !isActive &&
-        (e.currentTarget.style.background = "rgba(255,255,255,0.04)")
-      }
-      onMouseLeave={(e) =>
-        !isActive && (e.currentTarget.style.background = "transparent")
-      }
+      className={[
+        "flex items-center gap-2.5 px-5 py-2.5 transition-all no-underline border-l-[3px]",
+        isActive
+          ? "border-l-spektr-teal bg-spektr-teal/12"
+          : "border-l-transparent hover:bg-white/[0.04]",
+      ].join(" ")}
     >
       <Icon size={16} color={isActive ? "#23b2a4" : "rgba(255,255,255,0.5)"} />
       <span
-        style={{
-          fontSize: 13,
-          fontWeight: isActive ? 600 : 400,
-          color: isActive ? "#fff" : "rgba(255,255,255,0.6)",
-        }}
+        className={[
+          "text-[13px]",
+          isActive ? "font-semibold text-white" : "font-normal text-white/60",
+        ].join(" ")}
       >
         {label}
       </span>
@@ -91,7 +78,6 @@ function AdminNavItem({
   activePage: string;
   onClick: (p: string) => void;
 }) {
-  // student-detail is a sub-page of students
   const isActive =
     activePage === page ||
     (page === "students" && activePage === "student-detail");
@@ -99,34 +85,19 @@ function AdminNavItem({
     <button
       onClick={() => onClick(page)}
       aria-current={isActive ? "page" : undefined}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "10px 20px",
-        cursor: "pointer",
-        transition: "all 0.15s",
-        background: isActive ? "rgba(35,178,164,0.12)" : "transparent",
-        borderLeft: isActive ? "3px solid #23b2a4" : "3px solid transparent",
-        border: "none",
-        width: "100%",
-        textAlign: "left",
-      }}
-      onMouseEnter={(e) =>
-        !isActive &&
-        (e.currentTarget.style.background = "rgba(255,255,255,0.04)")
-      }
-      onMouseLeave={(e) =>
-        !isActive && (e.currentTarget.style.background = "transparent")
-      }
+      className={[
+        "flex items-center gap-2.5 px-5 py-2.5 transition-all border-l-[3px] border-none w-full text-left cursor-pointer",
+        isActive
+          ? "border-l-spektr-teal bg-spektr-teal/12"
+          : "border-l-transparent hover:bg-white/[0.04]",
+      ].join(" ")}
     >
       <Icon size={16} color={isActive ? "#23b2a4" : "rgba(255,255,255,0.5)"} />
       <span
-        style={{
-          fontSize: 13,
-          fontWeight: isActive ? 600 : 400,
-          color: isActive ? "#fff" : "rgba(255,255,255,0.6)",
-        }}
+        className={[
+          "text-[13px]",
+          isActive ? "font-semibold text-white" : "font-normal text-white/60",
+        ].join(" ")}
       >
         {label}
       </span>
@@ -142,7 +113,6 @@ const Sidebar = () => {
   const location = useRouterState({ select: (s) => s.location });
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // For admin, reactively read active page from URL search params
   const adminPage =
     new URLSearchParams(location.search).get("p") ?? "dashboard";
 
@@ -164,68 +134,21 @@ const Sidebar = () => {
     <div
       role="navigation"
       aria-label="Menu principal"
-      style={{
-        width: 220,
-        minWidth: 220,
-        height: "100vh",
-        background: "#1d1d1e",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0,
-        position: "fixed",
-        left: 0,
-        top: 0,
-        zIndex: 100,
-      }}
+      className="w-[220px] min-w-[220px] h-screen bg-spektr-dark flex flex-col flex-shrink-0 fixed left-0 top-0 z-[100]"
     >
       {/* Logo */}
-      <div
-        style={{
-          padding: "28px 20px 20px",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 24,
-            fontWeight: 800,
-            color: "#fff",
-            letterSpacing: -0.5,
-            fontFamily: "Montserrat, sans-serif",
-          }}
-        >
-          Spek<span style={{ color: "#23b2a4" }}>tr</span>
+      <div className="px-5 pt-7 pb-5 border-b border-white/[0.07]">
+        <div className="font-montserrat text-2xl font-extrabold text-white tracking-tight">
+          Spek<span className="text-spektr-teal">tr</span>
         </div>
-        <div
-          style={{
-            fontSize: 9,
-            color: "rgba(255,255,255,0.35)",
-            fontWeight: 600,
-            letterSpacing: 2,
-            marginTop: 2,
-            textTransform: "uppercase",
-            fontFamily: "Montserrat, sans-serif",
-          }}
-        >
+        <div className="font-montserrat text-[9px] text-white/35 font-semibold tracking-[2px] uppercase mt-0.5">
           YNOV CAMPUS
         </div>
       </div>
 
       {/* Nav */}
-      <nav
-        style={{ flex: 1, overflowY: "auto", paddingTop: 18, paddingBottom: 8 }}
-      >
-        <div
-          style={{
-            fontSize: 9,
-            color: "rgba(255,255,255,0.3)",
-            fontWeight: 700,
-            letterSpacing: 2,
-            padding: "0 20px 10px",
-            textTransform: "uppercase",
-            fontFamily: "Montserrat, sans-serif",
-          }}
-        >
+      <nav className="flex-1 overflow-y-auto pt-[18px] pb-2">
+        <div className="font-montserrat text-[9px] text-white/30 font-bold tracking-[2px] uppercase px-5 pb-2.5">
           NAVIGATION
         </div>
 
@@ -245,13 +168,7 @@ const Sidebar = () => {
             {StudentNav.map((item) => (
               <StudentNavItem key={item.href} {...item} />
             ))}
-            <div
-              style={{
-                margin: "14px 20px",
-                height: 1,
-                background: "rgba(255,255,255,0.08)",
-              }}
-            />
+            <div className="mx-5 my-3.5 h-px bg-white/[0.08]" />
             <StudentNavItem href="/profil" label="Mon profil" icon={User} />
           </>
         )}
@@ -259,25 +176,8 @@ const Sidebar = () => {
 
       {/* Notification bell (students only) */}
       {!isAdmin && (
-        <div
-          style={{
-            padding: "8px 12px",
-            borderTop: "1px solid rgba(255,255,255,0.07)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 10,
-              color: "rgba(255,255,255,0.3)",
-              fontWeight: 700,
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              fontFamily: "Montserrat, sans-serif",
-            }}
-          >
+        <div className="px-3 py-2 border-t border-white/[0.07] flex items-center justify-between">
+          <span className="font-montserrat text-[10px] text-white/30 font-bold tracking-[2px] uppercase">
             NOTIFS
           </span>
           <NotificationBell />
@@ -285,35 +185,18 @@ const Sidebar = () => {
       )}
 
       {/* User footer with dropdown */}
-      <div
-        style={{
-          position: "relative",
-          borderTop: "1px solid rgba(255,255,255,0.07)",
-        }}
-      >
+      <div className="relative border-t border-white/[0.07]">
         {showUserMenu && (
           <>
             {/* Backdrop */}
             <div
-              style={{ position: "fixed", inset: 0, zIndex: 99 }}
+              className="fixed inset-0 z-[99]"
               onClick={() => setShowUserMenu(false)}
             />
             {/* Dropdown menu */}
             <div
               role="menu"
-              style={{
-                position: "absolute",
-                bottom: "100%",
-                left: 12,
-                right: 12,
-                marginBottom: 6,
-                background: "#2a2a2b",
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.1)",
-                overflow: "hidden",
-                zIndex: 200,
-                boxShadow: "0 -8px 24px rgba(0,0,0,0.3)",
-              }}
+              className="absolute bottom-full left-3 right-3 mb-1.5 bg-[#2a2a2b] rounded-[10px] border border-white/10 overflow-hidden z-[200] shadow-[0_-8px_24px_rgba(0,0,0,0.3)]"
             >
               <button
                 role="menuitem"
@@ -321,70 +204,24 @@ const Sidebar = () => {
                   setShowUserMenu(false);
                   navigate({ to: "/profil" });
                 }}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "11px 14px",
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "rgba(255,255,255,0.06)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
+                className="w-full flex items-center gap-2.5 px-3.5 py-[11px] bg-transparent border-none cursor-pointer text-left hover:bg-white/[0.06]"
               >
                 <User size={14} color="rgba(255,255,255,0.6)" />
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: "rgba(255,255,255,0.85)",
-                    fontFamily: "Source Sans 3, sans-serif",
-                  }}
-                >
+                <span className="text-[13px] text-white/85 font-source-sans">
                   Mon profil
                 </span>
               </button>
-              <div
-                style={{ height: 1, background: "rgba(255,255,255,0.07)" }}
-              />
+              <div className="h-px bg-white/[0.07]" />
               <button
                 role="menuitem"
                 onClick={() => {
                   setShowUserMenu(false);
                   handleLogout();
                 }}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "11px 14px",
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "rgba(220,38,38,0.12)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
+                className="w-full flex items-center gap-2.5 px-3.5 py-[11px] bg-transparent border-none cursor-pointer text-left hover:bg-red-600/[0.12]"
               >
                 <LogOut size={14} color="#f87171" />
-                <span
-                  style={{
-                    fontSize: 13,
-                    color: "#f87171",
-                    fontFamily: "Source Sans 3, sans-serif",
-                  }}
-                >
+                <span className="text-[13px] text-red-400 font-source-sans">
                   Se déconnecter
                 </span>
               </button>
@@ -395,58 +232,17 @@ const Sidebar = () => {
           aria-haspopup="menu"
           aria-expanded={showUserMenu}
           aria-label={`Menu utilisateur — ${fullName}`}
-          style={{
-            width: "100%",
-            padding: "16px 20px",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            cursor: "pointer",
-            background: "transparent",
-            border: "none",
-            textAlign: "left",
-          }}
+          className="w-full px-5 py-4 flex items-center gap-2.5 cursor-pointer bg-transparent border-none text-left hover:bg-white/[0.04]"
           onClick={() => setShowUserMenu((v) => !v)}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = "rgba(255,255,255,0.04)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "transparent")
-          }
         >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: "50%",
-              background: "#23b2a4",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontSize: 12,
-              fontWeight: 700,
-              flexShrink: 0,
-              fontFamily: "Montserrat, sans-serif",
-            }}
-          >
+          <div className="w-9 h-9 rounded-full bg-spektr-teal flex items-center justify-center text-white text-xs font-bold flex-shrink-0 font-montserrat">
             {initials}
           </div>
-          <div style={{ flex: 1, overflow: "hidden" }}>
-            <div
-              style={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: "#fff",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                fontFamily: "Montserrat, sans-serif",
-              }}
-            >
+          <div className="flex-1 overflow-hidden">
+            <div className="text-xs font-bold text-white truncate font-montserrat">
               {fullName}
             </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>
+            <div className="text-[10px] text-white/40">
               {isAdmin ? "Chargé RE" : "Étudiant"}
             </div>
           </div>

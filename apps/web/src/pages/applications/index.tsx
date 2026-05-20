@@ -19,32 +19,22 @@ const STATUT_LABELS: Record<Statut, string> = {
   REFUS: "Refus",
 };
 
-const STATUT_COLORS: Record<Statut, { bg: string; color: string; border: string }> = {
-  A_CONTACTER: { bg: "#f3f4f6", color: "#6b7280", border: "#e5e7eb" },
-  ENVOYE:      { bg: "#eff6ff", color: "#3b82f6", border: "#bfdbfe" },
-  RELANCE:     { bg: "#fff7ed", color: "#d97706", border: "#fed7aa" },
-  EN_DISCUSSION: { bg: "#f5f3ff", color: "#8b5cf6", border: "#ddd6fe" },
-  REPONSE_POSITIVE: { bg: "#dcfce7", color: "#16a34a", border: "#bbf7d0" },
-  REFUS:       { bg: "#fee2e2", color: "#dc2626", border: "#fecaca" },
+const STATUT_COLORS: Record<Statut, { bg: string; text: string; border: string; activeBg: string }> = {
+  A_CONTACTER:      { bg: "bg-gray-100",   text: "text-gray-500",   border: "border-gray-200",   activeBg: "bg-gray-500" },
+  ENVOYE:           { bg: "bg-blue-50",    text: "text-blue-500",   border: "border-blue-200",   activeBg: "bg-blue-500" },
+  RELANCE:          { bg: "bg-amber-50",   text: "text-amber-600",  border: "border-amber-200",  activeBg: "bg-amber-600" },
+  EN_DISCUSSION:    { bg: "bg-violet-50",  text: "text-violet-500", border: "border-violet-200", activeBg: "bg-violet-500" },
+  REPONSE_POSITIVE: { bg: "bg-green-100",  text: "text-green-600",  border: "border-green-200",  activeBg: "bg-green-600" },
+  REFUS:            { bg: "bg-red-100",    text: "text-red-600",    border: "border-red-200",    activeBg: "bg-red-600" },
 };
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "9px 12px",
-  border: "1.5px solid #e8e8e8",
-  borderRadius: 8,
-  fontFamily: "Source Sans 3, sans-serif",
-  fontSize: 13,
-  outline: "none",
-  boxSizing: "border-box",
-  color: "#1d1d1e",
-  background: "#fff",
-};
+const inputCls =
+  "w-full px-3 py-[9px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] text-spektr-dark bg-white focus:outline-none focus:border-spektr-teal box-border";
 
 function StatusBadge({ statut }: { statut: Statut }) {
   const c = STATUT_COLORS[statut];
   return (
-    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: c.bg, color: c.color, border: `1px solid ${c.border}` }}>
+    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-[10px] border ${c.bg} ${c.text} ${c.border}`}>
       {STATUT_LABELS[statut]}
     </span>
   );
@@ -73,72 +63,63 @@ function AppModal({ app, onClose, onSave, mode }: ModalProps) {
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#fff", borderRadius: 16, width: 560, maxHeight: "90vh", overflow: "auto", boxShadow: "0 24px 80px rgba(0,0,0,0.2)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 28px", borderBottom: "1px solid #e8e8e8" }}>
-          <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 17, color: "#1d1d1e" }}>
+    <div className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center">
+      <div className="bg-white rounded-2xl w-[560px] max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]">
+        <div className="flex justify-between items-center px-7 py-[22px] border-b border-spektr-border">
+          <span className="font-montserrat font-extrabold text-[17px] text-spektr-dark">
             {mode === "create" ? "Nouvelle candidature" : "Modifier la candidature"}
           </span>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: "#9ca3af" }}>✕</button>
+          <button onClick={onClose} className="bg-transparent border-none cursor-pointer text-xl text-gray-400">✕</button>
         </div>
-        <div style={{ padding: "22px 28px", display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="px-7 py-[22px] flex flex-col gap-3.5">
           <div>
-            <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, color: "#1d1d1e", display: "block", marginBottom: 5 }}>
+            <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">
               Entreprise *
             </label>
-            <input value={form.entreprise} onChange={set("entreprise")} placeholder="Nom de l'entreprise" style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-              onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+            <input value={form.entreprise} onChange={set("entreprise")} placeholder="Nom de l'entreprise" className={inputCls} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, color: "#1d1d1e", display: "block", marginBottom: 5 }}>Statut</label>
-              <select value={form.statut} onChange={set("statut")} style={{ ...inputStyle, background: "#fff", cursor: "pointer" }}>
+              <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Statut</label>
+              <select value={form.statut} onChange={set("statut")} className={`${inputCls} cursor-pointer`}>
                 {STATUTS.map((s) => <option key={s} value={s}>{STATUT_LABELS[s]}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, color: "#1d1d1e", display: "block", marginBottom: 5 }}>Date de candidature</label>
-              <input type="date" value={form.date_candidature?.split("T")[0] ?? ""} onChange={set("date_candidature")} style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+              <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Date de candidature</label>
+              <input type="date" value={form.date_candidature?.split("T")[0] ?? ""} onChange={set("date_candidature")} className={inputCls} />
             </div>
           </div>
           <div>
-            <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, color: "#1d1d1e", display: "block", marginBottom: 5 }}>Lien de l'offre</label>
-            <input value={form.lien} onChange={set("lien")} placeholder="https://..." style={inputStyle}
-              onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-              onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+            <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Lien de l'offre</label>
+            <input value={form.lien} onChange={set("lien")} placeholder="https://..." className={inputCls} />
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, color: "#1d1d1e", display: "block", marginBottom: 5 }}>Nom du contact</label>
-              <input value={form.contact_nom} onChange={set("contact_nom")} placeholder="Jean Dupont" style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+              <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Nom du contact</label>
+              <input value={form.contact_nom} onChange={set("contact_nom")} placeholder="Jean Dupont" className={inputCls} />
             </div>
             <div>
-              <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, color: "#1d1d1e", display: "block", marginBottom: 5 }}>Email du contact</label>
-              <input value={form.contact_email} onChange={set("contact_email")} placeholder="contact@entreprise.com" style={inputStyle}
-                onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-                onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+              <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Email du contact</label>
+              <input value={form.contact_email} onChange={set("contact_email")} placeholder="contact@entreprise.com" className={inputCls} />
             </div>
           </div>
           <div>
-            <label style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, color: "#1d1d1e", display: "block", marginBottom: 5 }}>Commentaire</label>
+            <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Commentaire</label>
             <textarea value={form.commentaire} onChange={set("commentaire")} placeholder="Notes sur cette candidature..." rows={3}
-              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
-              onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-              onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")} />
+              className={`${inputCls} resize-y leading-relaxed`} />
           </div>
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 4 }}>
-            <button onClick={onClose} style={{ padding: "10px 20px", borderRadius: 8, border: "1.5px solid #e8e8e8", background: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, cursor: "pointer", color: "#6b7280" }}>
+          <div className="flex gap-2.5 justify-end pt-1">
+            <button onClick={onClose} className="px-5 py-2.5 rounded-lg border-[1.5px] border-spektr-border bg-white font-montserrat font-semibold text-[13px] cursor-pointer text-gray-500">
               Annuler
             </button>
             <button
               onClick={() => onSave(form)}
               disabled={!form.entreprise.trim()}
-              style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: form.entreprise.trim() ? "#23b2a4" : "#88d5cf", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: form.entreprise.trim() ? "pointer" : "not-allowed" }}
+              className={[
+                "px-5 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white",
+                form.entreprise.trim() ? "bg-spektr-teal cursor-pointer" : "bg-spektr-teal/50 cursor-not-allowed",
+              ].join(" ")}
             >
               {mode === "create" ? "Ajouter" : "Enregistrer"}
             </button>
@@ -192,70 +173,68 @@ const ApplicationsPage = () => {
   );
 
   return (
-    <div style={{ padding: "28px 32px", background: "#f5f5f5", minHeight: "100%" }}>
+    <div className="py-7 px-8 bg-spektr-bg min-h-full">
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 22, color: "#1d1d1e", letterSpacing: "-0.3px" }}>
+          <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark tracking-[-0.3px]">
             Candidatures
           </h1>
-          <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>
+          <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">
             {applications.length} candidature{applications.length !== 1 ? "s" : ""} au total
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          style={{ padding: "10px 18px", borderRadius: 8, border: "none", background: "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+          className="px-[18px] py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer flex items-center gap-1.5"
         >
           + Nouvelle candidature
         </button>
       </div>
 
       {/* Status summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10, marginBottom: 20 }}>
+      <div className="grid grid-cols-6 gap-2.5 mb-5">
         {STATUTS.map((s) => {
           const c = STATUT_COLORS[s];
+          const isActive = filterStatut === s;
           return (
             <button
               key={s}
               onClick={() => setFilterStatut(filterStatut === s ? "tous" : s)}
-              style={{
-                background: filterStatut === s ? c.color : "#fff",
-                color: filterStatut === s ? "#fff" : c.color,
-                border: `1.5px solid ${c.border}`,
-                borderRadius: 10,
-                padding: "10px 12px",
-                cursor: "pointer",
-                fontFamily: "Montserrat, sans-serif",
-                textAlign: "left",
-              }}
+              className={[
+                `border-[1.5px] rounded-[10px] px-3 py-2.5 cursor-pointer font-montserrat text-left ${c.border}`,
+                isActive ? `${c.activeBg} text-white` : `bg-white ${c.text}`,
+              ].join(" ")}
             >
-              <div style={{ fontSize: 18, fontWeight: 800 }}>{counts[s] ?? 0}</div>
-              <div style={{ fontSize: 10, fontWeight: 600, marginTop: 2 }}>{STATUT_LABELS[s]}</div>
+              <div className="text-lg font-extrabold">{counts[s] ?? 0}</div>
+              <div className="text-[10px] font-semibold mt-0.5">{STATUT_LABELS[s]}</div>
             </button>
           );
         })}
       </div>
 
       {/* Table */}
-      <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8" }}>
+      <div className="bg-white rounded-[10px] border border-spektr-border">
         {/* Toolbar */}
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid #e8e8e8", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ position: "relative", flex: 1, maxWidth: 320 }}>
-            <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", pointerEvents: "none" }}>🔍</span>
+        <div className="px-5 py-3.5 border-b border-spektr-border flex items-center gap-3">
+          <div className="relative flex-1 max-w-[320px]">
+            <span className="absolute left-[11px] top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">🔍</span>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher une entreprise..."
-              style={{ ...inputStyle, paddingLeft: 34 }}
-              onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-              onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+              className={`${inputCls} pl-[34px]`}
             />
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div className="flex gap-1.5">
             <button
               onClick={() => setFilterStatut("tous")}
-              style={{ padding: "6px 14px", borderRadius: 20, border: "1.5px solid", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "Montserrat, sans-serif", background: filterStatut === "tous" ? "#23b2a4" : "transparent", color: filterStatut === "tous" ? "#fff" : "#6b7280", borderColor: filterStatut === "tous" ? "#23b2a4" : "#e8e8e8" }}
+              className={[
+                "px-3.5 py-1.5 rounded-full border-[1.5px] text-xs font-semibold cursor-pointer font-montserrat",
+                filterStatut === "tous"
+                  ? "bg-spektr-teal text-white border-spektr-teal"
+                  : "bg-transparent text-gray-500 border-spektr-border",
+              ].join(" ")}
             >
               Tous ({applications.length})
             </button>
@@ -263,29 +242,29 @@ const ApplicationsPage = () => {
         </div>
 
         {isLoading ? (
-          <div style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>Chargement…</div>
+          <div className="py-10 text-center text-gray-400">Chargement…</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: "60px 40px", textAlign: "center" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-            <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 15, color: "#6b7280" }}>
+          <div className="py-[60px] px-10 text-center">
+            <div className="text-[40px] mb-3">📭</div>
+            <p className="font-montserrat font-semibold text-[15px] text-gray-500">
               {search || filterStatut !== "tous" ? "Aucun résultat" : "Aucune candidature"}
             </p>
             {!search && filterStatut === "tous" && (
               <button
                 onClick={() => setShowCreate(true)}
-                style={{ marginTop: 12, padding: "10px 20px", borderRadius: 8, border: "none", background: "#23b2a4", color: "#fff", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer" }}
+                className="mt-3 px-5 py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer"
               >
                 Ajouter ma première candidature
               </button>
             )}
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
               <thead>
-                <tr style={{ background: "#fafafa" }}>
+                <tr className="bg-[#fafafa]">
                   {["Entreprise", "Statut", "Date", "Contact", "Commentaire", "Actions"].map((h) => (
-                    <th key={h} style={{ padding: "12px 16px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid #e8e8e8" }}>
+                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-[0.5px] border-b border-spektr-border">
                       {h}
                     </th>
                   ))}
@@ -295,50 +274,48 @@ const ApplicationsPage = () => {
                 {filtered.map((app) => (
                   <tr
                     key={app.id}
-                    style={{ borderBottom: "1px solid #e8e8e8", transition: "background 0.15s" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    className="border-b border-spektr-border transition-colors hover:bg-[#fafafa]"
                   >
-                    <td style={{ padding: "14px 16px" }}>
-                      <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, color: "#1d1d1e" }}>
+                    <td className="px-4 py-3.5">
+                      <div className="font-montserrat font-semibold text-[13px] text-spektr-dark">
                         {app.entreprise}
                       </div>
                       {app.lien && (
-                        <a href={app.lien} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#23b2a4", textDecoration: "none" }}>
+                        <a href={app.lien} target="_blank" rel="noopener noreferrer" className="font-source-sans text-[11px] text-spektr-teal no-underline">
                           Voir l'offre →
                         </a>
                       )}
                     </td>
-                    <td style={{ padding: "14px 16px" }}>
+                    <td className="px-4 py-3.5">
                       <StatusBadge statut={app.statut} />
                     </td>
-                    <td style={{ padding: "14px 16px", fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#6b7280" }}>
+                    <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500">
                       {app.date_candidature
                         ? new Date(app.date_candidature).toLocaleDateString("fr-FR")
                         : "—"}
                     </td>
-                    <td style={{ padding: "14px 16px", fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#6b7280" }}>
+                    <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500">
                       {app.contact_nom || "—"}
                       {app.contact_email && (
-                        <div style={{ fontSize: 11, color: "#9ca3af" }}>{app.contact_email}</div>
+                        <div className="text-[11px] text-gray-400">{app.contact_email}</div>
                       )}
                     </td>
-                    <td style={{ padding: "14px 16px", fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#6b7280", maxWidth: 200 }}>
-                      <span style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500 max-w-[200px]">
+                      <span className="line-clamp-2">
                         {app.commentaire || "—"}
                       </span>
                     </td>
-                    <td style={{ padding: "14px 16px" }}>
-                      <div style={{ display: "flex", gap: 6 }}>
+                    <td className="px-4 py-3.5">
+                      <div className="flex gap-1.5">
                         <button
                           onClick={() => setEditApp(app)}
-                          style={{ background: "rgba(35,178,164,0.1)", border: "none", borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#23b2a4" }}
+                          className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-[5px] cursor-pointer text-[11px] font-semibold text-spektr-teal"
                         >
                           Modifier
                         </button>
                         <button
                           onClick={() => deleteApp(app.id)}
-                          style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: "#dc2626" }}
+                          className="bg-[#fee2e2] border-none rounded-md px-2.5 py-[5px] cursor-pointer text-[11px] font-semibold text-[#dc2626]"
                         >
                           Supprimer
                         </button>
@@ -352,7 +329,6 @@ const ApplicationsPage = () => {
         )}
       </div>
 
-      {/* Create modal */}
       {showCreate && (
         <AppModal
           mode="create"
@@ -365,7 +341,6 @@ const ApplicationsPage = () => {
         />
       )}
 
-      {/* Edit modal */}
       {editApp && (
         <AppModal
           mode="edit"

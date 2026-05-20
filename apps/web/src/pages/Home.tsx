@@ -13,13 +13,13 @@ const STATUT_LABELS: Record<string, string> = {
   REFUS: "Refus",
 };
 
-const STATUT_COLORS: Record<string, { bg: string; color: string }> = {
-  A_CONTACTER: { bg: "#f3f4f6", color: "#6b7280" },
-  ENVOYE: { bg: "#eff6ff", color: "#3b82f6" },
-  RELANCE: { bg: "#fff7ed", color: "#d97706" },
-  EN_DISCUSSION: { bg: "#f5f3ff", color: "#8b5cf6" },
-  REPONSE_POSITIVE: { bg: "#dcfce7", color: "#16a34a" },
-  REFUS: { bg: "#fee2e2", color: "#dc2626" },
+const STATUT_COLORS: Record<string, { bg: string; text: string }> = {
+  A_CONTACTER: { bg: "bg-gray-100", text: "text-gray-500" },
+  ENVOYE: { bg: "bg-blue-50", text: "text-blue-500" },
+  RELANCE: { bg: "bg-amber-50", text: "text-amber-600" },
+  EN_DISCUSSION: { bg: "bg-violet-50", text: "text-violet-500" },
+  REPONSE_POSITIVE: { bg: "bg-green-100", text: "text-green-600" },
+  REFUS: { bg: "bg-red-100", text: "text-red-600" },
 };
 
 export default function HomePage() {
@@ -39,12 +39,8 @@ export default function HomePage() {
   const activeApps = applications.filter((a) =>
     ["ENVOYE", "RELANCE", "EN_DISCUSSION"].includes(a.statut)
   );
-  const interviews = applications.filter(
-    (a) => a.outcome === "ENTRETIEN"
-  );
-  const positives = applications.filter(
-    (a) => a.statut === "REPONSE_POSITIVE"
-  );
+  const interviews = applications.filter((a) => a.outcome === "ENTRETIEN");
+  const positives = applications.filter((a) => a.statut === "REPONSE_POSITIVE");
 
   const recentApps = [...applications]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -59,76 +55,79 @@ export default function HomePage() {
         : "Bonsoir";
 
   return (
-    <div style={{ padding: "28px 32px", background: "#f5f5f5", minHeight: "100%" }}>
+    <div className="py-7 px-8 bg-spektr-bg min-h-full">
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 26, color: "#1d1d1e", letterSpacing: "-0.5px" }}>
+      <div className="mb-7">
+        <h1 className="font-montserrat font-extrabold text-[26px] text-spektr-dark tracking-[-0.5px]">
           {greeting}, {firstName} 👋
         </h1>
-        <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 14, color: "#6b7280", marginTop: 4 }}>
+        <p className="font-source-sans text-sm text-gray-500 mt-1">
           Voici un aperçu de votre recherche d'alternance.
         </p>
       </div>
 
       {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
+      <div className="grid grid-cols-3 gap-4 mb-6">
         {[
           { label: "Candidatures en cours", value: activeApps.length, delta: `${applications.length} au total`, icon: "📨" },
           { label: "Entretiens obtenus", value: interviews.length, delta: "depuis le début", icon: "🤝" },
           { label: "Réponses positives", value: positives.length, delta: "offres reçues", icon: "✅" },
         ].map((stat, i) => (
-          <div key={i} style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", padding: 20 }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>{stat.icon}</div>
-            <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 32, color: "#1d1d1e", letterSpacing: "-1px" }}>
+          <div key={i} className="bg-white rounded-[10px] border border-spektr-border p-5">
+            <div className="text-[28px] mb-2">{stat.icon}</div>
+            <div className="font-montserrat font-extrabold text-[32px] text-spektr-dark tracking-[-1px]">
               {stat.value}
             </div>
-            <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 11, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 4 }}>
+            <div className="font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] mt-1">
               {stat.label}
             </div>
-            <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
+            <div className="font-source-sans text-xs text-gray-400 mt-0.5">
               {stat.delta}
             </div>
           </div>
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}>
+      <div className="grid grid-cols-[1fr_320px] gap-4">
         {/* Recent applications */}
-        <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14 }}>Candidatures récentes</span>
-            <Link to="/candidatures" style={{ fontSize: 12, color: "#23b2a4", fontWeight: 600, textDecoration: "none" }}>
+        <div className="bg-white rounded-[10px] border border-spektr-border p-5">
+          <div className="flex justify-between items-center mb-4">
+            <span className="font-montserrat font-bold text-sm">Candidatures récentes</span>
+            <Link to="/candidatures" className="text-xs text-spektr-teal font-semibold no-underline">
               Voir toutes →
             </Link>
           </div>
           {recentApps.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af", fontSize: 14 }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
+            <div className="text-center py-8 text-gray-400 text-sm">
+              <div className="text-[32px] mb-2">📭</div>
               <p>Aucune candidature pour l'instant</p>
-              <Link to="/candidatures" style={{ display: "inline-block", marginTop: 12, padding: "8px 16px", background: "#23b2a4", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
+              <Link
+                to="/candidatures"
+                className="inline-block mt-3 px-4 py-2 bg-spektr-teal text-white rounded-lg text-[13px] font-semibold no-underline"
+              >
                 Ajouter une candidature
               </Link>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="flex flex-col gap-3">
               {recentApps.map((app) => {
-                const colors = STATUT_COLORS[app.statut] ?? { bg: "#f3f4f6", color: "#6b7280" };
+                const colors = STATUT_COLORS[app.statut] ?? { bg: "bg-gray-100", text: "text-gray-500" };
                 return (
-                  <div key={app.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid #f5f5f5" }}>
-                    <div style={{ width: 38, height: 38, borderRadius: "50%", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, color: colors.color, flexShrink: 0 }}>
+                  <div key={app.id} className="flex items-center gap-3 py-2.5 border-b border-spektr-bg">
+                    <div className={`w-[38px] h-[38px] rounded-full ${colors.bg} flex items-center justify-center font-montserrat font-bold text-[13px] ${colors.text} flex-shrink-0`}>
                       {app.entreprise.slice(0, 2).toUpperCase()}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 13, color: "#1d1d1e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
                         {app.entreprise}
                       </div>
-                      <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                      <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
                         {app.date_candidature
                           ? new Date(app.date_candidature).toLocaleDateString("fr-FR")
                           : "—"}
                       </div>
                     </div>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 10, background: colors.bg, color: colors.color, whiteSpace: "nowrap" }}>
+                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-[10px] ${colors.bg} ${colors.text} whitespace-nowrap`}>
                       {STATUT_LABELS[app.statut] ?? app.statut}
                     </span>
                   </div>
@@ -138,30 +137,31 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Objectives */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", padding: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <span style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13 }}>Mes objectifs</span>
-              <Link to="/objectifs" style={{ fontSize: 12, color: "#23b2a4", fontWeight: 600, textDecoration: "none" }}>
+        {/* Right column */}
+        <div className="flex flex-col gap-4">
+          {/* Objectives */}
+          <div className="bg-white rounded-[10px] border border-spektr-border p-5">
+            <div className="flex justify-between items-center mb-3.5">
+              <span className="font-montserrat font-bold text-[13px]">Mes objectifs</span>
+              <Link to="/objectifs" className="text-xs text-spektr-teal font-semibold no-underline">
                 Voir →
               </Link>
             </div>
             {objectives.length === 0 ? (
-              <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>
+              <p className="text-[13px] text-gray-400 text-center py-4">
                 Aucun objectif pour l'instant
               </p>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div className="flex flex-col gap-2.5">
                 {objectives.slice(0, 4).map((obj) => (
-                  <div key={obj.id} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                    <span style={{ fontSize: 16, marginTop: 1 }}>🎯</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 12, color: "#1d1d1e" }}>
+                  <div key={obj.id} className="flex items-start gap-2.5">
+                    <span className="text-base mt-px">🎯</span>
+                    <div className="flex-1">
+                      <div className="font-montserrat font-semibold text-xs text-spektr-dark">
                         {obj.title}
                       </div>
                       {obj.deadline && (
-                        <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                        <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
                           Deadline : {new Date(obj.deadline).toLocaleDateString("fr-FR")}
                         </div>
                       )}
@@ -173,15 +173,21 @@ export default function HomePage() {
           </div>
 
           {/* Quick actions */}
-          <div style={{ background: "rgba(35,178,164,0.06)", borderRadius: 10, border: "1px solid rgba(35,178,164,0.2)", padding: 20 }}>
-            <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 13, color: "#23b2a4", marginBottom: 12 }}>
+          <div className="bg-spektr-teal/[0.06] rounded-[10px] border border-spektr-teal/20 p-5">
+            <div className="font-montserrat font-bold text-[13px] text-spektr-teal mb-3">
               Actions rapides
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <Link to="/candidatures" style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "#fff", borderRadius: 8, border: "1px solid #e8e8e8", textDecoration: "none", fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#1d1d1e", fontWeight: 600 }}>
+            <div className="flex flex-col gap-2">
+              <Link
+                to="/candidatures"
+                className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-spektr-border no-underline font-source-sans text-[13px] text-spektr-dark font-semibold"
+              >
                 <span>📨</span> Nouvelle candidature
               </Link>
-              <Link to="/docs" style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "#fff", borderRadius: 8, border: "1px solid #e8e8e8", textDecoration: "none", fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#1d1d1e", fontWeight: 600 }}>
+              <Link
+                to="/docs"
+                className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-spektr-border no-underline font-source-sans text-[13px] text-spektr-dark font-semibold"
+              >
                 <span>📄</span> Mes documents
               </Link>
             </div>

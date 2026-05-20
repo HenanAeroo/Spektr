@@ -11,29 +11,6 @@ const loginSchema = z.object({
 
 type LoginSchema = z.infer<typeof loginSchema>;
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "11px 14px",
-  borderRadius: 8,
-  border: "1.5px solid #e8e8e8",
-  fontFamily: "Source Sans 3, sans-serif",
-  fontSize: 14,
-  outline: "none",
-  boxSizing: "border-box",
-  transition: "border-color 0.2s",
-  color: "#1d1d1e",
-  background: "#fff",
-};
-
-const labelStyle: React.CSSProperties = {
-  fontFamily: "Montserrat, sans-serif",
-  fontWeight: 600,
-  fontSize: 13,
-  color: "#1d1d1e",
-  display: "block",
-  marginBottom: 6,
-};
-
 const LoginForm = () => {
   const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
@@ -47,70 +24,49 @@ const LoginForm = () => {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} style={{ width: "100%" }}>
-      <div style={{ marginBottom: 14 }}>
-        <label htmlFor="email" style={labelStyle}>Adresse email</label>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+      <div className="mb-3.5">
+        <label htmlFor="email" className="font-montserrat font-semibold text-[13px] text-spektr-dark block mb-1.5">
+          Adresse email
+        </label>
         <input
           {...form.register("email")}
           id="email"
           type="email"
           placeholder="prenom.nom@ynov.com"
-          style={inputStyle}
-          onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-          onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+          className="w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus:border-spektr-teal"
         />
         {form.formState.errors.email && (
-          <p style={{ color: "#e05252", fontSize: 12, marginTop: 4 }}>
-            Email invalide
-          </p>
+          <p className="text-spektr-red text-xs mt-1">Email invalide</p>
         )}
       </div>
 
-      <div style={{ marginBottom: 20 }}>
-        <label htmlFor="password" style={labelStyle}>Mot de passe</label>
-        <div style={{ position: "relative" }}>
+      <div className="mb-5">
+        <label htmlFor="password" className="font-montserrat font-semibold text-[13px] text-spektr-dark block mb-1.5">
+          Mot de passe
+        </label>
+        <div className="relative">
           <input
             {...form.register("password")}
             id="password"
             type={showPwd ? "text" : "password"}
             placeholder="••••••••"
-            style={{ ...inputStyle, paddingRight: 40 }}
-            onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
-            onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
+            className="w-full px-3.5 py-[11px] pr-10 rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus:border-spektr-teal"
           />
           <span
             onClick={() => setShowPwd(!showPwd)}
-            style={{
-              position: "absolute",
-              right: 12,
-              top: "50%",
-              transform: "translateY(-50%)",
-              cursor: "pointer",
-              fontSize: 16,
-              color: "#999",
-            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-base text-[#999]"
           >
             {showPwd ? "🙈" : "👁️"}
           </span>
         </div>
         {form.formState.errors.password && (
-          <p style={{ color: "#e05252", fontSize: 12, marginTop: 4 }}>
-            8 caractères minimum
-          </p>
+          <p className="text-spektr-red text-xs mt-1">8 caractères minimum</p>
         )}
       </div>
 
       {error && (
-        <div
-          style={{
-            background: "#fee2e2",
-            color: "#dc2626",
-            borderRadius: 8,
-            padding: "10px 14px",
-            fontSize: 13,
-            marginBottom: 16,
-          }}
-        >
+        <div className="bg-[#fee2e2] text-[#dc2626] rounded-lg px-3.5 py-2.5 text-[13px] mb-4">
           {error}
         </div>
       )}
@@ -118,49 +74,24 @@ const LoginForm = () => {
       <button
         type="submit"
         disabled={isLoading}
-        style={{
-          width: "100%",
-          padding: "13px",
-          borderRadius: 8,
-          border: "none",
-          background: isLoading ? "#88d5cf" : "#23b2a4",
-          color: "#fff",
-          fontFamily: "Montserrat, sans-serif",
-          fontWeight: 700,
-          fontSize: 15,
-          cursor: isLoading ? "not-allowed" : "pointer",
-          marginBottom: 16,
-          transition: "background 0.2s",
-        }}
+        className={[
+          "w-full py-[13px] rounded-lg border-none font-montserrat font-bold text-[15px] text-white mb-4 transition-colors",
+          isLoading ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer",
+        ].join(" ")}
       >
         {isLoading ? "Connexion…" : "Se connecter"}
       </button>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-        <div style={{ flex: 1, height: 1, background: "#e8e8e8" }} />
-        <span style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#aaa" }}>ou</span>
-        <div style={{ flex: 1, height: 1, background: "#e8e8e8" }} />
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="flex-1 h-px bg-spektr-border" />
+        <span className="font-source-sans text-xs text-[#aaa]">ou</span>
+        <div className="flex-1 h-px bg-spektr-border" />
       </div>
 
       <button
         type="button"
         onClick={() => loginWithGoogle()}
-        style={{
-          width: "100%",
-          padding: "11px",
-          borderRadius: 8,
-          border: "1.5px solid #e8e8e8",
-          background: "#fff",
-          fontFamily: "Montserrat, sans-serif",
-          fontWeight: 600,
-          fontSize: 14,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          color: "#1d1d1e",
-        }}
+        className="w-full py-[11px] rounded-lg border-[1.5px] border-spektr-border bg-white font-montserrat font-semibold text-sm cursor-pointer flex items-center justify-center gap-2.5 text-spektr-dark"
       >
         <svg width="18" height="18" viewBox="0 0 48 48">
           <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 29.9 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.9 3 4 11.9 4 23s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-4l.9 1z"/>

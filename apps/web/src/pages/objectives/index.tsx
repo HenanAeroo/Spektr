@@ -13,49 +13,56 @@ function ObjectiveCard({ obj, onToggle }: { obj: Objective; onToggle?: () => voi
     ? Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     : null;
 
+  const borderColor = obj.done
+    ? "border-l-green-600"
+    : isExpired
+      ? "border-l-spektr-red"
+      : "border-l-spektr-teal";
+
+  const deadlineBadge = isExpired
+    ? "bg-red-100 text-red-600"
+    : daysLeft! <= 7
+      ? "bg-amber-50 text-amber-600"
+      : "bg-green-50 text-green-600";
+
   return (
-    <div style={{
-      background: "#fff",
-      borderRadius: 10,
-      border: "1px solid #e8e8e8",
-      padding: 20,
-      borderLeft: obj.done ? "3px solid #16a34a" : isExpired ? "3px solid #e05252" : "3px solid #23b2a4",
-      opacity: obj.done ? 0.85 : 1,
-      transition: "all 0.2s",
-    }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 14, textDecoration: obj.done ? "line-through" : "none", color: obj.done ? "#9ca3af" : "#1d1d1e" }}>
+    <div
+      className={[
+        "bg-white rounded-[10px] border border-spektr-border p-5 border-l-[3px] transition-all",
+        borderColor,
+        obj.done ? "opacity-85" : "",
+      ].join(" ")}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1">
+          <div
+            className={[
+              "font-montserrat font-bold text-sm",
+              obj.done ? "line-through text-gray-400" : "text-spektr-dark",
+            ].join(" ")}
+          >
             {obj.title}
           </div>
           {obj.description && (
-            <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 6, lineHeight: 1.5 }}>
+            <p className="font-source-sans text-[13px] text-gray-500 mt-1.5 leading-relaxed">
               {obj.description}
             </p>
           )}
           {deadline && (
-            <div style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 12, color: "#9ca3af", marginTop: 8 }}>
+            <div className="font-source-sans text-xs text-gray-400 mt-2">
               📅 {deadline.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
             </div>
           )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flexShrink: 0 }}>
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
           {deadline && !obj.done && (
-            <div style={{
-              padding: "4px 12px",
-              borderRadius: 10,
-              background: isExpired ? "#fee2e2" : daysLeft! <= 7 ? "#fff7ed" : "#f0fdf4",
-              color: isExpired ? "#dc2626" : daysLeft! <= 7 ? "#d97706" : "#16a34a",
-              fontSize: 11,
-              fontWeight: 700,
-              whiteSpace: "nowrap",
-            }}>
+            <div className={`px-3 py-1 rounded-[10px] text-[11px] font-bold whitespace-nowrap ${deadlineBadge}`}>
               {isExpired ? "Expiré" : daysLeft === 0 ? "Aujourd'hui" : `J-${daysLeft}`}
             </div>
           )}
           {obj.done && (
-            <div style={{ padding: "4px 12px", borderRadius: 10, background: "#dcfce7", color: "#16a34a", fontSize: 11, fontWeight: 700 }}>
+            <div className="px-3 py-1 rounded-[10px] bg-green-100 text-green-600 text-[11px] font-bold">
               ✓ Terminé
             </div>
           )}
@@ -63,19 +70,12 @@ function ObjectiveCard({ obj, onToggle }: { obj: Objective; onToggle?: () => voi
           {onToggle && (
             <button
               onClick={onToggle}
-              style={{
-                padding: "6px 14px",
-                borderRadius: 8,
-                border: obj.done ? "1.5px solid #e8e8e8" : "1.5px solid #23b2a4",
-                background: obj.done ? "transparent" : "#23b2a4",
-                color: obj.done ? "#9ca3af" : "#fff",
-                fontFamily: "Montserrat, sans-serif",
-                fontWeight: 700,
-                fontSize: 12,
-                cursor: "pointer",
-                transition: "all 0.15s",
-                whiteSpace: "nowrap",
-              }}
+              className={[
+                "px-3.5 py-1.5 rounded-lg border-[1.5px] font-montserrat font-bold text-xs cursor-pointer transition-all whitespace-nowrap",
+                obj.done
+                  ? "border-spektr-border bg-transparent text-gray-400"
+                  : "border-spektr-teal bg-spektr-teal text-white",
+              ].join(" ")}
             >
               {obj.done ? "Marquer non fait" : "Marquer fait ✓"}
             </button>
@@ -117,29 +117,31 @@ const ObjectivesPage = () => {
     }, {});
 
     return (
-      <div style={{ padding: "28px 32px", background: "#f5f5f5", minHeight: "100%" }}>
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 22, color: "#1d1d1e", letterSpacing: "-0.3px" }}>
+      <div className="py-7 px-8 bg-spektr-bg min-h-full">
+        <div className="mb-6">
+          <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark tracking-[-0.3px]">
             Objectifs par promo
           </h1>
-          <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>
+          <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">
             {objectives.length} objectif{objectives.length !== 1 ? "s" : ""} au total
           </p>
         </div>
 
         {isLoading ? (
-          <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>Chargement…</div>
+          <div className="py-10 text-center text-gray-400">Chargement…</div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div className="flex flex-col gap-6">
             {Object.entries(grouped).map(([promoId, objs]) => (
               <div key={promoId}>
-                <div style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 700, fontSize: 15, color: "#1d1d1e", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ background: "rgba(35,178,164,0.1)", color: "#23b2a4", padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
+                <div className="font-montserrat font-bold text-[15px] text-spektr-dark mb-3 flex items-center gap-2">
+                  <span className="bg-spektr-teal/10 text-spektr-teal px-2.5 py-0.5 rounded-full text-xs font-bold">
                     Promo {promoId}
                   </span>
-                  <span style={{ fontWeight: 400, color: "#9ca3af", fontSize: 13 }}>{objs.length} objectif{objs.length !== 1 ? "s" : ""}</span>
+                  <span className="font-normal text-gray-400 text-[13px]">
+                    {objs.length} objectif{objs.length !== 1 ? "s" : ""}
+                  </span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div className="flex flex-col gap-2.5">
                   {objs.map((obj) => <ObjectiveCard key={obj.id} obj={obj} />)}
                 </div>
               </div>
@@ -151,37 +153,43 @@ const ObjectivesPage = () => {
   }
 
   const doneCount = objectives.filter((o) => o.done).length;
+  const progressPct = objectives.length > 0 ? (doneCount / objectives.length) * 100 : 0;
 
   return (
-    <div style={{ padding: "28px 32px", background: "#f5f5f5", minHeight: "100%" }}>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 800, fontSize: 22, color: "#1d1d1e", letterSpacing: "-0.3px" }}>
+    <div className="py-7 px-8 bg-spektr-bg min-h-full">
+      <div className="mb-6">
+        <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark tracking-[-0.3px]">
           Mes objectifs
         </h1>
-        <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#6b7280", marginTop: 3 }}>
-          {objectives.length > 0 ? `${doneCount} / ${objectives.length} accomplis` : "Vos objectifs fixés par votre chargé RE"}
+        <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">
+          {objectives.length > 0
+            ? `${doneCount} / ${objectives.length} accomplis`
+            : "Vos objectifs fixés par votre chargé RE"}
         </p>
         {objectives.length > 0 && (
-          <div style={{ marginTop: 10, height: 6, borderRadius: 999, background: "#e8e8e8", overflow: "hidden", maxWidth: 320 }}>
-            <div style={{ height: "100%", borderRadius: 999, background: "#23b2a4", width: `${(doneCount / objectives.length) * 100}%`, transition: "width 0.4s ease" }} />
+          <div className="mt-2.5 h-1.5 rounded-full bg-spektr-border overflow-hidden max-w-[320px]">
+            <div
+              className="h-full rounded-full bg-spektr-teal transition-[width] duration-400 ease-in-out"
+              style={{ width: `${progressPct}%` }}
+            />
           </div>
         )}
       </div>
 
       {isLoading ? (
-        <div style={{ padding: 40, textAlign: "center", color: "#9ca3af" }}>Chargement…</div>
+        <div className="py-10 text-center text-gray-400">Chargement…</div>
       ) : objectives.length === 0 ? (
-        <div style={{ background: "#fff", borderRadius: 10, border: "1px solid #e8e8e8", padding: "60px 40px", textAlign: "center" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
-          <p style={{ fontFamily: "Montserrat, sans-serif", fontWeight: 600, fontSize: 15, color: "#6b7280" }}>
+        <div className="bg-white rounded-[10px] border border-spektr-border py-[60px] px-10 text-center">
+          <div className="text-[40px] mb-3">🎯</div>
+          <p className="font-montserrat font-semibold text-[15px] text-gray-500">
             Aucun objectif pour l'instant
           </p>
-          <p style={{ fontFamily: "Source Sans 3, sans-serif", fontSize: 13, color: "#9ca3af", marginTop: 4 }}>
+          <p className="font-source-sans text-[13px] text-gray-400 mt-1">
             Vos objectifs apparaîtront ici une fois qu'ils seront définis par votre chargé RE.
           </p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="flex flex-col gap-3">
           {objectives.map((obj) => (
             <ObjectiveCard key={obj.id} obj={obj} onToggle={() => toggle(obj.id)} />
           ))}

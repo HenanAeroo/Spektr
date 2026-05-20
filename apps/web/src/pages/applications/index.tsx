@@ -1,132 +1,29 @@
 import { fetchMyApplications } from "@/features/applications/actions/fetchMyApplications";
 import { createApplication } from "@/features/applications/actions/createApplication";
 import { deleteApplication } from "@/features/applications/actions/deleteApplication";
-import { updateApplication, UpdateApplicationData } from "@/features/applications/actions/updateApplication";
+import {
+  updateApplication,
+  UpdateApplicationData,
+} from "@/features/applications/actions/updateApplication";
 import { Application, Statut } from "@/features/applications/types";
+import { AppModal } from "@/features/applications/components/AppModal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-
-const STATUTS: Statut[] = [
-  "A_CONTACTER", "ENVOYE", "RELANCE", "EN_DISCUSSION", "REPONSE_POSITIVE", "REFUS",
-];
-
-const STATUT_LABELS: Record<Statut, string> = {
-  A_CONTACTER: "À contacter",
-  ENVOYE: "Envoyé",
-  RELANCE: "Relancé",
-  EN_DISCUSSION: "En discussion",
-  REPONSE_POSITIVE: "Réponse positive",
-  REFUS: "Refus",
-};
-
-const STATUT_COLORS: Record<Statut, { bg: string; text: string; border: string; activeBg: string }> = {
-  A_CONTACTER:      { bg: "bg-gray-100",   text: "text-gray-500",   border: "border-gray-200",   activeBg: "bg-gray-500" },
-  ENVOYE:           { bg: "bg-blue-50",    text: "text-blue-500",   border: "border-blue-200",   activeBg: "bg-blue-500" },
-  RELANCE:          { bg: "bg-amber-50",   text: "text-amber-600",  border: "border-amber-200",  activeBg: "bg-amber-600" },
-  EN_DISCUSSION:    { bg: "bg-violet-50",  text: "text-violet-500", border: "border-violet-200", activeBg: "bg-violet-500" },
-  REPONSE_POSITIVE: { bg: "bg-green-100",  text: "text-green-600",  border: "border-green-200",  activeBg: "bg-green-600" },
-  REFUS:            { bg: "bg-red-100",    text: "text-red-600",    border: "border-red-200",    activeBg: "bg-red-600" },
-};
-
-const inputCls =
-  "w-full px-3 py-[9px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] text-spektr-dark bg-white focus:outline-none focus:border-spektr-teal box-border";
+import {
+  inputCls,
+  STATUT_COLORS,
+  STATUT_LABELS,
+  STATUTS,
+} from "@/features/applications/constants";
 
 function StatusBadge({ statut }: { statut: Statut }) {
   const c = STATUT_COLORS[statut];
   return (
-    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-[10px] border ${c.bg} ${c.text} ${c.border}`}>
+    <span
+      className={`text-[11px] font-bold px-2.5 py-0.5 rounded-[10px] border ${c.bg} ${c.text} ${c.border}`}
+    >
       {STATUT_LABELS[statut]}
     </span>
-  );
-}
-
-type ModalProps = {
-  app: Partial<Application> & { id?: number };
-  onClose: () => void;
-  onSave: (data: Partial<Application>) => void;
-  mode: "create" | "edit";
-};
-
-function AppModal({ app, onClose, onSave, mode }: ModalProps) {
-  const [form, setForm] = useState({
-    entreprise: app.entreprise ?? "",
-    statut: (app.statut ?? "A_CONTACTER") as Statut,
-    contact_nom: app.contact_nom ?? "",
-    contact_email: app.contact_email ?? "",
-    contact_tel: app.contact_tel ?? "",
-    commentaire: app.commentaire ?? "",
-    lien: app.lien ?? "",
-    date_candidature: app.date_candidature ?? "",
-  });
-
-  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  return (
-    <div className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center">
-      <div className="bg-white rounded-2xl w-[560px] max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]">
-        <div className="flex justify-between items-center px-7 py-[22px] border-b border-spektr-border">
-          <span className="font-montserrat font-extrabold text-[17px] text-spektr-dark">
-            {mode === "create" ? "Nouvelle candidature" : "Modifier la candidature"}
-          </span>
-          <button onClick={onClose} className="bg-transparent border-none cursor-pointer text-xl text-gray-400">✕</button>
-        </div>
-        <div className="px-7 py-[22px] flex flex-col gap-3.5">
-          <div>
-            <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">
-              Entreprise *
-            </label>
-            <input value={form.entreprise} onChange={set("entreprise")} placeholder="Nom de l'entreprise" className={inputCls} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Statut</label>
-              <select value={form.statut} onChange={set("statut")} className={`${inputCls} cursor-pointer`}>
-                {STATUTS.map((s) => <option key={s} value={s}>{STATUT_LABELS[s]}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Date de candidature</label>
-              <input type="date" value={form.date_candidature?.split("T")[0] ?? ""} onChange={set("date_candidature")} className={inputCls} />
-            </div>
-          </div>
-          <div>
-            <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Lien de l'offre</label>
-            <input value={form.lien} onChange={set("lien")} placeholder="https://..." className={inputCls} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Nom du contact</label>
-              <input value={form.contact_nom} onChange={set("contact_nom")} placeholder="Jean Dupont" className={inputCls} />
-            </div>
-            <div>
-              <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Email du contact</label>
-              <input value={form.contact_email} onChange={set("contact_email")} placeholder="contact@entreprise.com" className={inputCls} />
-            </div>
-          </div>
-          <div>
-            <label className="font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]">Commentaire</label>
-            <textarea value={form.commentaire} onChange={set("commentaire")} placeholder="Notes sur cette candidature..." rows={3}
-              className={`${inputCls} resize-y leading-relaxed`} />
-          </div>
-          <div className="flex gap-2.5 justify-end pt-1">
-            <button onClick={onClose} className="px-5 py-2.5 rounded-lg border-[1.5px] border-spektr-border bg-white font-montserrat font-semibold text-[13px] cursor-pointer text-gray-500">
-              Annuler
-            </button>
-            <button
-              onClick={() => onSave(form)}
-              disabled={!form.entreprise.trim()}
-              className={[
-                "px-5 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white",
-                form.entreprise.trim() ? "bg-spektr-teal cursor-pointer" : "bg-spektr-teal/50 cursor-not-allowed",
-              ].join(" ")}
-            >
-              {mode === "create" ? "Ajouter" : "Enregistrer"}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -144,18 +41,21 @@ const ApplicationsPage = () => {
 
   const { mutate: createApp } = useMutation({
     mutationFn: (data: any) => createApplication(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 
   const { mutate: deleteApp } = useMutation({
     mutationFn: (id: number) => deleteApplication(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 
   const { mutate: updateApp } = useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateApplicationData }) =>
       updateApplication(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 
   const filtered = applications.filter((a) => {
@@ -168,8 +68,11 @@ const ApplicationsPage = () => {
   });
 
   const counts = STATUTS.reduce(
-    (acc, s) => ({ ...acc, [s]: applications.filter((a) => a.statut === s).length }),
-    {} as Record<Statut, number>
+    (acc, s) => ({
+      ...acc,
+      [s]: applications.filter((a) => a.statut === s).length,
+    }),
+    {} as Record<Statut, number>,
   );
 
   return (
@@ -181,12 +84,13 @@ const ApplicationsPage = () => {
             Candidatures
           </h1>
           <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">
-            {applications.length} candidature{applications.length !== 1 ? "s" : ""} au total
+            {applications.length} candidature
+            {applications.length !== 1 ? "s" : ""} au total
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-[18px] py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer flex items-center gap-1.5"
+          className="px-18px py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer flex items-center gap-1.5"
         >
           + Nouvelle candidature
         </button>
@@ -207,7 +111,9 @@ const ApplicationsPage = () => {
               ].join(" ")}
             >
               <div className="text-lg font-extrabold">{counts[s] ?? 0}</div>
-              <div className="text-[10px] font-semibold mt-0.5">{STATUT_LABELS[s]}</div>
+              <div className="text-[10px] font-semibold mt-0.5">
+                {STATUT_LABELS[s]}
+              </div>
             </button>
           );
         })}
@@ -218,12 +124,14 @@ const ApplicationsPage = () => {
         {/* Toolbar */}
         <div className="px-5 py-3.5 border-b border-spektr-border flex items-center gap-3">
           <div className="relative flex-1 max-w-[320px]">
-            <span className="absolute left-[11px] top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">🔍</span>
+            <span className="absolute left-11px top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              🔍
+            </span>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher une entreprise..."
-              className={`${inputCls} pl-[34px]`}
+              className={`${inputCls} pl-34px`}
             />
           </div>
           <div className="flex gap-1.5">
@@ -244,10 +152,12 @@ const ApplicationsPage = () => {
         {isLoading ? (
           <div className="py-10 text-center text-gray-400">Chargement…</div>
         ) : filtered.length === 0 ? (
-          <div className="py-[60px] px-10 text-center">
+          <div className="py-60px px-10 text-center">
             <div className="text-[40px] mb-3">📭</div>
             <p className="font-montserrat font-semibold text-[15px] text-gray-500">
-              {search || filterStatut !== "tous" ? "Aucun résultat" : "Aucune candidature"}
+              {search || filterStatut !== "tous"
+                ? "Aucun résultat"
+                : "Aucune candidature"}
             </p>
             {!search && filterStatut === "tous" && (
               <button
@@ -263,8 +173,18 @@ const ApplicationsPage = () => {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-[#fafafa]">
-                  {["Entreprise", "Statut", "Date", "Contact", "Commentaire", "Actions"].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-[0.5px] border-b border-spektr-border">
+                  {[
+                    "Entreprise",
+                    "Statut",
+                    "Date",
+                    "Contact",
+                    "Commentaire",
+                    "Actions",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-[0.5px] border-b border-spektr-border"
+                    >
                       {h}
                     </th>
                   ))}
@@ -281,7 +201,12 @@ const ApplicationsPage = () => {
                         {app.entreprise}
                       </div>
                       {app.lien && (
-                        <a href={app.lien} target="_blank" rel="noopener noreferrer" className="font-source-sans text-[11px] text-spektr-teal no-underline">
+                        <a
+                          href={app.lien}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-source-sans text-[11px] text-spektr-teal no-underline"
+                        >
                           Voir l'offre →
                         </a>
                       )}
@@ -291,16 +216,20 @@ const ApplicationsPage = () => {
                     </td>
                     <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500">
                       {app.date_candidature
-                        ? new Date(app.date_candidature).toLocaleDateString("fr-FR")
+                        ? new Date(app.date_candidature).toLocaleDateString(
+                            "fr-FR",
+                          )
                         : "—"}
                     </td>
                     <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500">
                       {app.contact_nom || "—"}
                       {app.contact_email && (
-                        <div className="text-[11px] text-gray-400">{app.contact_email}</div>
+                        <div className="text-[11px] text-gray-400">
+                          {app.contact_email}
+                        </div>
                       )}
                     </td>
-                    <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500 max-w-[200px]">
+                    <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500 max-w-200px">
                       <span className="line-clamp-2">
                         {app.commentaire || "—"}
                       </span>
@@ -309,13 +238,13 @@ const ApplicationsPage = () => {
                       <div className="flex gap-1.5">
                         <button
                           onClick={() => setEditApp(app)}
-                          className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-[5px] cursor-pointer text-[11px] font-semibold text-spektr-teal"
+                          className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-5px cursor-pointer text-[11px] font-semibold text-spektr-teal"
                         >
                           Modifier
                         </button>
                         <button
                           onClick={() => deleteApp(app.id)}
-                          className="bg-[#fee2e2] border-none rounded-md px-2.5 py-[5px] cursor-pointer text-[11px] font-semibold text-[#dc2626]"
+                          className="bg-[#fee2e2] border-none rounded-md px-2.5 py-5px cursor-pointer text-[11px] font-semibold text-[#dc2626]"
                         >
                           Supprimer
                         </button>

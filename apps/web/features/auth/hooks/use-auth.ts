@@ -5,10 +5,16 @@ import { logout } from "../actions/logout";
 import { loginWithGoogle } from "../actions/loginWithGoogle";
 import { LoginFormData, RegisterFormData } from "../types";
 import { useNavigate } from "@tanstack/react-router";
+import { useAuthContext } from "@/shared/components/auth-provider";
+import { apiFetch } from "@/shared/lib/api";
+import { getToken } from "@/shared/lib/auth";
+import { User } from "@/shared/types";
 
+// Using useState because it is a dedicated context for the authentication
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setUser } = useAuthContext();
   const navigate = useNavigate();
 
   async function handleLogin(data: LoginFormData) {
@@ -17,6 +23,8 @@ export function useAuth() {
 
     try {
       await login(data);
+      const me = await apiFetch<User>("/users/me", { token: getToken()! });
+      setUser(me);
       navigate({ to: "/" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Mauvais identifiants");
@@ -31,6 +39,8 @@ export function useAuth() {
 
     try {
       await register(data);
+      const me = await apiFetch<User>("/users/me", { token: getToken()! });
+      setUser(me);
       navigate({ to: "/" });
     } catch (err) {
       setError(
@@ -47,6 +57,7 @@ export function useAuth() {
 
     try {
       await logout();
+      setUser(null);
       navigate({ to: "/login" });
     } catch (err) {
       setError(

@@ -7,11 +7,13 @@ import { getToken } from "../lib/auth";
 interface AuthContextValue {
   isInitialized: boolean;
   user: User | null;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextValue>({
   isInitialized: false,
   user: null,
+  setUser: () => {},
 });
 
 export function useAuthContext() {
@@ -36,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isInitialized, user }}>
+    <AuthContext.Provider value={{ isInitialized, user, setUser }}>
       {children}
     </AuthContext.Provider>
   );

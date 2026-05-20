@@ -9,6 +9,12 @@ import {
   STATUT_LABELS,
   STATUTS,
 } from "../constants";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
+import { Calendar } from "@/shared/components/ui/calendar";
 
 const schema = z.object({
   entreprise: z.string().min(1, "L'entreprise est requise"),
@@ -110,20 +116,25 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
                 control={form.control}
                 name="date_candidature"
                 render={({ field }) => (
-                  <input
-                    type="date"
-                    value={
-                      field.value instanceof Date
-                        ? field.value.toISOString().split("T")[0]
-                        : ""
-                    }
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value ? new Date(e.target.value) : undefined,
-                      )
-                    }
-                    className={inputCls}
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className={`${inputCls} text-left ${!field.value ? "text-gray-400" : ""}`}
+                      >
+                        {field.value
+                          ? field.value.toLocaleDateString("fr-FR")
+                          : "Sélectionner une date"}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 )}
               />
             </div>

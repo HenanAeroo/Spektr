@@ -10,8 +10,30 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 
+const blockedMail = [
+  "yopmail.com",
+  "mailinator.com",
+  "guerrillamail.com",
+  "tempmail.com",
+  "throwam.com",
+  "sharklasers.com",
+  "trashmail.com",
+  "dispostable.com",
+  "maildrop.cc",
+];
+
 const registerSchema = z.object({
-  email: z.string().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
+  email: z
+    .string()
+    .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
+    .refine(
+      (email) => {
+        const domain = email.split("@")[1];
+        const result = blockedMail.includes(domain);
+        return !result;
+      },
+      { message: "Les adresses email temporaires ne sont pas acceptées" },
+    ),
   password: z.string().min(8),
   first_name: z.string().min(1),
   last_name: z.string().min(1),
@@ -208,6 +230,11 @@ const RegisterForm = () => {
                 onFocus={(e) => (e.target.style.borderColor = "#23b2a4")}
                 onBlur={(e) => (e.target.style.borderColor = "#e8e8e8")}
               />
+              {form.formState.errors.email?.message && (
+                <p style={{ color: "#e05252", fontSize: 12, marginTop: 4 }}>
+                  L'email est invalide
+                </p>
+              )}
             </div>
           </div>
         )}

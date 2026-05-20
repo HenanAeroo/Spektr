@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as ProtectedIndexRouteImport } from './routes/_protected/index'
@@ -19,6 +20,11 @@ import { Route as ProtectedMichelRouteImport } from './routes/_protected/michel'
 import { Route as ProtectedDocsRouteImport } from './routes/_protected/docs'
 import { Route as ProtectedCandidaturesRouteImport } from './routes/_protected/candidatures'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -67,6 +73,7 @@ const ProtectedCandidaturesRoute = ProtectedCandidaturesRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof ProtectedIndexRoute
   '/login': typeof LoginRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/candidatures': typeof ProtectedCandidaturesRoute
   '/docs': typeof ProtectedDocsRoute
   '/michel': typeof ProtectedMichelRoute
@@ -76,6 +83,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/candidatures': typeof ProtectedCandidaturesRoute
   '/docs': typeof ProtectedDocsRoute
   '/michel': typeof ProtectedMichelRoute
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_protected': typeof ProtectedRouteWithChildren
   '/login': typeof LoginRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/_protected/candidatures': typeof ProtectedCandidaturesRoute
   '/_protected/docs': typeof ProtectedDocsRoute
   '/_protected/michel': typeof ProtectedMichelRoute
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/verify-email'
     | '/candidatures'
     | '/docs'
     | '/michel'
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/verify-email'
     | '/candidatures'
     | '/docs'
     | '/michel'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_protected'
     | '/login'
+    | '/verify-email'
     | '/_protected/candidatures'
     | '/_protected/docs'
     | '/_protected/michel'
@@ -133,11 +145,19 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   OauthCallbackRoute: typeof OauthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -229,6 +249,7 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   LoginRoute: LoginRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   OauthCallbackRoute: OauthCallbackRoute,
 }
 export const routeTree = rootRouteImport

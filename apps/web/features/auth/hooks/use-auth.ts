@@ -41,6 +41,7 @@ export function useAuth() {
     try {
       await register(data);
       setEmailSent(true);
+      navigate({ to: "/login" });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Problème lors de l'inscription",

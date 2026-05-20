@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -13,6 +14,7 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { LocalRegisterDto } from './dto/local-register.dto';
 import { randomBytes, createHmac } from 'crypto';
 import { Profile } from 'passport-google-oauth20';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +23,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly usersService: UsersService,
+    private readonly mailerService: MailService,
   ) {}
 
   // ----- HELPERS -----
@@ -98,7 +101,7 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(dto.password, 12);
 
-    const user = await this.prisma.user.create({
+    const newUser = await this.prisma.user.create({
       data: {
         email: dto.email,
         first_name: dto.first_name,
@@ -109,7 +112,70 @@ export class AuthService {
       },
     });
 
-    return this.issueTokens(user.id);
+    const token = randomBytes(32).toString('hex');
+    const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const user = await this.prisma.user.update({
+      where: { id: newUser.id },
+      data: { verificationToken: token, verificationExpiry: expiry },
+    });
+
+    const frontUrl = this.config.get<string>('FRONT_URL');
+    const verifyUrl = `${frontUrl}/verify-email?token=${token}`;
+    const firstName = user.first_name ?? 'là';
+
+    const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Segoe UI',Arial,sans-serif;">
+  <div style="max-width:580px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <div style="background:#1d1d1e;padding:24px 32px;">
+      <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;">
+        Spek<span style="color:#23b2a4;">tr</span>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;letter-spacing:2px;margin-top:2px;">YNOV CAMPUS RENNES</div>
+    </div>
+
+    <div style="padding:32px;">
+      <div style="font-size:28px;margin-bottom:12px;">✉️</div>
+      <h1 style="margin:0 0 6px;font-size:20px;color:#1d1d1e;">Bonjour ${firstName},</h1>
+      <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+        Merci de vous être inscrit sur Spektr. Confirmez votre adresse email pour activer votre compte.
+      </p>
+
+      <div style="background:#f0fdf9;border:1px solid rgba(35,178,164,0.2);border-radius:10px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;line-height:1.6;">
+          Ce lien est valable <strong style="color:#1d1d1e;">24 heures</strong>.
+        </p>
+        <a href="${verifyUrl}"
+           style="display:inline-block;background:#23b2a4;color:#fff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 32px;border-radius:8px;letter-spacing:0.2px;">
+          Confirmer mon email
+        </a>
+      </div>
+
+      <div style="background:#f9fafb;border:1px solid #e8e8e8;border-radius:10px;padding:14px 18px;margin-bottom:24px;">
+        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Lien alternatif</div>
+        <p style="margin:0;font-size:12px;color:#6b7280;word-break:break-all;line-height:1.6;">${verifyUrl}</p>
+      </div>
+
+      <p style="font-size:13px;color:#6b7280;line-height:1.6;margin:0;">
+        Si vous n'êtes pas à l'origine de cette inscription, ignorez simplement cet email.
+      </p>
+    </div>
+
+    <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e8e8e8;text-align:center;">
+      <p style="margin:0;font-size:11px;color:#9ca3af;">
+        Ce message a été envoyé automatiquement par Spektr · Ynov Campus Rennes
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    await this.mailerService.send(user.email, 'Confirmer votre email', html);
+
+    return 'Un email de confirmation a été envoyé';
   }
 
   // As local strategy validate the user, localLogin is simple
@@ -125,7 +191,8 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!record) throw new UnauthorizedException('Refresh token invalide ou expiré');
+    if (!record)
+      throw new UnauthorizedException('Refresh token invalide ou expiré');
 
     // Delete token first to prevent reuse, then check expiry
     await this.prisma.refreshToken.delete({ where: { token: hashed } });
@@ -184,5 +251,32 @@ export class AuthService {
     }
 
     return this.issueTokens(user.id);
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { verificationToken: token },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Token invalide');
+    }
+
+    if (user.verificationExpiry! < new Date()) {
+      throw new BadRequestException('Token expiré');
+    }
+
+    await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        emailVerified: true,
+        verificationToken: null,
+        verificationExpiry: null,
+      },
+    });
+
+    return 'Email confirmé';
   }
 }

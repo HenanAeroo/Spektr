@@ -7,6 +7,7 @@ import {
   Get,
   Res,
   UnauthorizedException,
+  Query,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalRegisterDto } from './dto/local-register.dto';
@@ -30,18 +31,9 @@ export class AuthController {
 
   // ----- LOCAL METHODS -----
   @Post('register')
-  async register(@Body() dto: LocalRegisterDto, @Res() res: any) {
-    const { accessToken, refreshToken } =
-      await this.authService.localRegister(dto);
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: REFRESH_TOKEN_MAX_AGE_MS,
-    });
-
-    return res.json({ accessToken });
+  async register(@Body() dto: LocalRegisterDto) {
+    const message = await this.authService.localRegister(dto);
+    return { message };
   }
 
   @Post('login')
@@ -111,5 +103,10 @@ export class AuthController {
     return await res.redirect(
       `${this.configService.get('FRONT_URL')}/oauth/callback`,
     );
+  }
+
+  @Get('verify-email')
+  verifyEmail(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
   }
 }

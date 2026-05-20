@@ -14,6 +14,10 @@ model User {
   last_name   String?
   role        Role     @default(STUDENT)
 
+  emailVerified       Boolean @default(false)
+  verificationToken   String?
+  verificationExpiry  DateTime?
+
   created_at  DateTime @default(now())
   modified_at DateTime @updatedAt
 

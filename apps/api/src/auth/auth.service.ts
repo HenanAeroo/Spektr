@@ -180,7 +180,15 @@ export class AuthService {
 
   // As local strategy validate the user, localLogin is simple
   async localLogin(payload: JwtPayload) {
-    return this.issueTokens(payload.sub);
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+    });
+
+    if (user!.emailVerified === false) {
+      throw new UnauthorizedException('Veuillez confirmer votre email');
+    } else {
+      return this.issueTokens(payload.sub);
+    }
   }
 
   async refresh(rawRefreshToken: string) {

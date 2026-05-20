@@ -84,6 +84,7 @@ const RegisterForm = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAccepted, setIsAccepted] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const { emailSent } = useAuth();
 
   const form = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
@@ -131,6 +132,27 @@ const RegisterForm = () => {
   function handleAccept() {
     setIsAccepted(true);
     setIsOpen(false);
+  }
+
+  const email = form.getValues("email");
+
+  if (emailSent === true) {
+    return (
+      <div className="flex flex-col items-center gap-4 text-center py-8">
+        <span className="text-4xl">✉️</span>
+        <h2 className="text-xl font-medium">Vérifiez votre email</h2>
+        <p className="text-muted-foreground text-sm">
+          Un lien a été envoyé à{" "}
+          <span className="font-medium text-foreground">{email}</span>
+        </p>
+        <a
+          href="/login"
+          className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
+        >
+          Retour à la connexion
+        </a>
+      </div>
+    );
   }
 
   return (

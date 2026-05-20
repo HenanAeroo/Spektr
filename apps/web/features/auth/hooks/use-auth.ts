@@ -14,6 +14,7 @@ import { User } from "@/shared/types";
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
   const { setUser } = useAuthContext();
   const navigate = useNavigate();
 
@@ -39,9 +40,7 @@ export function useAuth() {
 
     try {
       await register(data);
-      const me = await apiFetch<User>("/users/me", { token: getToken()! });
-      setUser(me);
-      navigate({ to: "/" });
+      setEmailSent(true);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Problème lors de l'inscription",
@@ -75,5 +74,6 @@ export function useAuth() {
     loginWithGoogle,
     isLoading,
     error,
+    emailSent,
   };
 }

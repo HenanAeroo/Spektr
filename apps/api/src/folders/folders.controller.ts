@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FoldersService } from './folders.service';
 import { CreateFolderDto } from './dto/create-folder.dto';
@@ -35,15 +36,18 @@ export class FoldersController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateFolderDto: UpdateFolderDto,
     @CurrentUser() user: UserModel,
   ) {
-    return this.foldersService.update(+id, updateFolderDto, user.id);
+    return this.foldersService.update(id, updateFolderDto, user.id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: UserModel) {
-    return this.foldersService.remove(+id, user.id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserModel,
+  ) {
+    return this.foldersService.remove(id, user.id);
   }
 }

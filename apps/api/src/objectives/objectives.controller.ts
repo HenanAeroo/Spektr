@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ObjectivesService } from './objectives.service';
 import { CreateObjectiveDto } from './dto/create-objective.dto';
@@ -42,30 +43,31 @@ export class ObjectivesController {
 
   @Post(':id/toggle')
   @Roles(Role.STUDENT, Role.ADMIN)
-  toggle(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.objectivesService.toggleCompletion(+id, user.id);
+  toggle(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
+    return this.objectivesService.toggleCompletion(id, user.id);
   }
 
   @Get('completions')
+  @Roles(Role.ADMIN)
   findAllCompletions() {
     return this.objectivesService.findAllCompletions();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.objectivesService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.objectivesService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateObjectiveDto: UpdateObjectiveDto,
   ) {
-    return this.objectivesService.update(+id, updateObjectiveDto);
+    return this.objectivesService.update(id, updateObjectiveDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.objectivesService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.objectivesService.remove(id);
   }
 }

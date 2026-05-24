@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
@@ -39,26 +40,32 @@ export class ApplicationsController {
   @Get('user/:userId')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  findByUser(@Param('userId') userId: string) {
-    return this.applicationsService.findMyApplications(+userId);
+  findByUser(@Param('userId', ParseIntPipe) userId: number) {
+    return this.applicationsService.findMyApplications(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @CurrentUser() user: UserModel) {
-    return this.applicationsService.findOne(+id, user.id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserModel,
+  ) {
+    return this.applicationsService.findOne(id, user.id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateApplicationDto: UpdateApplicationDto,
     @CurrentUser() user: UserModel,
   ) {
-    return this.applicationsService.update(+id, updateApplicationDto, user.id);
+    return this.applicationsService.update(id, updateApplicationDto, user.id);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: UserModel) {
-    return this.applicationsService.remove(+id, user.id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserModel,
+  ) {
+    return this.applicationsService.remove(id, user.id);
   }
 }

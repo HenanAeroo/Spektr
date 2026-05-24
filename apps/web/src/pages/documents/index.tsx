@@ -8,6 +8,7 @@ import { uploadDocument } from "@/features/documents/actions/uploadDocument";
 import { getDocumentUrl } from "@/features/documents/actions/getDocumentUrl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Document } from "@/features/documents/types";
+import ConfirmDialog from "@/shared/components/ConfirmDialog";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} o`;
@@ -18,18 +19,32 @@ function formatSize(bytes: number): string {
 function FileIcon({ mimeType }: { mimeType: string }) {
   if (mimeType.includes("pdf")) return <span className="text-xl">📄</span>;
   if (mimeType.includes("image")) return <span className="text-xl">🖼️</span>;
-  if (mimeType.includes("word") || mimeType.includes("document")) return <span className="text-xl">📝</span>;
+  if (mimeType.includes("word") || mimeType.includes("document"))
+    return <span className="text-xl">📝</span>;
   return <span className="text-xl">📁</span>;
 }
 
-function ErrorBanner({ message, onClose }: { message: string; onClose: () => void }) {
+function ErrorBanner({
+  message,
+  onClose,
+}: {
+  message: string;
+  onClose: () => void;
+}) {
   return (
     <div className="flex items-center justify-between gap-3 bg-[#fee2e2] border border-[#fecaca] rounded-lg px-3.5 py-2.5 mb-4">
       <div className="flex items-center gap-2">
         <span className="text-[15px]">⚠️</span>
-        <span className="font-source-sans text-[13px] text-[#dc2626] font-semibold">{message}</span>
+        <span className="font-source-sans text-[13px] text-[#dc2626] font-semibold">
+          {message}
+        </span>
       </div>
-      <button onClick={onClose} className="bg-transparent border-none cursor-pointer text-[#dc2626] text-base leading-none">✕</button>
+      <button
+        onClick={onClose}
+        className="bg-transparent border-none cursor-pointer text-[#dc2626] text-base leading-none"
+      >
+        ✕
+      </button>
     </div>
   );
 }
@@ -50,13 +65,20 @@ const DocumentsPage = () => {
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<
+    { type: "folder"; id: number } | { type: "document"; id: number } | null
+  >(null);
 
   const { data: folders = [], isError: foldersError } = useQuery({
     queryKey: ["folders"],
     queryFn: getFolders,
   });
 
-  const { data: documents = [], isLoading: docsLoading, isError: docsError } = useQuery({
+  const {
+    data: documents = [],
+    isLoading: docsLoading,
+    isError: docsError,
+  } = useQuery({
     queryKey: ["documents"],
     queryFn: getDocuments,
   });
@@ -90,7 +112,8 @@ const DocumentsPage = () => {
     mutationFn: ({ file, folderId }: { file: File; folderId?: number }) =>
       uploadDocument(file, folderId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] }),
-    onError: (err: Error) => setError(err.message ?? "Échec de l'import du fichier."),
+    onError: (err: Error) =>
+      setError(err.message ?? "Échec de l'import du fichier."),
   });
 
   function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -98,7 +121,9 @@ const DocumentsPage = () => {
     if (!file) return;
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError("Format non supporté. Utilisez PDF, Word ou image (JPG, PNG, WebP).");
+      setError(
+        "Format non supporté. Utilisez PDF, Word ou image (JPG, PNG, WebP).",
+      );
       e.target.value = "";
       return;
     }
@@ -134,9 +159,22 @@ const DocumentsPage = () => {
     addFolder(name);
   }
 
-  const visibleDocs = selectedFolderId === null
-    ? documents
-    : documents.filter((d) => d.folderId === selectedFolderId);
+  function handleDelete() {
+    if (pendingDelete === null) {
+      return;
+    } else if (pendingDelete.type === "folder") {
+      removeFolder(pendingDelete.id);
+    } else {
+      removeDocument(pendingDelete.id);
+    }
+
+    setPendingDelete(null);
+  }
+
+  const visibleDocs =
+    selectedFolderId === null
+      ? documents
+      : documents.filter((d) => d.folderId === selectedFolderId);
 
   const selectedFolder = folders.find((f) => f.id === selectedFolderId);
 
@@ -145,7 +183,9 @@ const DocumentsPage = () => {
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark tracking-[-0.3px]">Documents</h1>
+          <h1 className="font-montserrat font-extrabold text-[22px] text-spektr-dark tracking-[-0.3px]">
+            Documents
+          </h1>
           <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">
             Gérez vos CV, lettres de motivation et certifications
           </p>
@@ -160,12 +200,19 @@ const DocumentsPage = () => {
           <label
             className={[
               "px-4 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white",
-              uploading ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer",
+              uploading
+                ? "bg-spektr-teal/50 cursor-not-allowed"
+                : "bg-spektr-teal cursor-pointer",
             ].join(" ")}
           >
             {uploading ? "Envoi…" : "⬆ Importer un fichier"}
-            <input type="file" className="hidden" onChange={handleUpload} disabled={uploading}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp" />
+            <input
+              type="file"
+              className="hidden"
+              onChange={handleUpload}
+              disabled={uploading}
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+            />
           </label>
         </div>
       </div>
@@ -185,7 +232,9 @@ const DocumentsPage = () => {
         <div>
           <div className="bg-white rounded-[10px] border border-spektr-border overflow-hidden">
             <div className="px-4 py-3.5 border-b border-spektr-border">
-              <span className="font-montserrat font-bold text-[13px] text-spektr-dark">Dossiers</span>
+              <span className="font-montserrat font-bold text-[13px] text-spektr-dark">
+                Dossiers
+              </span>
             </div>
             <div className="p-2">
               <button
@@ -199,11 +248,15 @@ const DocumentsPage = () => {
               >
                 <span>📂</span>
                 <span className="flex-1 text-left">Tous les fichiers</span>
-                <span className="text-[11px] text-gray-400">{documents.length}</span>
+                <span className="text-[11px] text-gray-400">
+                  {documents.length}
+                </span>
               </button>
 
               {folders.map((folder) => {
-                const count = documents.filter((d) => d.folderId === folder.id).length;
+                const count = documents.filter(
+                  (d) => d.folderId === folder.id,
+                ).length;
                 const isSelected = selectedFolderId === folder.id;
                 return (
                   <div
@@ -217,7 +270,9 @@ const DocumentsPage = () => {
                       onClick={() => setSelectedFolderId(folder.id)}
                       className={[
                         "flex-1 flex items-center gap-2.5 px-3 py-[9px] border-none cursor-pointer bg-transparent font-source-sans text-[13px]",
-                        isSelected ? "text-spektr-teal font-semibold" : "text-spektr-dark font-normal",
+                        isSelected
+                          ? "text-spektr-teal font-semibold"
+                          : "text-spektr-dark font-normal",
                       ].join(" ")}
                     >
                       <span>📁</span>
@@ -225,7 +280,9 @@ const DocumentsPage = () => {
                       <span className="text-[11px] text-gray-400">{count}</span>
                     </button>
                     <button
-                      onClick={() => removeFolder(folder.id)}
+                      onClick={() =>
+                        setPendingDelete({ type: "folder", id: folder.id })
+                      }
                       disabled={removingFolder}
                       className="px-2 py-1.5 border-none bg-transparent cursor-pointer text-[#dc2626] text-xs"
                       title="Supprimer le dossier"
@@ -259,13 +316,18 @@ const DocumentsPage = () => {
                   disabled={creatingFolder}
                   className={[
                     "flex-1 py-2 rounded-[7px] border-none font-montserrat font-bold text-xs text-white",
-                    creatingFolder ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer",
+                    creatingFolder
+                      ? "bg-spektr-teal/50 cursor-not-allowed"
+                      : "bg-spektr-teal cursor-pointer",
                   ].join(" ")}
                 >
                   {creatingFolder ? "Création…" : "Créer"}
                 </button>
                 <button
-                  onClick={() => { setShowNewFolder(false); setNewFolderName(""); }}
+                  onClick={() => {
+                    setShowNewFolder(false);
+                    setNewFolderName("");
+                  }}
                   className="flex-1 py-2 rounded-[7px] border-[1.5px] border-spektr-border bg-white font-montserrat font-semibold text-xs cursor-pointer text-gray-500"
                 >
                   Annuler
@@ -280,7 +342,9 @@ const DocumentsPage = () => {
           <div className="px-5 py-3.5 border-b border-spektr-border flex items-center justify-between">
             <span className="font-montserrat font-bold text-[13px]">
               {selectedFolder ? selectedFolder.name : "Tous les fichiers"}{" "}
-              <span className="font-normal text-gray-400">({visibleDocs.length})</span>
+              <span className="font-normal text-gray-400">
+                ({visibleDocs.length})
+              </span>
             </span>
             {selectedFolder && (
               <span className="font-source-sans text-xs text-gray-400">
@@ -292,7 +356,9 @@ const DocumentsPage = () => {
           {uploading && (
             <div className="px-5 py-3 bg-spektr-teal/[0.05] border-b border-spektr-border flex items-center gap-2.5">
               <div className="w-4 h-4 rounded-full border-2 border-spektr-teal border-t-transparent animate-spin" />
-              <span className="font-source-sans text-[13px] text-spektr-teal font-semibold">Import en cours…</span>
+              <span className="font-source-sans text-[13px] text-spektr-teal font-semibold">
+                Import en cours…
+              </span>
             </div>
           )}
 
@@ -302,7 +368,9 @@ const DocumentsPage = () => {
             <div className="py-[60px] px-10 text-center">
               <div className="text-[40px] mb-3">📭</div>
               <p className="font-montserrat font-semibold text-sm text-gray-500">
-                {selectedFolder ? `Aucun fichier dans "${selectedFolder.name}"` : "Aucun fichier importé"}
+                {selectedFolder
+                  ? `Aucun fichier dans "${selectedFolder.name}"`
+                  : "Aucun fichier importé"}
               </p>
               <p className="font-source-sans text-[13px] text-gray-400 mt-1">
                 {selectedFolder
@@ -317,7 +385,9 @@ const DocumentsPage = () => {
                   key={doc.id}
                   className={[
                     "flex items-center gap-3.5 px-5 py-3.5 transition-colors hover:bg-[#fafafa]",
-                    idx < visibleDocs.length - 1 ? "border-b border-spektr-bg" : "",
+                    idx < visibleDocs.length - 1
+                      ? "border-b border-spektr-bg"
+                      : "",
                   ].join(" ")}
                 >
                   <div className="w-10 h-10 rounded-lg bg-spektr-bg flex items-center justify-center flex-shrink-0">
@@ -328,12 +398,15 @@ const DocumentsPage = () => {
                       {doc.name}
                     </div>
                     <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
-                      {formatSize(doc.size)} · {new Date(doc.created_at).toLocaleDateString("fr-FR")}
-                      {doc.folderId && folders.find((f) => f.id === doc.folderId) && (
-                        <span className="ml-1.5 text-spektr-teal">
-                          · 📁 {folders.find((f) => f.id === doc.folderId)!.name}
-                        </span>
-                      )}
+                      {formatSize(doc.size)} ·{" "}
+                      {new Date(doc.created_at).toLocaleDateString("fr-FR")}
+                      {doc.folderId &&
+                        folders.find((f) => f.id === doc.folderId) && (
+                          <span className="ml-1.5 text-spektr-teal">
+                            · 📁{" "}
+                            {folders.find((f) => f.id === doc.folderId)!.name}
+                          </span>
+                        )}
                     </div>
                   </div>
                   <div className="flex gap-1.5">
@@ -344,7 +417,9 @@ const DocumentsPage = () => {
                       ⬇ Télécharger
                     </button>
                     <button
-                      onClick={() => removeDocument(doc.id)}
+                      onClick={() =>
+                        setPendingDelete({ type: "document", id: doc.id })
+                      }
                       className="bg-[#fee2e2] border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-[#dc2626]"
                     >
                       Supprimer
@@ -356,6 +431,16 @@ const DocumentsPage = () => {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onOpenChange={(val) => {
+          if (!val) setPendingDelete(null);
+        }}
+        title="Confirmer la suppression"
+        description="Cette action est irréversible."
+        onConfirm={handleDelete}
+      />
     </div>
   );
 };

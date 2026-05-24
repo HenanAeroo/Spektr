@@ -90,7 +90,7 @@ const ApplicationsPage = () => {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-18px py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer flex items-center gap-1.5"
+          className="px-5 py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer flex items-center gap-1.5"
         >
           + Nouvelle candidature
         </button>

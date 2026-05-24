@@ -35,7 +35,7 @@ import { ObjectivesModule } from './objectives/objectives.module';
         {
           name: 'default',
           ttl: 60000,
-          limit: 100,
+          limit: 30,
         },
       ],
     }),

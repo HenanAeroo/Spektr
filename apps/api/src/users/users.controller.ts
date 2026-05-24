@@ -21,6 +21,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { NotificationsService } from '../notifications/notifications.service';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -74,6 +75,7 @@ export class UsersController {
   }
 
   @Patch('me/password')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   async changePassword(
     @Body() body: ChangePasswordDto,
     @CurrentUser() user: UserModel,
@@ -94,7 +96,11 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { score: number; comment: string },
   ) {
-    await this.notificationsService.sendFeedbackEmail(id, body.score, body.comment);
+    await this.notificationsService.sendFeedbackEmail(
+      id,
+      body.score,
+      body.comment,
+    );
     return { sent: true };
   }
 

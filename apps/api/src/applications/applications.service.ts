@@ -23,7 +23,16 @@ export class ApplicationsService {
   ): Promise<Application> {
     return this.prisma.application.create({
       data: {
-        ...createApplicationDto,
+        entreprise: createApplicationDto.entreprise,
+        lien: createApplicationDto.lien,
+        commentaire: createApplicationDto.commentaire,
+        statut: createApplicationDto.statut,
+        contact_nom: createApplicationDto.contact_nom,
+        contact_email: createApplicationDto.contact_email,
+        contact_tel: createApplicationDto.contact_tel,
+        date_candidature: createApplicationDto.date_candidature,
+        date_relance: createApplicationDto.date_relance,
+        outcome: createApplicationDto.outcome,
         user: { connect: { id: userId } },
       },
     });
@@ -57,7 +66,16 @@ export class ApplicationsService {
         userId: userId,
       },
       data: {
-        ...updateApplicationDto,
+        entreprise: updateApplicationDto.entreprise,
+        lien: updateApplicationDto.lien,
+        commentaire: updateApplicationDto.commentaire,
+        statut: updateApplicationDto.statut,
+        contact_nom: updateApplicationDto.contact_nom,
+        contact_email: updateApplicationDto.contact_email,
+        contact_tel: updateApplicationDto.contact_tel,
+        date_candidature: updateApplicationDto.date_candidature,
+        date_relance: updateApplicationDto.date_relance,
+        outcome: updateApplicationDto.outcome,
       },
     });
 

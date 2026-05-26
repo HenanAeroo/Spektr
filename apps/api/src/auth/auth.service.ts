@@ -289,9 +289,14 @@ export class AuthService {
   }
 
   async forgotPassword(email: string) {
-    const user = await this.prisma.user.findUnique({ where: { email: email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { authProviders: { select: { provider: true } } },
+    });
 
-    if (!user) {
+    const hasLocal = user?.authProviders.some((p) => p.provider === Provider.local);
+
+    if (!user || !hasLocal) {
       return 'Un email de réinitialisation a été envoyé';
     }
 
@@ -374,6 +379,7 @@ export class AuthService {
 
     const user = await this.prisma.user.findFirst({
       where: { resetPasswordToken: hashedToken },
+      include: { authProviders: { select: { provider: true } } },
     });
 
     if (!user) {
@@ -382,6 +388,10 @@ export class AuthService {
 
     if (user.resetPasswordExpiry! < new Date()) {
       throw new BadRequestException('Token expiré');
+    }
+
+    if (!user.authProviders.some((p) => p.provider === Provider.local)) {
+      throw new BadRequestException('Ce compte utilise Google — aucun mot de passe à réinitialiser');
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);

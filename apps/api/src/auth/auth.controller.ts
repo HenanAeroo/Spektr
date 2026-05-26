@@ -115,11 +115,13 @@ export class AuthController {
 
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
-    return await this.authService.forgotPassword(dto.email);
+    const message = await this.authService.forgotPassword(dto.email);
+    return { message };
   }
 
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
-    return await this.authService.resetPassword(dto.token, dto.password);
+    const message = await this.authService.resetPassword(dto.token, dto.password);
+    return { message };
   }
 }

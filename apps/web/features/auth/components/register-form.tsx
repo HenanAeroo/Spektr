@@ -257,6 +257,7 @@ const RegisterForm = () => {
                 type="password"
                 placeholder="8 caractères minimum"
                 className={inputCls}
+                autoComplete="new-password"
               />
               {form.formState.errors.password && (
                 <p className="text-spektr-red text-xs mt-1">

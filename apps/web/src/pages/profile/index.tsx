@@ -18,7 +18,9 @@ export default function ProfilePage() {
   const [editMode, setEditMode] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [activeSection, setActiveSection] = useState<"profile" | "security">("profile");
+  const [activeSection, setActiveSection] = useState<"profile" | "security">(
+    "profile",
+  );
 
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -46,11 +48,16 @@ export default function ProfilePage() {
   };
 
   const initials = user
-    ? `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase() || "U"
+    ? `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase() ||
+      "U"
     : "U";
 
   const pwdInvalid =
-    pwdPending || !oldPassword || !newPassword || newPassword.length < 8 || newPassword !== confirmPassword;
+    pwdPending ||
+    !oldPassword ||
+    !newPassword ||
+    newPassword.length < 8 ||
+    newPassword !== confirmPassword;
 
   if (loading) {
     return (
@@ -113,7 +120,9 @@ export default function ProfilePage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => editMode ? setEditMode(false) : handleStartEdit()}
+                  onClick={() =>
+                    editMode ? setEditMode(false) : handleStartEdit()
+                  }
                   className="px-4 py-2 rounded-lg border-[1.5px] border-spektr-teal bg-transparent text-spektr-teal font-montserrat font-bold text-[13px] cursor-pointer"
                 >
                   {editMode ? "Annuler" : "Modifier"}
@@ -164,16 +173,23 @@ export default function ProfilePage() {
               {editMode && (
                 <button
                   onClick={async () => {
-                    await handleUpdate({ first_name: firstName, last_name: lastName });
+                    await handleUpdate({
+                      first_name: firstName,
+                      last_name: lastName,
+                    });
                     setEditMode(false);
                   }}
                   disabled={saving}
                   className={[
                     "px-6 py-[11px] rounded-lg border-none font-montserrat font-bold text-sm text-white",
-                    saving ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer",
+                    saving
+                      ? "bg-spektr-teal/50 cursor-not-allowed"
+                      : "bg-spektr-teal cursor-pointer",
                   ].join(" ")}
                 >
-                  {saving ? "Enregistrement…" : "✅ Enregistrer les modifications"}
+                  {saving
+                    ? "Enregistrement…"
+                    : "✅ Enregistrer les modifications"}
                 </button>
               )}
             </div>
@@ -185,7 +201,8 @@ export default function ProfilePage() {
                 Sécurité
               </h2>
               <p className="font-source-sans text-[13px] text-gray-500 mb-6">
-                Modifiez votre mot de passe. Vous serez déconnecté après confirmation.
+                Modifiez votre mot de passe. Vous serez déconnecté après
+                confirmation.
               </p>
 
               {pwdSuccess ? (
@@ -196,7 +213,8 @@ export default function ProfilePage() {
                       Mot de passe modifié !
                     </div>
                     <div className="font-source-sans text-[13px] text-green-400 mt-0.5">
-                      Un email de confirmation a été envoyé. Déconnexion en cours…
+                      Un email de confirmation a été envoyé. Déconnexion en
+                      cours…
                     </div>
                   </div>
                 </div>
@@ -207,9 +225,13 @@ export default function ProfilePage() {
                     <input
                       type="password"
                       value={oldPassword}
-                      onChange={(e) => { setOldPassword(e.target.value); setPwdError(null); }}
+                      onChange={(e) => {
+                        setOldPassword(e.target.value);
+                        setPwdError(null);
+                      }}
                       placeholder="••••••••"
                       className={inputCls}
+                      autoComplete="current-password"
                     />
                   </div>
                   <div>
@@ -217,20 +239,31 @@ export default function ProfilePage() {
                     <input
                       type="password"
                       value={newPassword}
-                      onChange={(e) => { setNewPassword(e.target.value); setPwdError(null); }}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        setPwdError(null);
+                      }}
                       placeholder="••••••••"
                       className={inputCls}
+                      autoComplete="new-password"
                     />
                     {newPassword.length > 0 && newPassword.length < 8 && (
-                      <p className="font-source-sans text-xs text-amber-600 mt-1">Minimum 8 caractères</p>
+                      <p className="font-source-sans text-xs text-amber-600 mt-1">
+                        Minimum 8 caractères
+                      </p>
                     )}
                   </div>
                   <div>
-                    <label className={labelCls}>Confirmer le nouveau mot de passe</label>
+                    <label className={labelCls}>
+                      Confirmer le nouveau mot de passe
+                    </label>
                     <input
                       type="password"
                       value={confirmPassword}
-                      onChange={(e) => { setConfirmPassword(e.target.value); setPwdError(null); }}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setPwdError(null);
+                      }}
                       placeholder="••••••••"
                       className={[
                         inputCls,
@@ -238,6 +271,7 @@ export default function ProfilePage() {
                           ? "border-spektr-red focus:border-spektr-red"
                           : "",
                       ].join(" ")}
+                      autoComplete="new-password"
                     />
                     {confirmPassword && confirmPassword !== newPassword && (
                       <p className="font-source-sans text-xs text-spektr-red mt-1">
@@ -259,13 +293,15 @@ export default function ProfilePage() {
                     }}
                     disabled={pwdInvalid}
                     className={[
-                      "px-6 py-[11px] rounded-lg border-none font-montserrat font-bold text-sm transition-all",
+                      "px-6 py-2.75 rounded-lg border-none font-montserrat font-bold text-sm transition-all",
                       pwdInvalid
                         ? "bg-spektr-border text-gray-400 cursor-not-allowed"
                         : "bg-spektr-teal text-white cursor-pointer",
                     ].join(" ")}
                   >
-                    {pwdPending ? "Modification en cours…" : "🔐 Modifier le mot de passe"}
+                    {pwdPending
+                      ? "Modification en cours…"
+                      : "🔐 Modifier le mot de passe"}
                   </button>
                 </div>
               )}

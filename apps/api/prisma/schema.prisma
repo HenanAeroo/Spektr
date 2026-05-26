@@ -29,7 +29,7 @@ model User {
   notifications        Notification[]
   objectiveCompletions ObjectiveCompletion[]
   promoId              Int?
-  promo                Promo? @relation(fields: [promoId], references: [id])
+  promo                Promo? @relation(fields: [promoId], references: [id], onDelete: SetNull)
 }
 
 enum Provider {
@@ -88,7 +88,7 @@ model Application {
   modified_at DateTime @updatedAt
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Outcome {
@@ -113,7 +113,7 @@ model Folder {
   name String
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
 
@@ -129,10 +129,10 @@ model Document {
   storageKey  String
 
   folderId Int?
-  folder   Folder? @relation(fields: [folderId], references: [id])
+  folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
   userId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   created_at DateTime @default(now())
 }
@@ -151,7 +151,7 @@ model Notification {
   read    Boolean @default(false)
 
   userId  Int
-  user    User @relation(fields: [userId], references: [id])
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
 }
@@ -174,7 +174,7 @@ model Objective {
   deadline    DateTime?
 
   promoId Int
-  promo   Promo @relation(fields: [promoId], references: [id])
+  promo   Promo @relation(fields: [promoId], references: [id], onDelete: Cascade)
 
   completions ObjectiveCompletion[]
 

@@ -45,12 +45,20 @@ const LoginForm = () => {
       </div>
 
       <div className="mb-5">
-        <label
-          htmlFor="password"
-          className="font-montserrat font-semibold text-[13px] text-spektr-dark block mb-1.5"
-        >
-          Mot de passe
-        </label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label
+            htmlFor="password"
+            className="font-montserrat font-semibold text-[13px] text-spektr-dark"
+          >
+            Mot de passe
+          </label>
+          <a
+            href="/forgot-password"
+            className="font-source-sans text-[12px] text-spektr-teal"
+          >
+            Mot de passe oublié ?
+          </a>
+        </div>
         <div className="relative">
           <input
             {...form.register("password")}

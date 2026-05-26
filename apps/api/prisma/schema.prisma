@@ -18,6 +18,9 @@ model User {
   verificationToken   String?
   verificationExpiry  DateTime?
 
+  resetPasswordToken   String?
+  resetPasswordExpiry  DateTime?
+
   created_at  DateTime @default(now())
   modified_at DateTime @updatedAt
 

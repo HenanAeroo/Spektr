@@ -287,4 +287,119 @@ export class AuthService {
 
     return 'Email confirmé';
   }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email: email } });
+
+    if (!user) {
+      return 'Un email de réinitialisation a été envoyé';
+    }
+
+    const rawToken = randomBytes(32).toString('hex');
+
+    const hashedToken = this.hashTokenForStorage(rawToken);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: hashedToken,
+        resetPasswordExpiry: new Date(Date.now() + 15 * 60 * 1000),
+      },
+    });
+
+    const frontUrl = this.config.get<string>('FRONT_URL');
+    const resetUrl = `${frontUrl}/reset-password?token=${rawToken}`;
+    const firstName = user.first_name ?? 'là';
+
+    const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Segoe UI',Arial,sans-serif;">
+  <div style="max-width:580px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <div style="background:#1d1d1e;padding:24px 32px;">
+      <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;">
+        Spek<span style="color:#23b2a4;">tr</span>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;letter-spacing:2px;margin-top:2px;">YNOV CAMPUS RENNES</div>
+    </div>
+
+    <div style="padding:32px;">
+      <div style="font-size:28px;margin-bottom:12px;">✉️</div>
+      <h1 style="margin:0 0 6px;font-size:20px;color:#1d1d1e;">Bonjour ${firstName},</h1>
+      <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+        Vous êtes à l'origine d'une demande de changement de mot passe, merci de cliquer sur le lien ci-dessous pour effectuer la réinitialisation.
+      </p>
+
+      <div style="background:#f0fdf9;border:1px solid rgba(35,178,164,0.2);border-radius:10px;padding:24px;margin-bottom:24px;text-align:center;">
+        <p style="margin:0 0 16px;font-size:13px;color:#6b7280;line-height:1.6;">
+          Ce lien est valable <strong style="color:#1d1d1e;">15 minutes</strong>.
+        </p>
+        <a href="${resetUrl}"
+           style="display:inline-block;background:#23b2a4;color:#fff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 32px;border-radius:8px;letter-spacing:0.2px;">
+          Réinitialiser mon mot de passe
+        </a>
+      </div>
+
+      <div style="background:#f9fafb;border:1px solid #e8e8e8;border-radius:10px;padding:14px 18px;margin-bottom:24px;">
+        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Lien alternatif</div>
+        <p style="margin:0;font-size:12px;color:#6b7280;word-break:break-all;line-height:1.6;">${resetUrl}</p>
+      </div>
+
+      <p style="font-size:13px;color:#6b7280;line-height:1.6;margin:0;">
+        Si vous n'êtes pas à l'origine de cette réinitialisation, ignorez simplement cet email.
+      </p>
+    </div>
+
+    <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e8e8e8;text-align:center;">
+      <p style="margin:0;font-size:11px;color:#9ca3af;">
+        Ce message a été envoyé automatiquement par Spektr · Ynov Campus Rennes
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    await this.mailerService.send(
+      user.email,
+      'Réinitialisation de votre mot de passe',
+      html,
+    );
+
+    return 'Un email de réinitialisation a été envoyé';
+  }
+
+  async resetPassword(token: string, password: string) {
+    const hashedToken = this.hashTokenForStorage(token);
+
+    const user = await this.prisma.user.findFirst({
+      where: { resetPasswordToken: hashedToken },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Token invalide');
+    }
+
+    if (user.resetPasswordExpiry! < new Date()) {
+      throw new BadRequestException('Token expiré');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await this.prisma.authProvider.update({
+      where: {
+        userId_provider: { userId: user.id, provider: Provider.local },
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { resetPasswordToken: null, resetPasswordExpiry: null },
+    });
+
+    return 'Mot de passe réinitialisé';
+  }
 }

@@ -1,6 +1,6 @@
 import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { inputCls, labelCls } from "../constants";
 import { Card } from "./Card";
 import { fetchUsers } from "@/features/promos/actions/fetchUsers";
@@ -28,7 +28,7 @@ export function StudentsList({
   });
 
   const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
-    queryKey: ["users"],
+    queryKey: ["users", "paginated"],
     queryFn: ({ pageParam }) => fetchUsers(pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
@@ -63,6 +63,24 @@ export function StudentsList({
       "_blank",
     );
   };
+
+  const sentinelRef = useRef(null);
+
+  useEffect(() => {
+    if (sentinelRef.current === null) {
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasNextPage) {
+        fetchNextPage();
+      }
+    });
+
+    observer.observe(sentinelRef.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, fetchNextPage]);
 
   return (
     <div>

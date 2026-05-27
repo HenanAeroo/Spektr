@@ -1,6 +1,6 @@
 import { getUserDocuments } from "@/features/documents/actions/getUserDocuments";
 import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
-import { fetchUsers } from "@/features/promos/actions/fetchUsers";
+import { fetchUser } from "@/features/promos/actions/fetchUser";
 import { sendFeedback } from "@/features/users/actions/sendFeedback";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -30,11 +30,10 @@ export function StudentDetail({
     mutationFn: () => sendFeedback(userId, feedbackScore!, feedbackText),
   });
 
-  const { data: users = [] } = useQuery({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
+  const { data: user } = useQuery({
+    queryKey: ["users", userId],
+    queryFn: () => fetchUser(userId),
   });
-  const user = users.find((u: any) => u.id === userId);
 
   const { data: objectivesWithCompletions = [], isLoading: objLoading } =
     useQuery({

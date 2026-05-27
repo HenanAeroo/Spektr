@@ -1,3 +1,5 @@
+import { fetchUserApplications } from "@/features/applications/actions/fetchUserApplications";
+import { STATUT_COLORS, STATUT_LABELS } from "@/features/applications/constants";
 import { getUserDocuments } from "@/features/documents/actions/getUserDocuments";
 import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
 import { fetchUser } from "@/features/promos/actions/fetchUser";
@@ -17,7 +19,7 @@ export function StudentDetail({
   navigate: (p: string) => void;
 }) {
   const [activeTab, setActiveTab] = useState<
-    "profile" | "objectifs" | "documents"
+    "profile" | "objectifs" | "documents" | "candidatures"
   >("profile");
   const [feedbackScore, setFeedbackScore] = useState<number | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
@@ -51,6 +53,13 @@ export function StudentDetail({
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: applications = [], isLoading: appsLoading } = useQuery({
+    queryKey: ["applications", "user", userId],
+    queryFn: () => fetchUserApplications(userId),
+    enabled: activeTab === "candidatures" || activeTab === "profile",
+    staleTime: 3 * 60 * 1000,
+  });
+
   if (!user) {
     return (
       <div className="text-center py-[60px] text-gray-400">
@@ -81,8 +90,17 @@ export function StudentDetail({
     "Critique",
   ];
 
+  const appPositive = applications.filter(
+    (a) => a.statut === "REPONSE_POSITIVE",
+  ).length;
+  const appRefus = applications.filter((a) => a.statut === "REFUS").length;
+  const appEnCours = applications.filter(
+    (a) => a.statut !== "REPONSE_POSITIVE" && a.statut !== "REFUS",
+  ).length;
+
   const tabs = [
     { id: "profile" as const, label: "Profil" },
+    { id: "candidatures" as const, label: `Candidatures${applications.length ? ` (${applications.length})` : ""}` },
     { id: "objectifs" as const, label: "Objectifs" },
     { id: "documents" as const, label: "Documents" },
   ];
@@ -164,6 +182,46 @@ export function StudentDetail({
                   {user.email}
                 </div>
               </div>
+            </Card>
+
+            <Card>
+              <div className="font-montserrat font-bold text-[13px] mb-3">
+                Candidatures
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div
+                  className="rounded-lg bg-spektr-bg py-2 cursor-pointer hover:bg-spektr-border/40 transition-colors"
+                  onClick={() => setActiveTab("candidatures")}
+                >
+                  <div className="font-montserrat font-extrabold text-[20px] text-spektr-dark">
+                    {applications.length}
+                  </div>
+                  <div className="font-source-sans text-[10px] text-gray-400 mt-0.5">
+                    Total
+                  </div>
+                </div>
+                <div className="rounded-lg bg-green-50 py-2">
+                  <div className="font-montserrat font-extrabold text-[20px] text-green-600">
+                    {appPositive}
+                  </div>
+                  <div className="font-source-sans text-[10px] text-green-500 mt-0.5">
+                    Positif
+                  </div>
+                </div>
+                <div className="rounded-lg bg-red-50 py-2">
+                  <div className="font-montserrat font-extrabold text-[20px] text-red-500">
+                    {appRefus}
+                  </div>
+                  <div className="font-source-sans text-[10px] text-red-400 mt-0.5">
+                    Refus
+                  </div>
+                </div>
+              </div>
+              {appEnCours > 0 && (
+                <div className="mt-2.5 text-center font-source-sans text-[11px] text-amber-600">
+                  {appEnCours} en cours de traitement
+                </div>
+              )}
             </Card>
 
             <Card>
@@ -322,6 +380,112 @@ export function StudentDetail({
             })()
           )}
         </Card>
+      )}
+
+      {activeTab === "candidatures" && (
+        <div className="flex flex-col gap-4">
+          {/* Stats row */}
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { label: "Total", value: applications.length, color: "text-spektr-dark", bg: "bg-white" },
+              { label: "Positifs", value: appPositive, color: "text-green-600", bg: "bg-green-50" },
+              { label: "Refus", value: appRefus, color: "text-red-500", bg: "bg-red-50" },
+              { label: "En cours", value: appEnCours, color: "text-amber-600", bg: "bg-amber-50" },
+            ].map((s) => (
+              <Card key={s.label} className={s.bg}>
+                <div className={`font-montserrat font-extrabold text-[32px] ${s.color}`}>
+                  {s.value}
+                </div>
+                <div className="font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] mt-1">
+                  {s.label}
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <Card>
+            <div className="font-montserrat font-bold text-sm mb-4">
+              Toutes les candidatures
+            </div>
+            {appsLoading ? (
+              <div className="text-center py-8 text-gray-400">Chargement…</div>
+            ) : applications.length === 0 ? (
+              <div className="text-center py-10">
+                <div className="text-[32px] mb-2">📋</div>
+                <p className="font-montserrat font-semibold text-sm text-gray-500">
+                  Aucune candidature enregistrée
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {[...applications]
+                  .sort((a, b) => new Date(b.modified_at).getTime() - new Date(a.modified_at).getTime())
+                  .map((app) => {
+                    const colors = STATUT_COLORS[app.statut];
+                    const dateCandidature = app.date_candidature
+                      ? new Date(app.date_candidature).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })
+                      : null;
+                    const dateRelance = app.date_relance
+                      ? new Date(app.date_relance).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
+                      : null;
+                    return (
+                      <div
+                        key={app.id}
+                        className="flex items-start gap-3.5 px-4 py-3.5 rounded-[10px] border border-spektr-border hover:bg-[#fafafa] transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2.5 mb-1.5">
+                            <span className="font-montserrat font-bold text-[16px] text-spektr-dark truncate">
+                              {app.entreprise}
+                            </span>
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[12px] font-bold whitespace-nowrap flex-shrink-0 ${colors.bg} ${colors.text}`}
+                            >
+                              {STATUT_LABELS[app.statut]}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1">
+                            {dateCandidature && (
+                              <span className="font-source-sans text-[13px] text-gray-400">
+                                📅 Candidature : {dateCandidature}
+                              </span>
+                            )}
+                            {dateRelance && (
+                              <span className="font-source-sans text-[13px] text-amber-500">
+                                🔔 Relance : {dateRelance}
+                              </span>
+                            )}
+                            {app.contact_nom && (
+                              <span className="font-source-sans text-[13px] text-gray-400">
+                                👤 {app.contact_nom}
+                                {app.contact_email && ` · ${app.contact_email}`}
+                                {app.contact_tel && ` · ${app.contact_tel}`}
+                              </span>
+                            )}
+                          </div>
+                          {app.commentaire && (
+                            <div className="mt-2 font-source-sans text-[13px] text-gray-500 italic line-clamp-2">
+                              {app.commentaire}
+                            </div>
+                          )}
+                        </div>
+                        {app.lien && (
+                          <a
+                            href={app.lien}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-spektr-teal whitespace-nowrap flex-shrink-0 no-underline"
+                          >
+                            Voir l'offre →
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </Card>
+        </div>
       )}
 
       {activeTab === "documents" && (

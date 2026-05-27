@@ -1,5 +1,5 @@
-import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
 import { fetchObjectives } from "@/features/objectives/actions/fetchObjectives";
+import { fetchRecentActivity } from "@/features/objectives/actions/fetchRecentActivity";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "./Card";
 import { ProgressBar } from "./ProgressBar";
@@ -19,24 +19,11 @@ export function Dashboard({
     queryFn: fetchObjectives,
     staleTime: 5 * 60 * 1000,
   });
-  const { data: objectivesWithCompletions = [] } = useQuery({
-    queryKey: ["objectives", "completions"],
-    queryFn: fetchAllCompletions,
-    staleTime: 5 * 60 * 1000,
+  const { data: recentActivity = [] } = useQuery({
+    queryKey: ["objectives", "recent-activity"],
+    queryFn: fetchRecentActivity,
+    staleTime: 2 * 60 * 1000,
   });
-
-  const studentProgress = students.reduce<
-    Record<number, { done: number; total: number }>
-  >((acc, u) => {
-    const promoObjectives = objectivesWithCompletions.filter(
-      (obj: any) => obj.promoId === u.promoId,
-    );
-    const done = promoObjectives.filter((obj: any) =>
-      obj.completions?.some((c: any) => c.user.id === u.id && c.done),
-    ).length;
-    acc[u.id] = { done, total: promoObjectives.length };
-    return acc;
-  }, {});
 
   const metrics = [
     {
@@ -90,62 +77,57 @@ export function Dashboard({
       <div className="grid grid-cols-[1fr_320px] gap-4">
         <Card>
           <div className="flex justify-between items-center mb-4">
-            <span className="font-montserrat font-bold text-sm">Étudiants</span>
+            <span className="font-montserrat font-bold text-sm">Dernières activités</span>
             <button
               onClick={() => navigate("students")}
               className="text-xs text-spektr-teal font-semibold bg-transparent border-none cursor-pointer"
             >
-              Voir tous →
+              Voir les étudiants →
             </button>
           </div>
-          {students.length === 0 ? (
+          {recentActivity.length === 0 ? (
             <p className="font-source-sans text-[13px] text-gray-400 text-center py-6">
-              Aucun étudiant enregistré
+              Aucune activité récente
             </p>
           ) : (
             <div className="flex flex-col gap-2.5">
-              {students.slice(0, 6).map((u) => {
+              {recentActivity.map((activity) => {
                 const initials =
-                  `${u.first_name?.[0] ?? ""}${u.last_name?.[0] ?? ""}`.toUpperCase() ||
+                  `${activity.user.first_name?.[0] ?? ""}${activity.user.last_name?.[0] ?? ""}`.toUpperCase() ||
                   "?";
-                const promo = promos.find((p: any) => p.id === u.promoId);
-                const progress = studentProgress[u.id] ?? { done: 0, total: 0 };
-                const pct =
-                  progress.total > 0
-                    ? Math.round((progress.done / progress.total) * 100)
-                    : 0;
+                const promo = promos.find((p: any) => p.id === activity.user.promoId);
+                const date = new Date(activity.modified_at);
+                const relativeTime = (() => {
+                  const diff = Date.now() - date.getTime();
+                  const mins = Math.floor(diff / 60000);
+                  if (mins < 60) return `il y a ${mins} min`;
+                  const hours = Math.floor(mins / 60);
+                  if (hours < 24) return `il y a ${hours}h`;
+                  return `il y a ${Math.floor(hours / 24)}j`;
+                })();
                 return (
                   <div
-                    key={u.id}
+                    key={activity.id}
                     className="flex items-center gap-3 px-2.5 py-2.5 border-b border-spektr-bg rounded-lg cursor-pointer transition-colors hover:bg-[#f9fafb]"
-                    onClick={() => navigate(`student-detail:${u.id}`)}
+                    onClick={() => navigate(`student-detail:${activity.user.id}`)}
                   >
                     <div className="w-[34px] h-[34px] rounded-full bg-green-100 text-green-600 flex items-center justify-center font-montserrat font-bold text-xs flex-shrink-0">
                       {initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-montserrat font-semibold text-[13px] text-spektr-dark">
-                        {u.first_name} {u.last_name}
+                      <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
+                        {activity.user.first_name} {activity.user.last_name}
                       </div>
-                      <div className="font-source-sans text-[11px] text-gray-400">
-                        {promo?.name ?? "Sans promo"}
+                      <div className="font-source-sans text-[11px] text-gray-400 truncate">
+                        ✅ {activity.objective.title}
+                        {promo && (
+                          <span className="ml-1.5 text-spektr-teal">· {promo.name}</span>
+                        )}
                       </div>
-                      {progress.total > 0 && (
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <div className="flex-1 h-1 rounded-full bg-spektr-border overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-[width] duration-400 ${pct === 100 ? "bg-green-600" : "bg-spektr-teal"}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <span
-                            className={`text-[10px] font-bold whitespace-nowrap ${pct === 100 ? "text-green-600" : "text-spektr-teal"}`}
-                          >
-                            {progress.done}/{progress.total}
-                          </span>
-                        </div>
-                      )}
                     </div>
+                    <span className="font-source-sans text-[10px] text-gray-400 whitespace-nowrap flex-shrink-0">
+                      {relativeTime}
+                    </span>
                   </div>
                 );
               })}

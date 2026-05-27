@@ -129,6 +129,28 @@ export class ObjectivesService {
     return objectives;
   }
 
+  async findRecentActivity(limit = 5) {
+    return this.prismaService.objectiveCompletion.findMany({
+      where: { done: true },
+      orderBy: { modified_at: 'desc' },
+      take: limit,
+      include: {
+        user: {
+          select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            email: true,
+            promoId: true,
+          },
+        },
+        objective: {
+          select: { id: true, title: true },
+        },
+      },
+    });
+  }
+
   update(id: number, dto: UpdateObjectiveDto) {
     return this.prismaService.objective.update({
       where: { id },

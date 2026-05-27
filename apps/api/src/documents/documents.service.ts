@@ -20,7 +20,9 @@ export class DocumentsService {
     folderId: number | undefined,
     userId: number,
   ) {
-    const ext = extname(file.originalname).replace(/[^a-zA-Z0-9.]/g, '').toLowerCase();
+    const ext = extname(file.originalname)
+      .replace(/[^a-zA-Z0-9.]/g, '')
+      .toLowerCase();
     const safeFilename = `${randomUUID()}${ext}`;
     const storageKey = `${userId}/${Date.now()}-${safeFilename}`;
     await this.minio.uploadFile(

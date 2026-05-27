@@ -18,7 +18,10 @@ describe('UsersController', () => {
         },
         {
           provide: NotificationsService,
-          useValue: { sendFeedbackEmail: jest.fn(), sendPasswordChangedEmail: jest.fn() },
+          useValue: {
+            sendFeedbackEmail: jest.fn(),
+            sendPasswordChangedEmail: jest.fn(),
+          },
         },
       ],
     }).compile();

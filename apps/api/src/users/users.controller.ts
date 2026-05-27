@@ -34,14 +34,8 @@ export class UsersController {
   @Roles(RoleModel.ADMIN)
   @UseGuards(RolesGuard)
   @Get()
-  findAll(
-    @Query() query: { skip?: string; take?: string },
-  ): Promise<UserModel[]> {
-    return this.usersService.findAll({
-      orderBy: { id: 'asc' },
-      take: query.take ? Number(query.take) : 20,
-      skip: query.skip ? Number(query.skip) : undefined,
-    });
+  findAll(@Query('page') page = '1', @Query('limit') limit = '9') {
+    return this.usersService.findAll(parseInt(page), parseInt(limit));
   }
 
   @Get('me')

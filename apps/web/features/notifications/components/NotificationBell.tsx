@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { socket } from "@/shared/lib/socket";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getToken } from "@/shared/lib/auth";
+import { markAllRead } from "../actions/markAllRead";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -36,6 +37,20 @@ function NotificationBell() {
     mutationFn: markAsRead,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+
+  const { mutate: triggerMarkAllRead } = useMutation({
+    mutationFn: markAllRead,
+    onSuccess: () =>
+      queryClient.setQueryData<Notification[]>(["notifications"], (old) => {
+        if (old === undefined) {
+          return [];
+        } else {
+          return old.map((notification) => {
+            return { ...notification, read: true };
+          });
+        }
+      }),
   });
 
   useEffect(() => {
@@ -78,7 +93,7 @@ function NotificationBell() {
   }
 
   function handleMarkAllRead() {
-    notifications.filter((n) => !n.read).forEach((n) => markRead(n.id));
+    triggerMarkAllRead();
   }
 
   return (

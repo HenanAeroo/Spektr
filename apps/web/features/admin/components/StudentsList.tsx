@@ -124,109 +124,59 @@ export function StudentsList({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-[#fafafa]">
-                  {[
-                    "Étudiant",
-                    "Email",
-                    "Promotion",
-                    "Objectifs",
-                    "Actions",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-[0.5px] border-b border-spektr-border"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((u) => {
-                  const initials =
-                    `${u.first_name?.[0] ?? ""}${u.last_name?.[0] ?? ""}`.toUpperCase() ||
-                    "?";
-                  const promo = promos.find((p: any) => p.id === u.promoId);
-                  const promoObjectives = objectivesWithCompletions.filter(
-                    (obj: any) => obj.promoId === u.promoId,
-                  );
-                  const doneCount = promoObjectives.filter((obj: any) =>
-                    obj.completions?.some(
-                      (c: any) => c.user.id === u.id && c.done,
-                    ),
-                  ).length;
-                  const pct =
-                    promoObjectives.length > 0
-                      ? Math.round((doneCount / promoObjectives.length) * 100)
-                      : 0;
-                  return (
-                    <tr
-                      key={u.id}
-                      className="border-b border-spektr-border transition-colors cursor-pointer hover:bg-[#fafafa]"
-                      onClick={() => navigate(`student-detail:${u.id}`)}
-                    >
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-montserrat font-bold text-xs flex-shrink-0">
-                            {initials}
-                          </div>
-                          <div className="font-montserrat font-semibold text-[13px]">
-                            {u.first_name} {u.last_name}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500">
+          <div className="grid grid-cols-3 gap-4 p-5">
+            {filtered.map((u) => {
+              const initials =
+                `${u.first_name?.[0] ?? ""}${u.last_name?.[0] ?? ""}`.toUpperCase() ||
+                "?";
+              const promo = promos.find((p: any) => p.id === u.promoId);
+              const promoObjectives = objectivesWithCompletions.filter(
+                (obj: any) => obj.promoId === u.promoId,
+              );
+              const doneCount = promoObjectives.filter((obj: any) =>
+                obj.completions?.some((c: any) => c.user.id === u.id && c.done),
+              ).length;
+              const pct =
+                promoObjectives.length > 0
+                  ? Math.round((doneCount / promoObjectives.length) * 100)
+                  : 0;
+              return (
+                <Card key={u.id} onClick={() => navigate(`student-detail:${u.id}`)}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[13px] font-bold flex-shrink-0">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
+                        {u.first_name} {u.last_name}
+                      </div>
+                      <div className="font-source-sans text-[11px] text-gray-400 truncate">
                         {u.email}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        {promo ? (
-                          <span className="bg-spektr-teal/10 text-spektr-teal text-[11px] font-semibold px-2.5 py-0.5 rounded-[10px]">
-                            {promo.name}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3.5 min-w-[120px]">
-                        {promoObjectives.length > 0 ? (
-                          <div>
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <div className="flex-1 h-[5px] rounded-full bg-spektr-border overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full transition-[width] duration-400 ${pct === 100 ? "bg-green-600" : "bg-spektr-teal"}`}
-                                  style={{ width: `${pct}%` }}
-                                />
-                              </div>
-                              <span
-                                className={`text-[11px] font-bold whitespace-nowrap ${pct === 100 ? "text-green-600" : "text-spektr-teal"}`}
-                              >
-                                {doneCount}/{promoObjectives.length}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 text-xs">—</span>
-                        )}
-                      </td>
-                      <td
-                        className="px-4 py-3.5"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          onClick={() => navigate(`student-detail:${u.id}`)}
-                          className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-xs font-semibold text-spektr-teal"
-                        >
-                          👁 Voir
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </div>
+                    </div>
+                  </div>
+                  {promo && (
+                    <span className="inline-block px-2 py-0.5 rounded-full bg-spektr-teal/10 text-spektr-teal text-[11px] font-semibold mb-3">
+                      {promo.name}
+                    </span>
+                  )}
+                  {promoObjectives.length > 0 && (
+                    <div>
+                      <div className="flex justify-between text-[11px] text-gray-400 mb-1">
+                        <span>Objectifs</span>
+                        <span>{doneCount}/{promoObjectives.length} — {pct}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-spektr-teal rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              )
+            })}
           </div>
         )}
       </Card>

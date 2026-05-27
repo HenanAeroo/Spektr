@@ -33,6 +33,7 @@ export function StudentDetail({
   const { data: user } = useQuery({
     queryKey: ["users", userId],
     queryFn: () => fetchUser(userId),
+    staleTime: 3 * 60 * 1000,
   });
 
   const { data: objectivesWithCompletions = [], isLoading: objLoading } =
@@ -40,12 +41,14 @@ export function StudentDetail({
       queryKey: ["objectives", "completions"],
       queryFn: fetchAllCompletions,
       enabled: activeTab === "objectifs",
+      staleTime: 5 * 60 * 1000,
     });
 
   const { data: documents = [], isLoading: docsLoading } = useQuery({
     queryKey: ["documents", "user", userId],
     queryFn: () => getUserDocuments(userId),
     enabled: activeTab === "documents",
+    staleTime: 5 * 60 * 1000,
   });
 
   if (!user) {

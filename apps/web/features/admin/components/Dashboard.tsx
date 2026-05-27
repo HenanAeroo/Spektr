@@ -17,10 +17,12 @@ export function Dashboard({
   const { data: objectives = [] } = useQuery({
     queryKey: ["objectives", "all"],
     queryFn: fetchObjectives,
+    staleTime: 5 * 60 * 1000,
   });
   const { data: objectivesWithCompletions = [] } = useQuery({
     queryKey: ["objectives", "completions"],
     queryFn: fetchAllCompletions,
+    staleTime: 5 * 60 * 1000,
   });
 
   const studentProgress = students.reduce<

@@ -53,6 +53,12 @@ export class ObjectivesController {
     return this.objectivesService.findAllCompletions();
   }
 
+  @Get('recent-activity')
+  @Roles(Role.ADMIN)
+  findRecentActivity() {
+    return this.objectivesService.findRecentActivity();
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.objectivesService.findOne(id);

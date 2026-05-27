@@ -29,21 +29,26 @@ export default function HomePage() {
   const { data: applications = [] } = useQuery({
     queryKey: ["applications"],
     queryFn: fetchMyApplications,
+    staleTime: 2 * 60 * 1000,
   });
 
   const { data: objectives = [] } = useQuery({
     queryKey: ["objectives", "mine"],
     queryFn: fetchMyObjectives,
+    staleTime: 5 * 60 * 1000,
   });
 
   const activeApps = applications.filter((a) =>
-    ["ENVOYE", "RELANCE", "EN_DISCUSSION"].includes(a.statut)
+    ["ENVOYE", "RELANCE", "EN_DISCUSSION"].includes(a.statut),
   );
   const interviews = applications.filter((a) => a.outcome === "ENTRETIEN");
   const positives = applications.filter((a) => a.statut === "REPONSE_POSITIVE");
 
   const recentApps = [...applications]
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )
     .slice(0, 5);
 
   const now = new Date();
@@ -69,11 +74,29 @@ export default function HomePage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: "Candidatures en cours", value: activeApps.length, delta: `${applications.length} au total`, icon: "📨" },
-          { label: "Entretiens obtenus", value: interviews.length, delta: "depuis le début", icon: "🤝" },
-          { label: "Réponses positives", value: positives.length, delta: "offres reçues", icon: "✅" },
+          {
+            label: "Candidatures en cours",
+            value: activeApps.length,
+            delta: `${applications.length} au total`,
+            icon: "📨",
+          },
+          {
+            label: "Entretiens obtenus",
+            value: interviews.length,
+            delta: "depuis le début",
+            icon: "🤝",
+          },
+          {
+            label: "Réponses positives",
+            value: positives.length,
+            delta: "offres reçues",
+            icon: "✅",
+          },
         ].map((stat, i) => (
-          <div key={i} className="bg-white rounded-[10px] border border-spektr-border p-5">
+          <div
+            key={i}
+            className="bg-white rounded-[10px] border border-spektr-border p-5"
+          >
             <div className="text-[28px] mb-2">{stat.icon}</div>
             <div className="font-montserrat font-extrabold text-[32px] text-spektr-dark tracking-[-1px]">
               {stat.value}
@@ -92,8 +115,13 @@ export default function HomePage() {
         {/* Recent applications */}
         <div className="bg-white rounded-[10px] border border-spektr-border p-5">
           <div className="flex justify-between items-center mb-4">
-            <span className="font-montserrat font-bold text-sm">Candidatures récentes</span>
-            <Link to="/candidatures" className="text-xs text-spektr-teal font-semibold no-underline">
+            <span className="font-montserrat font-bold text-sm">
+              Candidatures récentes
+            </span>
+            <Link
+              to="/candidatures"
+              className="text-xs text-spektr-teal font-semibold no-underline"
+            >
               Voir toutes →
             </Link>
           </div>
@@ -111,10 +139,18 @@ export default function HomePage() {
           ) : (
             <div className="flex flex-col gap-3">
               {recentApps.map((app) => {
-                const colors = STATUT_COLORS[app.statut] ?? { bg: "bg-gray-100", text: "text-gray-500" };
+                const colors = STATUT_COLORS[app.statut] ?? {
+                  bg: "bg-gray-100",
+                  text: "text-gray-500",
+                };
                 return (
-                  <div key={app.id} className="flex items-center gap-3 py-2.5 border-b border-spektr-bg">
-                    <div className={`w-[38px] h-[38px] rounded-full ${colors.bg} flex items-center justify-center font-montserrat font-bold text-[13px] ${colors.text} flex-shrink-0`}>
+                  <div
+                    key={app.id}
+                    className="flex items-center gap-3 py-2.5 border-b border-spektr-bg"
+                  >
+                    <div
+                      className={`w-[38px] h-[38px] rounded-full ${colors.bg} flex items-center justify-center font-montserrat font-bold text-[13px] ${colors.text} flex-shrink-0`}
+                    >
                       {app.entreprise.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -123,11 +159,15 @@ export default function HomePage() {
                       </div>
                       <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
                         {app.date_candidature
-                          ? new Date(app.date_candidature).toLocaleDateString("fr-FR")
+                          ? new Date(app.date_candidature).toLocaleDateString(
+                              "fr-FR",
+                            )
                           : "—"}
                       </div>
                     </div>
-                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-[10px] ${colors.bg} ${colors.text} whitespace-nowrap`}>
+                    <span
+                      className={`text-[11px] font-bold px-2.5 py-0.5 rounded-[10px] ${colors.bg} ${colors.text} whitespace-nowrap`}
+                    >
                       {STATUT_LABELS[app.statut] ?? app.statut}
                     </span>
                   </div>
@@ -142,8 +182,13 @@ export default function HomePage() {
           {/* Objectives */}
           <div className="bg-white rounded-[10px] border border-spektr-border p-5">
             <div className="flex justify-between items-center mb-3.5">
-              <span className="font-montserrat font-bold text-[13px]">Mes objectifs</span>
-              <Link to="/objectifs" className="text-xs text-spektr-teal font-semibold no-underline">
+              <span className="font-montserrat font-bold text-[13px]">
+                Mes objectifs
+              </span>
+              <Link
+                to="/objectifs"
+                className="text-xs text-spektr-teal font-semibold no-underline"
+              >
                 Voir →
               </Link>
             </div>
@@ -162,7 +207,8 @@ export default function HomePage() {
                       </div>
                       {obj.deadline && (
                         <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
-                          Deadline : {new Date(obj.deadline).toLocaleDateString("fr-FR")}
+                          Deadline :{" "}
+                          {new Date(obj.deadline).toLocaleDateString("fr-FR")}
                         </div>
                       )}
                     </div>

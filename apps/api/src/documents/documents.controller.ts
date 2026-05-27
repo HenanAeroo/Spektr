@@ -51,7 +51,12 @@ export class DocumentsController {
         if (DocumentsController.ALLOWED_MIME_TYPES.has(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new BadRequestException(`Type de fichier non autorisé : ${file.mimetype}`), false);
+          cb(
+            new BadRequestException(
+              `Type de fichier non autorisé : ${file.mimetype}`,
+            ),
+            false,
+          );
         }
       },
     }),

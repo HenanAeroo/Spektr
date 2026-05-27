@@ -12,6 +12,7 @@ export function useProfile() {
     queryKey: ["profile", user?.sub],
     queryFn: () => getProfile(user!.sub),
     enabled: user !== null,
+    staleTime: 3 * 60 * 1000,
   });
 
   const { mutate: updateProf, isPending } = useMutation({

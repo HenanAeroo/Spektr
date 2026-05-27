@@ -1,4 +1,11 @@
-import { Controller, Get, Patch, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  UseGuards,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import type { User } from '../../prisma/generated/prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -14,8 +21,13 @@ export class NotificationsController {
     return this.notificationsService.findAllForUser(user.id);
   }
 
+  @Patch('/mark-all-read')
+  markAllread(@CurrentUser() user: User) {
+    return this.notificationsService.markAllRead(user.id);
+  }
+
   @Patch(':id/read')
-  update(@Param('id') id: string, @CurrentUser() user: User) {
-    return this.notificationsService.markAsRead(+id, user.id);
+  update(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
+    return this.notificationsService.markAsRead(id, user.id);
   }
 }

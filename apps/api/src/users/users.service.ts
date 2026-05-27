@@ -17,21 +17,22 @@ export class UsersService {
     });
   }
 
-  findAll(params: {
-    skip?: number;
-    take?: number;
-    cursor?: Prisma.UserWhereUniqueInput;
-    where?: Prisma.UserWhereInput;
-    orderBy?: Prisma.UserOrderByWithRelationInput;
-  }): Promise<User[]> {
-    const { skip, take, cursor, where, orderBy } = params ?? {};
-    return this.prisma.user.findMany({
+  async findAll(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const users = await this.prisma.user.findMany({
       skip,
-      take,
-      cursor,
-      where,
-      orderBy,
+      take: limit,
+      orderBy: { id: 'asc' },
     });
+
+    const total = await this.prisma.user.count();
+
+    return {
+      data: users,
+      total,
+      hasNextPage: page * limit < total,
+    };
   }
 
   findOne(

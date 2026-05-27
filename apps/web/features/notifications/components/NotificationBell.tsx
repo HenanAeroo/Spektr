@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { socket } from "@/shared/lib/socket";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getToken } from "@/shared/lib/auth";
+import { markAllRead } from "../actions/markAllRead";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -14,7 +15,10 @@ function timeAgo(dateStr: string): string {
   if (mins < 60) return `Il y a ${mins} min`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `Il y a ${hrs}h`;
-  return new Date(dateStr).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  return new Date(dateStr).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+  });
 }
 
 function NotificationBell() {
@@ -26,11 +30,27 @@ function NotificationBell() {
     queryKey: ["notifications"],
     queryFn: getNotifications,
     enabled: !!getToken(),
+    staleTime: 30 * 1000,
   });
 
   const { mutate: markRead } = useMutation({
     mutationFn: markAsRead,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+
+  const { mutate: triggerMarkAllRead } = useMutation({
+    mutationFn: markAllRead,
+    onSuccess: () =>
+      queryClient.setQueryData<Notification[]>(["notifications"], (old) => {
+        if (old === undefined) {
+          return [];
+        } else {
+          return old.map((notification) => {
+            return { ...notification, read: true };
+          });
+        }
+      }),
   });
 
   useEffect(() => {
@@ -40,10 +60,15 @@ function NotificationBell() {
     }
 
     socket.on("notification", (notif: Notification) => {
-      queryClient.setQueryData<Notification[]>(["notifications"], (prev = []) => [notif, ...prev]);
+      queryClient.setQueryData<Notification[]>(
+        ["notifications"],
+        (prev = []) => [notif, ...prev],
+      );
     });
 
-    return () => { socket.off("notification"); };
+    return () => {
+      socket.off("notification");
+    };
   }, [queryClient]);
 
   useEffect(() => {
@@ -68,7 +93,7 @@ function NotificationBell() {
   }
 
   function handleMarkAllRead() {
-    notifications.filter((n) => !n.read).forEach((n) => markRead(n.id));
+    triggerMarkAllRead();
   }
 
   return (
@@ -138,19 +163,29 @@ function NotificationBell() {
                       n.read ? "bg-spektr-bg" : "bg-spektr-teal/12",
                     ].join(" ")}
                   >
-                    {n.type === "OBJECTIVE_CREATED" ? "🎯" : n.type === "DOCUMENT_ADDED" ? "📄" : "📋"}
+                    {n.type === "OBJECTIVE_CREATED"
+                      ? "🎯"
+                      : n.type === "DOCUMENT_ADDED"
+                        ? "📄"
+                        : "📋"}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div
                       className={[
                         "font-source-sans text-[13px] leading-snug",
-                        n.read ? "text-gray-500 font-normal" : "text-spektr-dark font-semibold",
+                        n.read
+                          ? "text-gray-500 font-normal"
+                          : "text-spektr-dark font-semibold",
                       ].join(" ")}
                     >
                       {NOTIF_LABELS[n.type] ?? n.type}
-                      {n.type === "OBJECTIVE_CREATED" && typeof n.payload?.title === "string" && (
-                        <span className="text-spektr-teal font-bold"> : {n.payload.title}</span>
-                      )}
+                      {n.type === "OBJECTIVE_CREATED" &&
+                        typeof n.payload?.title === "string" && (
+                          <span className="text-spektr-teal font-bold">
+                            {" "}
+                            : {n.payload.title}
+                          </span>
+                        )}
                     </div>
                     <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
                       {timeAgo(n.created_at)}

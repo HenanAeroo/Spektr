@@ -294,7 +294,9 @@ export class AuthService {
       include: { authProviders: { select: { provider: true } } },
     });
 
-    const hasLocal = user?.authProviders.some((p) => p.provider === Provider.local);
+    const hasLocal = user?.authProviders.some(
+      (p) => p.provider === Provider.local,
+    );
 
     if (!user || !hasLocal) {
       return 'Un email de réinitialisation a été envoyé';
@@ -391,7 +393,9 @@ export class AuthService {
     }
 
     if (!user.authProviders.some((p) => p.provider === Provider.local)) {
-      throw new BadRequestException('Ce compte utilise Google — aucun mot de passe à réinitialiser');
+      throw new BadRequestException(
+        'Ce compte utilise Google — aucun mot de passe à réinitialiser',
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);

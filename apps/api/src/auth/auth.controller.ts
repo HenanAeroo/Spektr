@@ -121,7 +121,10 @@ export class AuthController {
 
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
-    const message = await this.authService.resetPassword(dto.token, dto.password);
+    const message = await this.authService.resetPassword(
+      dto.token,
+      dto.password,
+    );
     return { message };
   }
 }

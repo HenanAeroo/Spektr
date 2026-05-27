@@ -47,7 +47,9 @@ export class ObjectivesService {
         ),
       );
     } catch (err) {
-      this.logger.warn(`Notifications non envoyées pour l'objectif ${objective.id} : ${err}`);
+      this.logger.warn(
+        `Notifications non envoyées pour l'objectif ${objective.id} : ${String(err)}`,
+      );
     }
 
     return objective;
@@ -111,7 +113,13 @@ export class ObjectivesService {
         completions: {
           include: {
             user: {
-              select: { id: true, first_name: true, last_name: true, email: true, promoId: true },
+              select: {
+                id: true,
+                first_name: true,
+                last_name: true,
+                email: true,
+                promoId: true,
+              },
             },
           },
         },

@@ -41,7 +41,11 @@ export class NotificationsService {
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (user?.email) {
-      const { subject, html } = this.buildObjectiveEmail(type, payload, user.first_name);
+      const { subject, html } = this.buildObjectiveEmail(
+        type,
+        payload,
+        user.first_name,
+      );
       await this.mailService.send(user.email, subject, html);
     }
 
@@ -50,12 +54,10 @@ export class NotificationsService {
     return notif;
   }
 
-  async sendFeedbackEmail(
-    studentId: number,
-    score: number,
-    comment: string,
-  ) {
-    const student = await this.prisma.user.findUnique({ where: { id: studentId } });
+  async sendFeedbackEmail(studentId: number, score: number, comment: string) {
+    const student = await this.prisma.user.findUnique({
+      where: { id: studentId },
+    });
     if (!student?.email) return;
 
     const label = SMILEY_LABELS[score] ?? 'Non précisé';
@@ -94,12 +96,16 @@ export class NotificationsService {
         </div>
       </div>
 
-      ${comment ? `
+      ${
+        comment
+          ? `
       <div style="background:#f9fafb;border:1px solid #e8e8e8;border-left:3px solid #23b2a4;border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px;">
         <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Commentaire</div>
         <p style="margin:0;font-size:14px;color:#1d1d1e;line-height:1.6;">${escapeHtml(comment).replace(/\n/g, '<br>')}</p>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
 
       <p style="font-size:13px;color:#6b7280;line-height:1.6;margin:0;">
         N'hésitez pas à contacter votre chargé RE si vous avez des questions ou souhaitez échanger sur ce retour.
@@ -126,15 +132,21 @@ export class NotificationsService {
     const name = escapeHtml(firstName ?? 'Étudiant');
 
     if (type === NotifType.OBJECTIVE_CREATED) {
-      const title = escapeHtml(String(payload.title ?? ''));
-      const description = payload.description ? escapeHtml(String(payload.description)) : null;
-      const deadline = payload.deadline
-        ? new Date(String(payload.deadline)).toLocaleDateString('fr-FR', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-          })
-        : null;
+      const title = escapeHtml(
+        typeof payload.title === 'string' ? payload.title : '',
+      );
+      const description =
+        typeof payload.description === 'string'
+          ? escapeHtml(payload.description)
+          : null;
+      const deadline =
+        typeof payload.deadline === 'string'
+          ? new Date(String(payload.deadline)).toLocaleDateString('fr-FR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })
+          : null;
 
       const html = `
 <!DOCTYPE html>
@@ -159,10 +171,14 @@ export class NotificationsService {
       <div style="background:#f0fdf9;border:1px solid rgba(35,178,164,0.2);border-left:3px solid #23b2a4;border-radius:0 10px 10px 0;padding:20px 24px;margin-bottom:20px;">
         <div style="font-size:16px;font-weight:800;color:#1d1d1e;margin-bottom:8px;">${title}</div>
         ${description ? `<p style="margin:0 0 12px;font-size:14px;color:#6b7280;line-height:1.6;">${description}</p>` : ''}
-        ${deadline ? `
+        ${
+          deadline
+            ? `
         <div style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #e8e8e8;border-radius:6px;padding:6px 12px;font-size:13px;color:#1d1d1e;">
           📅 <strong>Deadline :</strong> ${deadline}
-        </div>` : ''}
+        </div>`
+            : ''
+        }
       </div>
 
       <p style="font-size:13px;color:#6b7280;line-height:1.6;margin:0;">
@@ -248,7 +264,11 @@ export class NotificationsService {
 </body>
 </html>`;
 
-    await this.mailService.send(user.email, '🔐 Mot de passe modifié — Spektr', html);
+    await this.mailService.send(
+      user.email,
+      '🔐 Mot de passe modifié — Spektr',
+      html,
+    );
   }
 
   async findAllForUser(userId: number) {
@@ -261,6 +281,13 @@ export class NotificationsService {
   async markAsRead(id: number, userId: number) {
     return this.prisma.notification.updateMany({
       where: { id, userId },
+      data: { read: true },
+    });
+  }
+
+  async markAllRead(userId: number) {
+    return this.prisma.notification.updateMany({
+      where: { userId },
       data: { read: true },
     });
   }

@@ -55,8 +55,32 @@ const ApplicationsPage = () => {
   const { mutate: updateApp } = useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateApplicationData }) =>
       updateApplication(id, data),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["applications"] }),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["applications"] });
+
+      const snapshot = queryClient.getQueryData(["applications"]);
+      queryClient.setQueryData<Application[]>(["applications"], (old) => {
+        if (old === undefined) {
+          return [];
+        } else {
+          return old.map((application) => {
+            if (application.id === id) {
+              return { ...application, ...data };
+            } else {
+              return application;
+            }
+          });
+        }
+      });
+
+      return { snapshot };
+    },
+    onError: (error, { id, data }, context) => {
+      queryClient.setQueryData(["applications"], context?.snapshot);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
   });
 
   const filtered = applications.filter((a) => {

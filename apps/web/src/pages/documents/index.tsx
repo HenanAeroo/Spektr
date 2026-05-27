@@ -72,6 +72,7 @@ const DocumentsPage = () => {
   const { data: folders = [], isError: foldersError } = useQuery({
     queryKey: ["folders"],
     queryFn: getFolders,
+    staleTime: 5 * 60 * 1000,
   });
 
   const {
@@ -81,6 +82,7 @@ const DocumentsPage = () => {
   } = useQuery({
     queryKey: ["documents"],
     queryFn: getDocuments,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { mutate: removeFolder, isPending: removingFolder } = useMutation({

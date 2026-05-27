@@ -20,10 +20,12 @@ const AdminPage = () => {
   const { data: promos = [] } = useQuery({
     queryKey: ["promos"],
     queryFn: fetchPromos,
+    staleTime: 5 * 60 * 1000,
   });
   const { data: users = [] } = useQuery({
     queryKey: ["users"],
     queryFn: fetchUsers,
+    staleTime: 3 * 60 * 1000,
   });
 
   const navigate = (target: string) => {

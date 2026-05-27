@@ -37,6 +37,7 @@ const ApplicationsPage = () => {
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ["applications"],
     queryFn: fetchMyApplications,
+    staleTime: 2 * 60 * 1000,
   });
 
   const { mutate: createApp } = useMutation({

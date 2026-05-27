@@ -22,11 +22,12 @@ const AdminPage = () => {
     queryFn: fetchPromos,
     staleTime: 5 * 60 * 1000,
   });
-  const { data: users = [] } = useQuery({
+  const { data: usersResponse } = useQuery({
     queryKey: ["users"],
-    queryFn: fetchUsers,
+    queryFn: () => fetchUsers(1),
     staleTime: 3 * 60 * 1000,
   });
+  const users = usersResponse?.data ?? [];
 
   const navigate = (target: string) => {
     if (target.startsWith("student-detail:")) {

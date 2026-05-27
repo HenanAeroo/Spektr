@@ -47,10 +47,15 @@ export default function ProfilePage() {
     setEditMode(true);
   };
 
+  const profileFirstName = editMode ? firstName : (profile?.first_name ?? "");
+  const profileLastName = editMode ? lastName : (profile?.last_name ?? "");
+
   const initials = user
     ? `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase() ||
       "U"
     : "U";
+
+  const roleLabel = user?.role === "ADMIN" ? "Chargé RE" : "Étudiant";
 
   const pwdInvalid =
     pwdPending ||
@@ -108,14 +113,14 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex-1">
                   <div className="font-montserrat font-extrabold text-xl text-spektr-dark">
-                    {firstName} {lastName}
+                    {profileFirstName} {profileLastName}
                   </div>
                   <div className="font-source-sans text-[13px] text-gray-400 mt-0.5">
                     {profile?.email}
                   </div>
                   <div className="mt-2">
                     <span className="bg-spektr-teal/10 text-spektr-teal text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-spektr-teal/20">
-                      Étudiant
+                      {roleLabel}
                     </span>
                   </div>
                 </div>

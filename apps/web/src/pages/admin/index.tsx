@@ -1,6 +1,5 @@
 import { fetchPromos } from "@/features/promos/actions/fetchPromos";
 import { fetchUsers } from "@/features/promos/actions/fetchUsers";
-import { AdminProfil } from "@/features/admin/components/AdminProfil";
 import { Dashboard } from "@/features/admin/components/Dashboard";
 import { ObjectivesAdmin } from "@/features/admin/components/ObjectivesAdmin";
 import { PromoManager } from "@/features/admin/components/PromoManager";
@@ -61,8 +60,6 @@ const AdminPage = () => {
         return <PromoManager users={users} promos={promos} />;
       case "objectifs":
         return <ObjectivesAdmin promos={promos} />;
-      case "profil":
-        return <AdminProfil />;
       default:
         return <Dashboard navigate={navigate} users={users} promos={promos} />;
     }

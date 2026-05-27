@@ -24,7 +24,6 @@ const AdminNav = [
   { page: "students", label: "Étudiants", icon: Users },
   { page: "promos", label: "Promotions", icon: Users },
   { page: "objectifs", label: "Objectifs", icon: CheckSquare },
-  { page: "profil", label: "Profil", icon: User },
 ];
 
 function StudentNavItem({
@@ -168,8 +167,6 @@ const Sidebar = () => {
             {StudentNav.map((item) => (
               <StudentNavItem key={item.href} {...item} />
             ))}
-            <div className="mx-5 my-3.5 h-px bg-white/[0.08]" />
-            <StudentNavItem href="/profil" label="Mon profil" icon={User} />
           </>
         )}
       </nav>

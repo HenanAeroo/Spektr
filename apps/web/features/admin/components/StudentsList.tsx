@@ -1,15 +1,14 @@
 import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { inputCls, labelCls } from "../constants";
 import { Card } from "./Card";
+import { fetchUsers } from "@/features/promos/actions/fetchUsers";
 
 export function StudentsList({
-  users,
   promos,
   navigate,
 }: {
-  users: any[];
   promos: any[];
   navigate: (p: string) => void;
 }) {
@@ -28,7 +27,23 @@ export function StudentsList({
     queryFn: fetchAllCompletions,
   });
 
-  const students = users.filter((u) => u.role === "STUDENT");
+  const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
+    queryKey: ["users"],
+    queryFn: ({ pageParam }) => fetchUsers(pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.hasNextPage) {
+        return allPages.length + 1;
+      } else {
+        return undefined;
+      }
+    },
+    staleTime: 3 * 60 * 1000,
+  });
+
+  const allUsers = data?.pages.flatMap((page) => page.data) ?? [];
+
+  const students = allUsers.filter((u) => u.role === "STUDENT");
   const filtered = students.filter((u) => {
     if (!search) return true;
     const name = `${u.first_name} ${u.last_name}`.toLowerCase();
@@ -39,7 +54,7 @@ export function StudentsList({
   });
 
   const handleSendOutlook = () => {
-    const recipients = users
+    const recipients = allUsers
       .filter((u) => selected.includes(u.id))
       .map((u) => u.email)
       .join(";");

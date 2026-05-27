@@ -2,8 +2,14 @@ import { apiFetch } from "@/shared/lib/api";
 import { getToken } from "@/shared/lib/auth";
 import { User } from "@/shared/types";
 
-export async function fetchUsers() {
-  return apiFetch<User[]>("/users", {
+type PaginatedUsers = {
+  data: User[];
+  total: number;
+  hasNextPage: boolean;
+};
+
+export async function fetchUsers(page: number) {
+  return apiFetch<PaginatedUsers>(`/users?page=${page}&limit=9`, {
     method: "GET",
     token: getToken() ?? undefined,
   });

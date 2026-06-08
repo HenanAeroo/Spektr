@@ -8,7 +8,11 @@ import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
 import bcrypt from 'bcrypt';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 const mockPrisma = {
   user: {
@@ -244,6 +248,166 @@ describe('AuthService', () => {
       expect(mockPrisma.refreshToken.delete).toHaveBeenCalledTimes(1);
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
+    });
+  });
+
+  describe('logout', () => {
+    it('supprime tous les refresh tokens de l\'utilisateur', async () => {
+      mockPrisma.refreshToken.deleteMany.mockResolvedValue({ count: 1 });
+
+      await service.logout(1);
+
+      expect(mockPrisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 1 },
+      });
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('lève BadRequestException si le token est introuvable', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue(null);
+
+      await expect(service.verifyEmail('bad-token')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('lève BadRequestException si le token est expiré', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 1,
+        verificationExpiry: new Date(Date.now() - 1000),
+      });
+
+      await expect(service.verifyEmail('expired-token')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('confirme l\'email et nettoie les champs de vérification', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 1,
+        verificationExpiry: new Date(Date.now() + 60_000),
+      });
+      mockPrisma.user.update.mockResolvedValue({});
+
+      const result = await service.verifyEmail('valid-token');
+
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: {
+          emailVerified: true,
+          verificationToken: null,
+          verificationExpiry: null,
+        },
+      });
+      expect(result).toBe('Email confirmé');
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('retourne la réponse neutre sans appeler send si l\'utilisateur est inconnu', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+
+      const result = await service.forgotPassword('unknown@example.com');
+
+      expect(mockMailService.send).not.toHaveBeenCalled();
+      expect(result).toBe('Un email de réinitialisation a été envoyé');
+    });
+
+    it('retourne la réponse neutre si le compte est Google uniquement', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 1,
+        email: 'user@example.com',
+        first_name: 'John',
+        authProviders: [{ provider: 'google' }],
+      });
+
+      const result = await service.forgotPassword('user@example.com');
+
+      expect(mockMailService.send).not.toHaveBeenCalled();
+      expect(result).toBe('Un email de réinitialisation a été envoyé');
+    });
+
+    it('met à jour le token et envoie l\'email si le compte est local', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 1,
+        email: 'user@example.com',
+        first_name: 'John',
+        authProviders: [{ provider: 'local' }],
+      });
+      mockPrisma.user.update.mockResolvedValue({});
+      mockMailService.send.mockResolvedValue(undefined);
+
+      const result = await service.forgotPassword('user@example.com');
+
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 1 },
+          data: expect.objectContaining({
+            resetPasswordToken: expect.any(String),
+            resetPasswordExpiry: expect.any(Date),
+          }),
+        }),
+      );
+      expect(mockMailService.send).toHaveBeenCalledTimes(1);
+      expect(result).toBe('Un email de réinitialisation a été envoyé');
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('lève BadRequestException si le token est introuvable', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.resetPassword('bad-token', 'NewPass1!'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('lève BadRequestException si le token est expiré', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 1,
+        resetPasswordExpiry: new Date(Date.now() - 1000),
+        authProviders: [{ provider: 'local' }],
+      });
+
+      await expect(
+        service.resetPassword('expired-token', 'NewPass1!'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('lève BadRequestException si le compte ne possède pas de provider local', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 1,
+        resetPasswordExpiry: new Date(Date.now() + 60_000),
+        authProviders: [{ provider: 'google' }],
+      });
+
+      await expect(
+        service.resetPassword('valid-token', 'NewPass1!'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('met à jour le mot de passe et nettoie le token de reset', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue({
+        id: 1,
+        resetPasswordExpiry: new Date(Date.now() + 60_000),
+        authProviders: [{ provider: 'local' }],
+      });
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed_new_pw');
+      mockPrisma.authProvider.update.mockResolvedValue({});
+      mockPrisma.user.update.mockResolvedValue({});
+
+      const result = await service.resetPassword('valid-token', 'NewPass1!');
+
+      expect(bcrypt.hash).toHaveBeenCalledWith('NewPass1!', 12);
+      expect(mockPrisma.authProvider.update).toHaveBeenCalled();
+      expect(mockPrisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 1 },
+          data: { resetPasswordToken: null, resetPasswordExpiry: null },
+        }),
+      );
+      expect(result).toBe('Mot de passe réinitialisé');
     });
   });
 });

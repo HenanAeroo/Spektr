@@ -354,6 +354,68 @@ describe('AuthService', () => {
     });
   });
 
+  describe('validateOAuthLogin', () => {
+    const makeProfile = (email?: string) =>
+      ({
+        id: 'google-id-123',
+        emails: email ? [{ value: email }] : [],
+        name: { givenName: 'John', familyName: 'Doe' },
+      }) as any;
+
+    it('lève une Error si le profil Google ne contient pas d\'email', async () => {
+      await expect(
+        service.validateOAuthLogin(makeProfile()),
+      ).rejects.toThrow('Email Google manquant');
+    });
+
+    it('retourne les tokens si le provider Google existe déjà', async () => {
+      mockPrisma.authProvider.findUnique.mockResolvedValue({
+        user: { id: 1, role: 'STUDENT' },
+      });
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 1, role: 'STUDENT' });
+      mockPrisma.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.validateOAuthLogin(
+        makeProfile('john@example.com'),
+      );
+
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+    });
+
+    it('crée un nouvel utilisateur si l\'email est inconnu', async () => {
+      mockPrisma.authProvider.findUnique.mockResolvedValue(null);
+      mockUsersService.findOne.mockResolvedValue(null);
+      mockPrisma.user.create.mockResolvedValue({ id: 2, role: 'STUDENT' });
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 2, role: 'STUDENT' });
+      mockPrisma.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.validateOAuthLogin(
+        makeProfile('new@example.com'),
+      );
+
+      expect(mockPrisma.user.create).toHaveBeenCalled();
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+    });
+
+    it('lie le compte Google à un compte local existant si l\'email est connu', async () => {
+      mockPrisma.authProvider.findUnique.mockResolvedValue(null);
+      mockUsersService.findOne.mockResolvedValue({ id: 3 });
+      mockPrisma.authProvider.create.mockResolvedValue({});
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 3, role: 'STUDENT' });
+      mockPrisma.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.validateOAuthLogin(
+        makeProfile('existing@example.com'),
+      );
+
+      expect(mockPrisma.authProvider.create).toHaveBeenCalled();
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+    });
+  });
+
   describe('resetPassword', () => {
     it('lève BadRequestException si le token est introuvable', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);

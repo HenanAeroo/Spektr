@@ -32,7 +32,7 @@ describe('PromosService', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('create', () => {
-    it('appelle promo.create avec { data: { name } }', async () => {
+    it('calls promo.create with { data: { name } }', async () => {
       mockPrisma.promo.create.mockResolvedValue({ id: 1, name: 'INFO1' });
 
       await service.create({ name: 'INFO1' });
@@ -44,7 +44,7 @@ describe('PromosService', () => {
   });
 
   describe('findAll', () => {
-    it('appelle promo.findMany sans arguments', async () => {
+    it('calls promo.findMany with no arguments', async () => {
       mockPrisma.promo.findMany.mockResolvedValue([]);
 
       await service.findAll();
@@ -54,7 +54,7 @@ describe('PromosService', () => {
   });
 
   describe('findOne', () => {
-    it('appelle promo.findUnique avec { where: { id } }', async () => {
+    it('calls promo.findUnique with { where: { id } }', async () => {
       mockPrisma.promo.findUnique.mockResolvedValue({ id: 2 });
 
       await service.findOne(2);
@@ -66,7 +66,7 @@ describe('PromosService', () => {
   });
 
   describe('remove', () => {
-    it('appelle promo.delete avec { where: { id } }', async () => {
+    it('calls promo.delete with { where: { id } }', async () => {
       mockPrisma.promo.delete.mockResolvedValue({ id: 3 });
 
       await service.remove(3);
@@ -78,7 +78,7 @@ describe('PromosService', () => {
   });
 
   describe('assignUser', () => {
-    it('appelle user.update avec where userId et data promoId', async () => {
+    it('calls user.update with where userId and data promoId', async () => {
       mockPrisma.user.update.mockResolvedValue({ id: 5, promoId: 2 });
 
       await service.assignUser(2, 5);

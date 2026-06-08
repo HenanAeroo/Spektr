@@ -43,7 +43,7 @@ describe('AuthController', () => {
   });
 
   describe('register', () => {
-    it('délègue à authService.localRegister', async () => {
+    it('delegates to authService.localRegister', async () => {
       mockAuthService.localRegister.mockResolvedValue(
         'Un email de confirmation a été envoyé',
       );
@@ -61,7 +61,7 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('délègue à authService.localLogin et pose le cookie refreshToken', async () => {
+    it('delegates to authService.localLogin and sets the refreshToken cookie', async () => {
       mockAuthService.localLogin.mockResolvedValue({
         accessToken: 'at',
         refreshToken: 'rt',
@@ -82,7 +82,7 @@ describe('AuthController', () => {
   });
 
   describe('refresh', () => {
-    it('délègue à authService.refresh avec le token du cookie', async () => {
+    it('delegates to authService.refresh with cookie token', async () => {
       mockAuthService.refresh.mockResolvedValue({
         accessToken: 'new-at',
         refreshToken: 'new-rt',
@@ -100,7 +100,7 @@ describe('AuthController', () => {
       );
     });
 
-    it('lève UnauthorizedException si le cookie est absent', async () => {
+    it('throws UnauthorizedException if cookie is missing', async () => {
       const req = { cookies: {} };
       const res = mockRes();
 
@@ -112,7 +112,7 @@ describe('AuthController', () => {
   });
 
   describe('logout', () => {
-    it('délègue à authService.logout et efface le cookie', async () => {
+    it('delegates to authService.logout and clears the cookie', async () => {
       mockAuthService.logout.mockResolvedValue(undefined);
       const res = mockRes();
       const user = { sub: 1, role: 'STUDENT' };
@@ -128,7 +128,7 @@ describe('AuthController', () => {
   });
 
   describe('verifyEmail', () => {
-    it('délègue à authService.verifyEmail', async () => {
+    it('delegates to authService.verifyEmail', async () => {
       mockAuthService.verifyEmail.mockResolvedValue('Email confirmé');
 
       const result = await controller.verifyEmail('token123');
@@ -139,7 +139,7 @@ describe('AuthController', () => {
   });
 
   describe('forgotPassword', () => {
-    it('délègue à authService.forgotPassword', async () => {
+    it('delegates to authService.forgotPassword', async () => {
       mockAuthService.forgotPassword.mockResolvedValue(
         'Un email de réinitialisation a été envoyé',
       );
@@ -153,7 +153,7 @@ describe('AuthController', () => {
   });
 
   describe('resetPassword', () => {
-    it('délègue à authService.resetPassword', async () => {
+    it('delegates to authService.resetPassword', async () => {
       mockAuthService.resetPassword.mockResolvedValue(
         'Mot de passe réinitialisé',
       );

@@ -29,7 +29,7 @@ describe('DocumentsController', () => {
   const admin = { id: 2, role: 'ADMIN' } as any;
 
   describe('uploadFile', () => {
-    it('délègue à documentsService.upload avec file, folderId et user.id', async () => {
+    it('delegates to documentsService.upload with file, folderId and user.id', async () => {
       const file = { originalname: 'cv.pdf' } as any;
       mockDocumentsService.upload.mockResolvedValue({ id: 1 });
 
@@ -38,7 +38,7 @@ describe('DocumentsController', () => {
       expect(mockDocumentsService.upload).toHaveBeenCalledWith(file, 3, student.id);
     });
 
-    it('passe folderId undefined si absent', async () => {
+    it('passes folderId as undefined if absent', async () => {
       const file = { originalname: 'cv.pdf' } as any;
       mockDocumentsService.upload.mockResolvedValue({ id: 1 });
 
@@ -49,7 +49,7 @@ describe('DocumentsController', () => {
   });
 
   describe('findAll', () => {
-    it('délègue à documentsService.findAll avec user.id', async () => {
+    it('delegates to documentsService.findAll with user.id', async () => {
       mockDocumentsService.findAll.mockResolvedValue([]);
 
       await controller.findAll(student);
@@ -59,7 +59,7 @@ describe('DocumentsController', () => {
   });
 
   describe('getDownloadUrl', () => {
-    it('passe userId undefined pour un admin', async () => {
+    it('passes userId as undefined for an admin', async () => {
       mockDocumentsService.getDownloadUrl.mockResolvedValue({ url: 'http://...' });
 
       await controller.getDownloadUrl('5', admin);
@@ -67,7 +67,7 @@ describe('DocumentsController', () => {
       expect(mockDocumentsService.getDownloadUrl).toHaveBeenCalledWith(5, undefined);
     });
 
-    it('passe userId pour un étudiant', async () => {
+    it('passes userId for a student', async () => {
       mockDocumentsService.getDownloadUrl.mockResolvedValue({ url: 'http://...' });
 
       await controller.getDownloadUrl('5', student);
@@ -77,7 +77,7 @@ describe('DocumentsController', () => {
   });
 
   describe('remove', () => {
-    it('délègue à documentsService.remove avec id et user.id', async () => {
+    it('delegates to documentsService.remove with id and user.id', async () => {
       mockDocumentsService.remove.mockResolvedValue({ id: 3 });
 
       await controller.remove('3', student);

@@ -207,7 +207,7 @@ describe('AuthService', () => {
   });
 
   describe('refresh', () => {
-    it('lève UnauthorizedException si le token est introuvable en base', async () => {
+    it('throws UnauthorizedException if token is not found in DB', async () => {
       mockPrisma.refreshToken.findUnique.mockResolvedValue(null);
 
       await expect(service.refresh('raw-token')).rejects.toThrow(
@@ -215,9 +215,9 @@ describe('AuthService', () => {
       );
     });
 
-    it('supprime le token AVANT de lever une exception si expiré (anti-rejeu)', async () => {
-      // delete-before-check intentionnel : si deux requêtes simultanées arrivent avec le même token
-      // (vol + usage légitime), la seconde échoue car le token est déjà supprimé.
+    it('deletes the token BEFORE throwing if expired (anti-replay)', async () => {
+      // intentional delete-before-check: if two concurrent requests arrive with the same token
+      // (theft + legitimate use), the second will fail because the token is already deleted.
       mockPrisma.refreshToken.findUnique.mockResolvedValue({
         token: 'hashed',
         expires_at: new Date(Date.now() - 1000),
@@ -229,11 +229,11 @@ describe('AuthService', () => {
         UnauthorizedException,
       );
 
-      // Garantit que delete a été appelé AVANT que l'exception soit levée
+      // Guarantees that delete was called BEFORE the exception was thrown
       expect(mockPrisma.refreshToken.delete).toHaveBeenCalledTimes(1);
     });
 
-    it('retourne accessToken et refreshToken si le token est valide', async () => {
+    it('returns accessToken and refreshToken if token is valid', async () => {
       mockPrisma.refreshToken.findUnique.mockResolvedValue({
         token: 'hashed',
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -252,7 +252,7 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
-    it('supprime tous les refresh tokens de l\'utilisateur', async () => {
+    it('deletes all refresh tokens for the user', async () => {
       mockPrisma.refreshToken.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.logout(1);
@@ -264,7 +264,7 @@ describe('AuthService', () => {
   });
 
   describe('verifyEmail', () => {
-    it('lève BadRequestException si le token est introuvable', async () => {
+    it('throws BadRequestException if token is not found', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
 
       await expect(service.verifyEmail('bad-token')).rejects.toThrow(
@@ -272,7 +272,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('lève BadRequestException si le token est expiré', async () => {
+    it('throws BadRequestException if token is expired', async () => {
       mockPrisma.user.findFirst.mockResolvedValue({
         id: 1,
         verificationExpiry: new Date(Date.now() - 1000),
@@ -283,7 +283,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('confirme l\'email et nettoie les champs de vérification', async () => {
+    it('confirms the email and clears verification fields', async () => {
       mockPrisma.user.findFirst.mockResolvedValue({
         id: 1,
         verificationExpiry: new Date(Date.now() + 60_000),
@@ -305,7 +305,7 @@ describe('AuthService', () => {
   });
 
   describe('forgotPassword', () => {
-    it('retourne la réponse neutre sans appeler send si l\'utilisateur est inconnu', async () => {
+    it('returns neutral response without calling send if user is unknown', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       const result = await service.forgotPassword('unknown@example.com');
@@ -314,7 +314,7 @@ describe('AuthService', () => {
       expect(result).toBe('Un email de réinitialisation a été envoyé');
     });
 
-    it('retourne la réponse neutre si le compte est Google uniquement', async () => {
+    it('returns neutral response if account is Google only', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 1,
         email: 'user@example.com',
@@ -328,7 +328,7 @@ describe('AuthService', () => {
       expect(result).toBe('Un email de réinitialisation a été envoyé');
     });
 
-    it('met à jour le token et envoie l\'email si le compte est local', async () => {
+    it('updates the reset token and sends the email if account is local', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 1,
         email: 'user@example.com',
@@ -362,13 +362,13 @@ describe('AuthService', () => {
         name: { givenName: 'John', familyName: 'Doe' },
       }) as any;
 
-    it('lève une Error si le profil Google ne contient pas d\'email', async () => {
+    it('throws Error if Google profile has no email', async () => {
       await expect(
         service.validateOAuthLogin(makeProfile()),
       ).rejects.toThrow('Email Google manquant');
     });
 
-    it('retourne les tokens si le provider Google existe déjà', async () => {
+    it('returns tokens if Google provider already exists', async () => {
       mockPrisma.authProvider.findUnique.mockResolvedValue({
         user: { id: 1, role: 'STUDENT' },
       });
@@ -383,7 +383,7 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('refreshToken');
     });
 
-    it('crée un nouvel utilisateur si l\'email est inconnu', async () => {
+    it('creates a new user if email is unknown', async () => {
       mockPrisma.authProvider.findUnique.mockResolvedValue(null);
       mockUsersService.findOne.mockResolvedValue(null);
       mockPrisma.user.create.mockResolvedValue({ id: 2, role: 'STUDENT' });
@@ -399,7 +399,7 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('refreshToken');
     });
 
-    it('lie le compte Google à un compte local existant si l\'email est connu', async () => {
+    it('links Google account to existing local account if email is known', async () => {
       mockPrisma.authProvider.findUnique.mockResolvedValue(null);
       mockUsersService.findOne.mockResolvedValue({ id: 3 });
       mockPrisma.authProvider.create.mockResolvedValue({});
@@ -417,7 +417,7 @@ describe('AuthService', () => {
   });
 
   describe('resetPassword', () => {
-    it('lève BadRequestException si le token est introuvable', async () => {
+    it('throws BadRequestException if token is not found', async () => {
       mockPrisma.user.findFirst.mockResolvedValue(null);
 
       await expect(
@@ -425,7 +425,7 @@ describe('AuthService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('lève BadRequestException si le token est expiré', async () => {
+    it('throws BadRequestException if token is expired', async () => {
       mockPrisma.user.findFirst.mockResolvedValue({
         id: 1,
         resetPasswordExpiry: new Date(Date.now() - 1000),
@@ -437,7 +437,7 @@ describe('AuthService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('lève BadRequestException si le compte ne possède pas de provider local', async () => {
+    it('throws BadRequestException if account has no local provider', async () => {
       mockPrisma.user.findFirst.mockResolvedValue({
         id: 1,
         resetPasswordExpiry: new Date(Date.now() + 60_000),
@@ -449,7 +449,7 @@ describe('AuthService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('met à jour le mot de passe et nettoie le token de reset', async () => {
+    it('updates the password and clears the reset token', async () => {
       mockPrisma.user.findFirst.mockResolvedValue({
         id: 1,
         resetPasswordExpiry: new Date(Date.now() + 60_000),

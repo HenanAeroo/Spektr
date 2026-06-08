@@ -25,7 +25,7 @@ describe('AuthTasks', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('deleteTokens', () => {
-    it('supprime les refresh tokens expirés avec une date strictement inférieure à now', async () => {
+    it('deletes expired refresh tokens with a date strictly less than now', async () => {
       mockPrisma.refreshToken.deleteMany.mockResolvedValue({ count: 3 });
 
       const before = new Date();

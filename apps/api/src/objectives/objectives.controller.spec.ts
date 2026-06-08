@@ -33,7 +33,7 @@ describe('ObjectivesController', () => {
   const user = { id: 1, role: 'ADMIN' } as any;
 
   describe('create', () => {
-    it('délègue à objectivesService.create', async () => {
+    it('delegates to objectivesService.create', async () => {
       const dto = { promoId: 1, title: 'CV' } as any;
       mockObjectivesService.create.mockResolvedValue({ id: 1 });
 
@@ -44,7 +44,7 @@ describe('ObjectivesController', () => {
   });
 
   describe('findAll', () => {
-    it('délègue à objectivesService.findAll', async () => {
+    it('delegates to objectivesService.findAll', async () => {
       mockObjectivesService.findAll.mockResolvedValue([]);
 
       await controller.findAll();
@@ -54,7 +54,7 @@ describe('ObjectivesController', () => {
   });
 
   describe('findByUser', () => {
-    it('délègue à objectivesService.findByUser avec l\'user courant', async () => {
+    it('delegates to objectivesService.findByUser with current user', async () => {
       mockObjectivesService.findByUser.mockResolvedValue([]);
 
       await controller.findByUser(user);
@@ -64,7 +64,7 @@ describe('ObjectivesController', () => {
   });
 
   describe('toggle', () => {
-    it('délègue à objectivesService.toggleCompletion avec id et user.id', async () => {
+    it('delegates to objectivesService.toggleCompletion with id and user.id', async () => {
       mockObjectivesService.toggleCompletion.mockResolvedValue({ done: true });
 
       await controller.toggle(5, user);
@@ -77,7 +77,7 @@ describe('ObjectivesController', () => {
   });
 
   describe('update', () => {
-    it('délègue à objectivesService.update avec id et dto', async () => {
+    it('delegates to objectivesService.update with id and dto', async () => {
       const dto = { title: 'Updated' } as any;
       mockObjectivesService.update.mockResolvedValue({ id: 3 });
 
@@ -88,7 +88,7 @@ describe('ObjectivesController', () => {
   });
 
   describe('remove', () => {
-    it('délègue à objectivesService.remove avec id', async () => {
+    it('delegates to objectivesService.remove with id', async () => {
       mockObjectivesService.remove.mockResolvedValue({ id: 4 });
 
       await controller.remove(4);

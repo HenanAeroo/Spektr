@@ -30,7 +30,7 @@ describe('NotificationsController', () => {
   const user = { id: 1 } as any;
 
   describe('findAll', () => {
-    it('délègue à notificationsService.findAllForUser avec user.id', async () => {
+    it('delegates to notificationsService.findAllForUser with user.id', async () => {
       mockNotificationsService.findAllForUser.mockResolvedValue([]);
 
       await controller.findAll(user);
@@ -42,7 +42,7 @@ describe('NotificationsController', () => {
   });
 
   describe('markAllread', () => {
-    it('délègue à notificationsService.markAllRead avec user.id', async () => {
+    it('delegates to notificationsService.markAllRead with user.id', async () => {
       mockNotificationsService.markAllRead.mockResolvedValue({ count: 3 });
 
       await controller.markAllread(user);
@@ -54,7 +54,7 @@ describe('NotificationsController', () => {
   });
 
   describe('update (markAsRead)', () => {
-    it('délègue à notificationsService.markAsRead avec id et user.id', async () => {
+    it('delegates to notificationsService.markAsRead with id and user.id', async () => {
       mockNotificationsService.markAsRead.mockResolvedValue({ count: 1 });
 
       await controller.update(7, user);

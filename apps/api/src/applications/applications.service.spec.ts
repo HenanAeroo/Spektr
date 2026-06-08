@@ -39,7 +39,7 @@ describe('ApplicationsService', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('create', () => {
-    it('appelle prisma.application.create avec le mapping explicite et connecte l\'user', async () => {
+    it('calls prisma.application.create with explicit field mapping and connects user', async () => {
       const dto = {
         entreprise: 'Acme',
         lien: 'https://acme.com',
@@ -75,7 +75,7 @@ describe('ApplicationsService', () => {
   });
 
   describe('findMyApplications', () => {
-    it('appelle findMany avec le filtre userId', async () => {
+    it('calls findMany with userId filter', async () => {
       mockPrisma.application.findMany.mockResolvedValue([]);
 
       await service.findMyApplications(7);
@@ -87,7 +87,7 @@ describe('ApplicationsService', () => {
   });
 
   describe('update', () => {
-    it('ne notifie pas les admins si l\'outcome est neutre', async () => {
+    it('does not notify admins if outcome is neutral', async () => {
       mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
 
       await service.update(1, { outcome: 'EN_COURS' } as any, 5);
@@ -96,7 +96,7 @@ describe('ApplicationsService', () => {
       expect(mockNotificationsService.createAndEmit).not.toHaveBeenCalled();
     });
 
-    it('notifie les admins si l\'outcome est ENTRETIEN', async () => {
+    it('notifies admins if outcome is ENTRETIEN', async () => {
       mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.user.findMany.mockResolvedValue([
         { id: 10 },
@@ -112,7 +112,7 @@ describe('ApplicationsService', () => {
       expect(mockNotificationsService.createAndEmit).toHaveBeenCalledTimes(2);
     });
 
-    it('notifie les admins si l\'outcome est DECROCHEE', async () => {
+    it('notifies admins if outcome is DECROCHEE', async () => {
       mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.user.findMany.mockResolvedValue([{ id: 10 }]);
       mockNotificationsService.createAndEmit.mockResolvedValue({});
@@ -127,7 +127,7 @@ describe('ApplicationsService', () => {
   });
 
   describe('remove', () => {
-    it('appelle deleteMany avec id et userId', async () => {
+    it('calls deleteMany with id and userId', async () => {
       mockPrisma.application.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.remove(3, 7);

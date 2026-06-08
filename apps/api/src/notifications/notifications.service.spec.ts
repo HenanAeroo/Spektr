@@ -48,7 +48,7 @@ describe('NotificationsService', () => {
   describe('createAndEmit', () => {
     const notif = { id: 1, userId: 5, type: NotifType.DOCUMENT_ADDED };
 
-    it('crée la notification en DB et émet via WebSocket', async () => {
+    it('creates the notification in DB and emits via WebSocket', async () => {
       mockPrisma.notification.create.mockResolvedValue(notif);
       mockPrisma.user.findUnique.mockResolvedValue({ id: 5, email: null });
 
@@ -63,7 +63,7 @@ describe('NotificationsService', () => {
       expect(mockEmit).toHaveBeenCalledWith('notification', notif);
     });
 
-    it('envoie un email si l\'user a une adresse email', async () => {
+    it('sends an email if the user has an email address', async () => {
       mockPrisma.notification.create.mockResolvedValue(notif);
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 5,
@@ -77,7 +77,7 @@ describe('NotificationsService', () => {
       expect(mockMailService.send).toHaveBeenCalledTimes(1);
     });
 
-    it('n\'envoie pas d\'email si l\'user n\'a pas d\'adresse email', async () => {
+    it('does not send an email if the user has no email address', async () => {
       mockPrisma.notification.create.mockResolvedValue(notif);
       mockPrisma.user.findUnique.mockResolvedValue({ id: 5, email: null });
 
@@ -88,7 +88,7 @@ describe('NotificationsService', () => {
   });
 
   describe('sendFeedbackEmail', () => {
-    it('ne fait rien si l\'étudiant est introuvable', async () => {
+    it('does nothing if the student is not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await service.sendFeedbackEmail(99, 2, 'Bon travail');
@@ -96,7 +96,7 @@ describe('NotificationsService', () => {
       expect(mockMailService.send).not.toHaveBeenCalled();
     });
 
-    it('envoie l\'email au student si l\'user existe', async () => {
+    it('sends the email to the student if the user exists', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 3,
         email: 'student@example.com',
@@ -115,7 +115,7 @@ describe('NotificationsService', () => {
   });
 
   describe('sendPasswordChangedEmail', () => {
-    it('ne fait rien si l\'user est introuvable', async () => {
+    it('does nothing if the user is not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await service.sendPasswordChangedEmail(99);
@@ -123,7 +123,7 @@ describe('NotificationsService', () => {
       expect(mockMailService.send).not.toHaveBeenCalled();
     });
 
-    it('ne fait rien si l\'user n\'a pas d\'email', async () => {
+    it('does nothing if the user has no email', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ id: 1, email: null });
 
       await service.sendPasswordChangedEmail(1);
@@ -131,7 +131,7 @@ describe('NotificationsService', () => {
       expect(mockMailService.send).not.toHaveBeenCalled();
     });
 
-    it('envoie l\'email de confirmation si l\'user a un email', async () => {
+    it('sends the confirmation email if the user has an email', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({
         id: 1,
         email: 'user@example.com',
@@ -150,7 +150,7 @@ describe('NotificationsService', () => {
   });
 
   describe('markAsRead', () => {
-    it('appelle notification.updateMany avec where id+userId et data read: true', async () => {
+    it('calls notification.updateMany with where id+userId and data read: true', async () => {
       mockPrisma.notification.updateMany.mockResolvedValue({ count: 1 });
 
       await service.markAsRead(7, 3);
@@ -163,7 +163,7 @@ describe('NotificationsService', () => {
   });
 
   describe('markAllRead', () => {
-    it('appelle notification.updateMany avec where userId et data read: true', async () => {
+    it('calls notification.updateMany with where userId and data read: true', async () => {
       mockPrisma.notification.updateMany.mockResolvedValue({ count: 5 });
 
       await service.markAllRead(3);

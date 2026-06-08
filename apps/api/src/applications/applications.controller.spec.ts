@@ -29,7 +29,7 @@ describe('ApplicationsController', () => {
   const user = { id: 1, role: 'STUDENT' } as any;
 
   describe('create', () => {
-    it('délègue à applicationsService.create avec dto et user.id', async () => {
+    it('delegates to applicationsService.create with dto and user.id', async () => {
       const dto = { entreprise: 'Acme' } as any;
       mockApplicationsService.create.mockResolvedValue({ id: 1 });
 
@@ -40,7 +40,7 @@ describe('ApplicationsController', () => {
   });
 
   describe('findMyApplications', () => {
-    it('délègue à applicationsService.findMyApplications avec user.id', async () => {
+    it('delegates to applicationsService.findMyApplications with user.id', async () => {
       mockApplicationsService.findMyApplications.mockResolvedValue([]);
 
       await controller.findMyApplications(user);
@@ -52,7 +52,7 @@ describe('ApplicationsController', () => {
   });
 
   describe('update', () => {
-    it('délègue à applicationsService.update avec id, dto et user.id', async () => {
+    it('delegates to applicationsService.update with id, dto and user.id', async () => {
       const dto = { statut: 'RELANCE' } as any;
       mockApplicationsService.update.mockResolvedValue({ count: 1 });
 
@@ -67,7 +67,7 @@ describe('ApplicationsController', () => {
   });
 
   describe('remove', () => {
-    it('délègue à applicationsService.remove avec id et user.id', async () => {
+    it('delegates to applicationsService.remove with id and user.id', async () => {
       mockApplicationsService.remove.mockResolvedValue({ count: 1 });
 
       await controller.remove(3, user);

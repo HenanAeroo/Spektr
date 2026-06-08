@@ -26,7 +26,7 @@ describe('PromosController', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('create', () => {
-    it('délègue à promosService.create', async () => {
+    it('delegates to promosService.create', async () => {
       const dto = { name: 'INFO1' };
       mockPromosService.create.mockResolvedValue({ id: 1 });
 
@@ -37,7 +37,7 @@ describe('PromosController', () => {
   });
 
   describe('findAll', () => {
-    it('délègue à promosService.findAll', async () => {
+    it('delegates to promosService.findAll', async () => {
       mockPromosService.findAll.mockResolvedValue([]);
 
       await controller.findAll();
@@ -47,7 +47,7 @@ describe('PromosController', () => {
   });
 
   describe('findOne', () => {
-    it('délègue à promosService.findOne avec l\'id converti en number', async () => {
+    it('delegates to promosService.findOne with id converted to number', async () => {
       mockPromosService.findOne.mockResolvedValue({ id: 2 });
 
       await controller.findOne('2');
@@ -57,7 +57,7 @@ describe('PromosController', () => {
   });
 
   describe('remove', () => {
-    it('délègue à promosService.remove avec l\'id converti en number', async () => {
+    it('delegates to promosService.remove with id converted to number', async () => {
       mockPromosService.remove.mockResolvedValue({ id: 3 });
 
       await controller.remove('3');
@@ -67,7 +67,7 @@ describe('PromosController', () => {
   });
 
   describe('assign', () => {
-    it('délègue à promosService.assignUser avec promoId et userId', async () => {
+    it('delegates to promosService.assignUser with promoId and userId', async () => {
       mockPromosService.assignUser.mockResolvedValue({ id: 5 });
 
       await controller.assign('2', { userId: 5 });

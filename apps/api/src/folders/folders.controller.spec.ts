@@ -26,7 +26,7 @@ describe('FoldersController', () => {
   const user = { id: 1 } as any;
 
   describe('create', () => {
-    it('délègue à foldersService.create avec dto et user.id', async () => {
+    it('delegates to foldersService.create with dto and user.id', async () => {
       const dto = { name: 'Docs' } as any;
       mockFoldersService.create.mockResolvedValue({ id: 1 });
 
@@ -37,7 +37,7 @@ describe('FoldersController', () => {
   });
 
   describe('findAll', () => {
-    it('délègue à foldersService.findAll avec user.id', async () => {
+    it('delegates to foldersService.findAll with user.id', async () => {
       mockFoldersService.findAll.mockResolvedValue([]);
 
       await controller.findAll(user);
@@ -47,7 +47,7 @@ describe('FoldersController', () => {
   });
 
   describe('update', () => {
-    it('délègue à foldersService.update avec id, dto et user.id', async () => {
+    it('delegates to foldersService.update with id, dto and user.id', async () => {
       const dto = { name: 'Updated' } as any;
       mockFoldersService.update.mockResolvedValue({ count: 1 });
 
@@ -58,7 +58,7 @@ describe('FoldersController', () => {
   });
 
   describe('remove', () => {
-    it('délègue à foldersService.remove avec id et user.id', async () => {
+    it('delegates to foldersService.remove with id and user.id', async () => {
       mockFoldersService.remove.mockResolvedValue({ count: 1 });
 
       await controller.remove(3, user);

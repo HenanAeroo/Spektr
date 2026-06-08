@@ -51,7 +51,7 @@ describe('ObjectivesService', () => {
       deadline: new Date('2026-06-30'),
     };
 
-    it('crée l\'objectif et notifie tous les étudiants de la promo', async () => {
+    it('creates the objective and notifies all students in the promo', async () => {
       const objective = { id: 10, ...dto };
       mockPrisma.objective.create.mockResolvedValue(objective);
       mockPrisma.user.findMany.mockResolvedValue([{ id: 1 }, { id: 2 }]);
@@ -64,7 +64,7 @@ describe('ObjectivesService', () => {
       expect(result).toEqual(objective);
     });
 
-    it('retourne l\'objectif même si createAndEmit rejette (catch swallowe l\'erreur)', async () => {
+    it('returns the objective even if createAndEmit rejects (error is swallowed by catch)', async () => {
       const objective = { id: 11, ...dto };
       mockPrisma.objective.create.mockResolvedValue(objective);
       mockPrisma.user.findMany.mockResolvedValue([{ id: 3 }]);
@@ -79,14 +79,14 @@ describe('ObjectivesService', () => {
   });
 
   describe('findByUser', () => {
-    it('retourne [] si l\'utilisateur n\'appartient à aucune promo', async () => {
+    it('returns [] if user does not belong to any promo', async () => {
       const result = await service.findByUser({ id: 1, promoId: null } as any);
 
       expect(result).toEqual([]);
       expect(mockPrisma.objective.findMany).not.toHaveBeenCalled();
     });
 
-    it('mappe done depuis completions[0].done et supprime completions du résultat', async () => {
+    it('maps done from completions[0].done and removes completions from result', async () => {
       mockPrisma.objective.findMany.mockResolvedValue([
         { id: 1, title: 'Obj A', completions: [{ done: true }] },
         { id: 2, title: 'Obj B', completions: [] },
@@ -102,7 +102,7 @@ describe('ObjectivesService', () => {
   });
 
   describe('toggleCompletion', () => {
-    it('appelle update avec done inversé si le record existe', async () => {
+    it('calls update with toggled done if record exists', async () => {
       mockPrisma.objectiveCompletion.findUnique.mockResolvedValue({
         objectiveId: 1,
         userId: 5,
@@ -119,7 +119,7 @@ describe('ObjectivesService', () => {
       );
     });
 
-    it('appelle create avec done: true si le record n\'existe pas', async () => {
+    it('calls create with done: true if record does not exist', async () => {
       mockPrisma.objectiveCompletion.findUnique.mockResolvedValue(null);
       mockPrisma.objectiveCompletion.create.mockResolvedValue({
         done: true,

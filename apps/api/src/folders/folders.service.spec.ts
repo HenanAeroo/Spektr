@@ -28,7 +28,7 @@ describe('FoldersService', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('create', () => {
-    it('appelle folder.create avec les champs du dto et connecte l\'user', async () => {
+    it('calls folder.create with dto fields and connects the user', async () => {
       const dto = { name: 'Candidatures' };
       mockPrisma.folder.create.mockResolvedValue({ id: 1, ...dto });
 
@@ -44,7 +44,7 @@ describe('FoldersService', () => {
   });
 
   describe('findAll', () => {
-    it('appelle folder.findMany avec le filtre userId', async () => {
+    it('calls folder.findMany with userId filter', async () => {
       mockPrisma.folder.findMany.mockResolvedValue([]);
 
       await service.findAll(7);
@@ -56,7 +56,7 @@ describe('FoldersService', () => {
   });
 
   describe('update', () => {
-    it('appelle folder.updateMany avec where id+userId et data dto', async () => {
+    it('calls folder.updateMany with where id+userId and data dto', async () => {
       const dto = { name: 'Updated' };
       mockPrisma.folder.updateMany.mockResolvedValue({ count: 1 });
 
@@ -70,7 +70,7 @@ describe('FoldersService', () => {
   });
 
   describe('remove', () => {
-    it('appelle folder.deleteMany avec where id+userId', async () => {
+    it('calls folder.deleteMany with where id+userId', async () => {
       mockPrisma.folder.deleteMany.mockResolvedValue({ count: 1 });
 
       await service.remove(3, 7);

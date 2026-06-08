@@ -44,7 +44,7 @@ describe('DocumentsService', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('upload', () => {
-    it('sanitise le nom, uploade sur MinIO et émet une notification DOCUMENT_ADDED', async () => {
+    it('sanitizes the filename, uploads to MinIO and emits a DOCUMENT_ADDED notification', async () => {
       const file = {
         originalname: 'mon <fichier>.pdf',
         buffer: Buffer.from('data'),
@@ -81,7 +81,7 @@ describe('DocumentsService', () => {
   });
 
   describe('getDownloadUrl', () => {
-    it('lève NotFoundException si le document est introuvable', async () => {
+    it('throws NotFoundException if document is not found', async () => {
       mockPrisma.document.findFirst.mockResolvedValue(null);
 
       await expect(service.getDownloadUrl(99, 1)).rejects.toThrow(
@@ -89,7 +89,7 @@ describe('DocumentsService', () => {
       );
     });
 
-    it('appelle getPresignedUrl avec storageKey et TTL 3600 et retourne { url }', async () => {
+    it('calls getPresignedUrl with storageKey and TTL 3600 and returns { url }', async () => {
       mockPrisma.document.findFirst.mockResolvedValue({
         id: 1,
         storageKey: 'key/file.pdf',
@@ -105,7 +105,7 @@ describe('DocumentsService', () => {
       expect(result).toEqual({ url: 'https://minio/url' });
     });
 
-    it('filtre par userId si userId est fourni', async () => {
+    it('filters by userId if userId is provided', async () => {
       mockPrisma.document.findFirst.mockResolvedValue({
         storageKey: 'k',
       });
@@ -118,7 +118,7 @@ describe('DocumentsService', () => {
       });
     });
 
-    it('ne filtre pas par userId si userId est undefined', async () => {
+    it('does not filter by userId if userId is undefined', async () => {
       mockPrisma.document.findFirst.mockResolvedValue({
         storageKey: 'k',
       });
@@ -133,13 +133,13 @@ describe('DocumentsService', () => {
   });
 
   describe('remove', () => {
-    it('lève NotFoundException si le document est introuvable', async () => {
+    it('throws NotFoundException if document is not found', async () => {
       mockPrisma.document.findFirst.mockResolvedValue(null);
 
       await expect(service.remove(99, 1)).rejects.toThrow(NotFoundException);
     });
 
-    it('supprime le fichier sur MinIO puis le document en DB', async () => {
+    it('deletes the file from MinIO then removes the document from DB', async () => {
       mockPrisma.document.findFirst.mockResolvedValue({
         id: 1,
         storageKey: '1/file.pdf',

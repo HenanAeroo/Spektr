@@ -1,11 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '../users/users.service';
-import { MailService } from '../mail/mail.service';
+import { UnauthorizedException } from '@nestjs/common';
+
+const mockAuthService = {
+  localRegister: jest.fn(),
+  localLogin: jest.fn(),
+  refresh: jest.fn(),
+  logout: jest.fn(),
+  verifyEmail: jest.fn(),
+  forgotPassword: jest.fn(),
+  resetPassword: jest.fn(),
+};
+
+const mockConfigService = {
+  get: jest.fn().mockReturnValue('http://localhost:3000'),
+};
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -14,19 +25,148 @@ describe('AuthController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        AuthService,
-        { provide: PrismaService, useValue: {} },
-        { provide: JwtService, useValue: {} },
-        { provide: ConfigService, useValue: {} },
-        { provide: UsersService, useValue: {} },
-        { provide: MailService, useValue: { send: jest.fn() } },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  afterEach(() => jest.clearAllMocks());
+
+  const mockRes = () => ({
+    cookie: jest.fn(),
+    clearCookie: jest.fn(),
+    json: jest.fn().mockReturnThis(),
+    redirect: jest.fn().mockReturnThis(),
+  });
+
+  describe('register', () => {
+    it('délègue à authService.localRegister', async () => {
+      mockAuthService.localRegister.mockResolvedValue(
+        'Un email de confirmation a été envoyé',
+      );
+      const dto = {
+        email: 'test@example.com',
+        password: 'Test1234!',
+        first_name: 'John',
+        last_name: 'Doe',
+      };
+
+      await controller.register(dto as any);
+
+      expect(mockAuthService.localRegister).toHaveBeenCalledWith(dto);
+    });
+  });
+
+  describe('login', () => {
+    it('délègue à authService.localLogin et pose le cookie refreshToken', async () => {
+      mockAuthService.localLogin.mockResolvedValue({
+        accessToken: 'at',
+        refreshToken: 'rt',
+      });
+      const res = mockRes();
+      const user = { sub: 1, role: 'STUDENT' };
+
+      await controller.login(user as any, res);
+
+      expect(mockAuthService.localLogin).toHaveBeenCalledWith(user);
+      expect(res.cookie).toHaveBeenCalledWith(
+        'refreshToken',
+        'rt',
+        expect.any(Object),
+      );
+      expect(res.json).toHaveBeenCalledWith({ accessToken: 'at' });
+    });
+  });
+
+  describe('refresh', () => {
+    it('délègue à authService.refresh avec le token du cookie', async () => {
+      mockAuthService.refresh.mockResolvedValue({
+        accessToken: 'new-at',
+        refreshToken: 'new-rt',
+      });
+      const req = { cookies: { refreshToken: 'raw-rt' } };
+      const res = mockRes();
+
+      await controller.refresh(req, res);
+
+      expect(mockAuthService.refresh).toHaveBeenCalledWith('raw-rt');
+      expect(res.cookie).toHaveBeenCalledWith(
+        'refreshToken',
+        'new-rt',
+        expect.any(Object),
+      );
+    });
+
+    it('lève UnauthorizedException si le cookie est absent', async () => {
+      const req = { cookies: {} };
+      const res = mockRes();
+
+      await expect(controller.refresh(req, res)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(mockAuthService.refresh).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('logout', () => {
+    it('délègue à authService.logout et efface le cookie', async () => {
+      mockAuthService.logout.mockResolvedValue(undefined);
+      const res = mockRes();
+      const user = { sub: 1, role: 'STUDENT' };
+
+      await controller.logout(user as any, res);
+
+      expect(mockAuthService.logout).toHaveBeenCalledWith(1);
+      expect(res.clearCookie).toHaveBeenCalledWith(
+        'refreshToken',
+        expect.any(Object),
+      );
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('délègue à authService.verifyEmail', async () => {
+      mockAuthService.verifyEmail.mockResolvedValue('Email confirmé');
+
+      const result = await controller.verifyEmail('token123');
+
+      expect(mockAuthService.verifyEmail).toHaveBeenCalledWith('token123');
+      expect(result).toEqual({ message: 'Email confirmé' });
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('délègue à authService.forgotPassword', async () => {
+      mockAuthService.forgotPassword.mockResolvedValue(
+        'Un email de réinitialisation a été envoyé',
+      );
+
+      await controller.forgotPassword({ email: 'user@example.com' } as any);
+
+      expect(mockAuthService.forgotPassword).toHaveBeenCalledWith(
+        'user@example.com',
+      );
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('délègue à authService.resetPassword', async () => {
+      mockAuthService.resetPassword.mockResolvedValue(
+        'Mot de passe réinitialisé',
+      );
+
+      await controller.resetPassword({
+        token: 'tok',
+        password: 'NewPass1!',
+      } as any);
+
+      expect(mockAuthService.resetPassword).toHaveBeenCalledWith(
+        'tok',
+        'NewPass1!',
+      );
+    });
   });
 });

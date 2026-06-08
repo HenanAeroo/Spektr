@@ -1,7 +1,7 @@
 import { useAuthContext } from "@/shared/components/auth-provider";
 import Sidebar from "@/shared/components/layout/sidebar";
 import { refresh } from "@/features/auth/actions/refresh";
-import { getToken } from "@/shared/lib/auth";
+import { getToken, isTokenExpired } from "@/shared/lib/auth";
 import {
   createFileRoute,
   Outlet,
@@ -12,7 +12,7 @@ import { useEffect } from "react";
 
 export const Route = createFileRoute("/_protected")({
   beforeLoad: async () => {
-    if (!getToken()) {
+    if (!getToken() || isTokenExpired()) {
       try {
         await refresh();
       } catch {

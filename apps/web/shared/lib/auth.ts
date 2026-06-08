@@ -16,6 +16,19 @@ export function removeToken() {
   accessToken = null;
 }
 
+export function isTokenExpired(): boolean {
+  const token = getToken();
+  if (!token) return true;
+  try {
+    const { exp } = jwtDecode<JwtPayload>(token);
+    if (!exp) return false;
+    // Consider expired 30s before actual expiry to avoid race conditions
+    return Date.now() / 1000 >= exp - 30;
+  } catch {
+    return true;
+  }
+}
+
 export function getUser() {
   const token = getToken();
 

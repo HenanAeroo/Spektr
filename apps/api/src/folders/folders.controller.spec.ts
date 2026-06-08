@@ -1,0 +1,69 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { FoldersController } from './folders.controller';
+import { FoldersService } from './folders.service';
+
+const mockFoldersService = {
+  create: jest.fn(),
+  findAll: jest.fn(),
+  update: jest.fn(),
+  remove: jest.fn(),
+};
+
+describe('FoldersController', () => {
+  let controller: FoldersController;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [FoldersController],
+      providers: [{ provide: FoldersService, useValue: mockFoldersService }],
+    }).compile();
+
+    controller = module.get<FoldersController>(FoldersController);
+  });
+
+  afterEach(() => jest.clearAllMocks());
+
+  const user = { id: 1 } as any;
+
+  describe('create', () => {
+    it('délègue à foldersService.create avec dto et user.id', async () => {
+      const dto = { name: 'Docs' } as any;
+      mockFoldersService.create.mockResolvedValue({ id: 1 });
+
+      await controller.create(dto, user);
+
+      expect(mockFoldersService.create).toHaveBeenCalledWith(dto, user.id);
+    });
+  });
+
+  describe('findAll', () => {
+    it('délègue à foldersService.findAll avec user.id', async () => {
+      mockFoldersService.findAll.mockResolvedValue([]);
+
+      await controller.findAll(user);
+
+      expect(mockFoldersService.findAll).toHaveBeenCalledWith(user.id);
+    });
+  });
+
+  describe('update', () => {
+    it('délègue à foldersService.update avec id, dto et user.id', async () => {
+      const dto = { name: 'Updated' } as any;
+      mockFoldersService.update.mockResolvedValue({ count: 1 });
+
+      await controller.update(3, dto, user);
+
+      expect(mockFoldersService.update).toHaveBeenCalledWith(3, dto, user.id);
+    });
+  });
+
+  describe('remove', () => {
+    it('délègue à foldersService.remove avec id et user.id', async () => {
+      mockFoldersService.remove.mockResolvedValue({ count: 1 });
+
+      await controller.remove(3, user);
+
+      expect(mockFoldersService.remove).toHaveBeenCalledWith(3, user.id);
+    });
+  });
+});

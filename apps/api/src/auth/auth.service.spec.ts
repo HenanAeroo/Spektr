@@ -201,4 +201,49 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('refreshToken');
     });
   });
+
+  describe('refresh', () => {
+    it('lève UnauthorizedException si le token est introuvable en base', async () => {
+      mockPrisma.refreshToken.findUnique.mockResolvedValue(null);
+
+      await expect(service.refresh('raw-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('supprime le token AVANT de lever une exception si expiré (anti-rejeu)', async () => {
+      // delete-before-check intentionnel : si deux requêtes simultanées arrivent avec le même token
+      // (vol + usage légitime), la seconde échoue car le token est déjà supprimé.
+      mockPrisma.refreshToken.findUnique.mockResolvedValue({
+        token: 'hashed',
+        expires_at: new Date(Date.now() - 1000),
+        user: { id: 1, role: 'STUDENT' },
+      });
+      mockPrisma.refreshToken.delete.mockResolvedValue({});
+
+      await expect(service.refresh('raw-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
+
+      // Garantit que delete a été appelé AVANT que l'exception soit levée
+      expect(mockPrisma.refreshToken.delete).toHaveBeenCalledTimes(1);
+    });
+
+    it('retourne accessToken et refreshToken si le token est valide', async () => {
+      mockPrisma.refreshToken.findUnique.mockResolvedValue({
+        token: 'hashed',
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        user: { id: 1, role: 'STUDENT' },
+      });
+      mockPrisma.refreshToken.delete.mockResolvedValue({});
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 1, role: 'STUDENT' });
+      mockPrisma.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.refresh('raw-token');
+
+      expect(mockPrisma.refreshToken.delete).toHaveBeenCalledTimes(1);
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+    });
+  });
 });

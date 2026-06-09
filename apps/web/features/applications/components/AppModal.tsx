@@ -49,7 +49,8 @@ export type ModalProps = {
 };
 
 export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
-  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [applicationCalendarOpen, setApplicationCalendarOpen] = useState(false);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -67,9 +68,9 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
   const errors = form.formState.errors;
 
   return (
-    <div className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center">
-      <div className="bg-white rounded-2xl w-[560px] max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]">
-        <div className="flex justify-between items-center px-7 py-[22px] border-b border-spektr-border">
+    <div className="fixed inset-0 bg-black/45 z-1000 flex items-center justify-center">
+      <div className="bg-white rounded-2xl w-140 max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]">
+        <div className="flex justify-between items-center px-7 py-5.5 border-b border-spektr-border">
           <span className="font-montserrat font-extrabold text-[17px] text-spektr-dark">
             {mode === "create"
               ? "Nouvelle candidature"
@@ -83,10 +84,10 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
           </button>
         </div>
 
-        <div className="px-7 py-[22px] flex flex-col gap-3.5">
+        <div className="px-7 py-5.5 flex flex-col gap-3.5">
           {/* Entreprise */}
           <div>
-            <label className={labelCls}>Entreprise *</label>
+            <label className={labelCls}>Entreprise</label>
             <input
               {...form.register("entreprise")}
               placeholder="Nom de l'entreprise"
@@ -118,7 +119,10 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
                 control={form.control}
                 name="date_candidature"
                 render={({ field }) => (
-                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                  <Popover
+                    open={applicationCalendarOpen}
+                    onOpenChange={setApplicationCalendarOpen}
+                  >
                     <PopoverTrigger asChild>
                       <button
                         type="button"
@@ -129,13 +133,13 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
                           : "Sélectionner une date"}
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent className="z-[1001]">
+                    <PopoverContent className="z-1001">
                       <Calendar
                         mode="single"
                         selected={field.value}
                         onSelect={(date) => {
                           field.onChange(date);
-                          setCalendarOpen(false);
+                          setApplicationCalendarOpen(false);
                         }}
                       />
                     </PopoverContent>

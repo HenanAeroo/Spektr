@@ -66,4 +66,7 @@ export const inputCls =
 export const labelCls =
   "font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]";
 
+export const modifCls =
+  "font-montserrat font-semibold text-xs text-spektr-teal block mb-[5px]";
+
 export const errorCls = "font-source-sans text-xs text-spektr-red mt-1";

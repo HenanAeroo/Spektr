@@ -19,7 +19,9 @@ export type Application = {
   contact_tel: string | null;
   outcome: Outcome | null;
   date_candidature: string | null;
-  date_relance: string | null;
+  date_relance_tel: string | null;
+  date_relance_contact: string | null;
+  date_reponse_entreprise: string | null;
   created_at: string;
   modified_at: string;
 };

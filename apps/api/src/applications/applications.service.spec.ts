@@ -49,10 +49,16 @@ describe('ApplicationsService', () => {
         contact_email: 'alice@acme.com',
         contact_tel: '0600000000',
         date_candidature: new Date('2026-01-01'),
-        date_relance: null,
+        date_relance_contact: null,
+        date_relance_tel: null,
+        date_reponse_entreprise: null,
         outcome: null,
       };
-      mockPrisma.application.create.mockResolvedValue({ id: 1, ...dto, userId: 42 });
+      mockPrisma.application.create.mockResolvedValue({
+        id: 1,
+        ...dto,
+        userId: 42,
+      });
 
       await service.create(dto as any, 42);
 
@@ -66,7 +72,9 @@ describe('ApplicationsService', () => {
           contact_email: dto.contact_email,
           contact_tel: dto.contact_tel,
           date_candidature: dto.date_candidature,
-          date_relance: dto.date_relance,
+          date_relance_contact: dto.date_relance_contact,
+          date_relance_tel: dto.date_relance_tel,
+          date_reponse_entreprise: dto.date_reponse_entreprise,
           outcome: dto.outcome,
           user: { connect: { id: 42 } },
         },
@@ -98,10 +106,7 @@ describe('ApplicationsService', () => {
 
     it('notifies admins if outcome is ENTRETIEN', async () => {
       mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
-      mockPrisma.user.findMany.mockResolvedValue([
-        { id: 10 },
-        { id: 11 },
-      ]);
+      mockPrisma.user.findMany.mockResolvedValue([{ id: 10 }, { id: 11 }]);
       mockNotificationsService.createAndEmit.mockResolvedValue({});
 
       await service.update(1, { outcome: Outcome.ENTRETIEN } as any, 5);

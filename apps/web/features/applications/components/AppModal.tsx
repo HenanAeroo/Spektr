@@ -37,6 +37,9 @@ const schema = z.object({
   contact_tel: z.string().optional(),
   commentaire: z.string().optional(),
   date_candidature: z.date().optional(),
+  date_relance_contact: z.date().optional(),
+  date_relance_tel: z.date().optional(),
+  date_reponse_entreprise: z.date().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -62,6 +65,9 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
       commentaire: app.commentaire ?? "",
       lien: app.lien ?? "",
       date_candidature: undefined,
+      date_relance_contact: undefined,
+      date_relance_tel: undefined,
+      date_reponse_entreprise: undefined,
     },
   });
 
@@ -212,6 +218,11 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
                   contact_tel: data.contact_tel || undefined,
                   commentaire: data.commentaire || undefined,
                   date_candidature: data.date_candidature?.toISOString(),
+                  date_relance_contact:
+                    data.date_relance_contact?.toISOString(),
+                  date_relance_tel: data.date_relance_tel?.toISOString(),
+                  date_reponse_entreprise:
+                    data.date_reponse_entreprise?.toISOString(),
                 }),
               )}
               disabled={!form.watch("entreprise")?.trim()}

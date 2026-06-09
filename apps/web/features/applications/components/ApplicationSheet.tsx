@@ -147,7 +147,7 @@ export function ApplicationSheet({
               )}
             </div>
 
-            {/* Statut + Date */}
+            {/* Statut */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className={modifCls}>Statut</label>

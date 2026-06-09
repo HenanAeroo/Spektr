@@ -202,7 +202,7 @@ const ApplicationsPage = () => {
                   {[
                     "Entreprise",
                     "Statut",
-                    "Date",
+                    "Dates",
                     "Contact",
                     "Commentaire",
                     "Actions",
@@ -242,11 +242,40 @@ const ApplicationsPage = () => {
                       <StatusBadge statut={app.statut} />
                     </td>
                     <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500">
-                      {app.date_candidature
-                        ? new Date(app.date_candidature).toLocaleDateString(
-                            "fr-FR",
-                          )
-                        : "—"}
+                      <div className="flex flex-col">
+                        <span>
+                          {"Candidature : " +
+                            (app.date_candidature
+                              ? new Date(
+                                  app.date_candidature,
+                                ).toLocaleDateString("fr-FR")
+                              : "-")}
+                        </span>
+                        <span>
+                          {"Relance contact : " +
+                            (app.date_relance_contact
+                              ? new Date(
+                                  app.date_relance_contact,
+                                ).toLocaleDateString("fr-FR")
+                              : "-")}
+                        </span>
+                        <span>
+                          {"Relance téléphonique : " +
+                            (app.date_relance_tel
+                              ? new Date(
+                                  app.date_relance_tel,
+                                ).toLocaleDateString("fr-FR")
+                              : "-")}
+                        </span>
+                        <span>
+                          {"Réponse : " +
+                            (app.date_reponse_entreprise
+                              ? new Date(
+                                  app.date_reponse_entreprise,
+                                ).toLocaleDateString("fr-FR")
+                              : "-")}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500">
                       {app.contact_nom || "—"}

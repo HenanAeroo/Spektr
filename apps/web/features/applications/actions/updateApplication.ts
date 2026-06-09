@@ -9,7 +9,9 @@ export type UpdateApplicationData = {
   contact_email?: string | null;
   contact_tel?: string | null;
   date_candidature?: string | null;
-  date_relance?: string | null;
+  date_relance_contact?: string | null;
+  date_relance_tel?: string | null;
+  date_reponse_entreprise?: string | null;
   statut?: Statut;
   outcome?: Outcome | null;
 };

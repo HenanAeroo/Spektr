@@ -1,6 +1,4 @@
-import {
-  assignPromo,
-} from "@/features/promos/actions/assignPromo";
+import { assignPromo } from "@/features/promos/actions/assignPromo";
 import {
   createPromo,
   CreatePromoData,
@@ -20,6 +18,7 @@ export function PromoManager({
 }) {
   const queryClient = useQueryClient();
   const [newName, setNewName] = useState("");
+  const [selectedPromoId, setSelectedPromoId] = useState<number | null>(null);
 
   const { mutate: handleCreate } = useMutation({
     mutationFn: (data: CreatePromoData) => createPromo(data),
@@ -37,6 +36,11 @@ export function PromoManager({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["users"] }),
   });
 
+  const selectedPromo = promos.find((p) => p.id === selectedPromoId);
+  const promoStudents = users.filter(
+    (u) => u.promoId === selectedPromoId && u.role === "STUDENT",
+  );
+
   return (
     <div>
       <div className="mb-6">
@@ -50,9 +54,9 @@ export function PromoManager({
 
       <div className="grid grid-cols-2 gap-4">
         <Card>
-          <div className="font-montserrat font-bold text-sm mb-3.5">
+          <h2 className="font-montserrat font-bold text-sm mb-3.5">
             Promotions
-          </div>
+          </h2>
           <div className="flex gap-2 mb-3.5">
             <input
               value={newName}
@@ -88,12 +92,29 @@ export function PromoManager({
                 return (
                   <div
                     key={p.id}
-                    className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border"
+                    className={[
+                      "flex items-center gap-3 px-3.5 py-2.5 rounded-lg border cursor-pointer",
+                      selectedPromoId === p.id
+                        ? "bg-spektr-teal border-spektr-teal"
+                        : "bg-[#fafafa] border-spektr-border",
+                    ].join(" ")}
+                    onClick={() => {
+                      setSelectedPromoId(
+                        selectedPromoId === p.id ? null : p.id,
+                      );
+                    }}
                   >
                     <span className="font-montserrat font-semibold text-[13px] flex-1">
                       {p.name}
                     </span>
-                    <span className="font-source-sans text-[11px] text-gray-400">
+                    <span
+                      className={[
+                        "font-source-sans text-[11px]",
+                        selectedPromoId === p.id
+                          ? "text-spektr-dark"
+                          : "text-gray-400",
+                      ].join(" ")}
+                    >
                       {count} étudiant{count !== 1 ? "s" : ""}
                     </span>
                     <button
@@ -110,9 +131,9 @@ export function PromoManager({
         </Card>
 
         <Card>
-          <div className="font-montserrat font-bold text-sm mb-3.5">
+          <h2 className="font-montserrat font-bold text-sm mb-3.5">
             Assigner des étudiants
-          </div>
+          </h2>
           {users.filter((u) => u.role === "STUDENT").length === 0 ? (
             <p className="font-source-sans text-[13px] text-gray-400">
               Aucun étudiant enregistré
@@ -159,6 +180,22 @@ export function PromoManager({
           )}
         </Card>
       </div>
+
+      {selectedPromoId !== null && (
+        <div>
+          <h2 className="font-montserrat font-bold text-sm mb-3.5">
+            {selectedPromo?.name}
+          </h2>
+          {promoStudents.map((u) => (
+            <div key={u.id}>
+              <span>
+                {u.first_name} {u.last_name}
+              </span>
+              <span>{u.email}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -43,7 +43,15 @@ export class CreateApplicationDto {
 
   @IsDateString()
   @IsOptional()
-  date_relance?: string;
+  date_relance_contact?: string;
+
+  @IsDateString()
+  @IsOptional()
+  date_relance_tel?: string;
+
+  @IsDateString()
+  @IsOptional()
+  date_reponse_entreprise?: string;
 
   @IsEnum(Outcome)
   @IsOptional()

@@ -15,6 +15,7 @@ import {
   STATUT_LABELS,
   STATUTS,
 } from "@/features/applications/constants";
+import { ApplicationSheet } from "@/features/applications/components/ApplicationSheet";
 
 function StatusBadge({ statut }: { statut: Statut }) {
   const c = STATUT_COLORS[statut];
@@ -220,6 +221,7 @@ const ApplicationsPage = () => {
                   <tr
                     key={app.id}
                     className="border-b border-spektr-border transition-colors hover:bg-[#fafafa]"
+                    onClick={() => setEditApp(app)}
                   >
                     <td className="px-4 py-3.5">
                       <div className="font-montserrat font-semibold text-[13px] text-spektr-dark">
@@ -262,13 +264,19 @@ const ApplicationsPage = () => {
                     <td className="px-4 py-3.5">
                       <div className="flex gap-1.5">
                         <button
-                          onClick={() => setEditApp(app)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditApp(app);
+                          }}
                           className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-5px cursor-pointer text-[11px] font-semibold text-spektr-teal"
                         >
                           Modifier
                         </button>
                         <button
-                          onClick={() => deleteApp(app.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteApp(app.id);
+                          }}
                           className="bg-[#fee2e2] border-none rounded-md px-2.5 py-5px cursor-pointer text-[11px] font-semibold text-[#dc2626]"
                         >
                           Supprimer
@@ -295,17 +303,16 @@ const ApplicationsPage = () => {
         />
       )}
 
-      {editApp && (
-        <AppModal
-          mode="edit"
-          app={editApp}
-          onClose={() => setEditApp(null)}
-          onSave={(data) => {
-            updateApp({ id: editApp.id, data: data as UpdateApplicationData });
-            setEditApp(null);
-          }}
-        />
-      )}
+      <ApplicationSheet
+        mode="edit"
+        open={!!editApp}
+        app={editApp}
+        onClose={() => setEditApp(null)}
+        onSave={(data) => {
+          updateApp({ id: editApp!.id, data: data as UpdateApplicationData });
+          setEditApp(null);
+        }}
+      />
     </div>
   );
 };

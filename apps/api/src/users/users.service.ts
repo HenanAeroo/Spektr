@@ -9,6 +9,7 @@ import bcrypt from 'bcrypt';
 import { BulkEmailDto } from './dto/bulk-email.dto';
 import { MailService } from '../mail/mail.service';
 import juice from 'juice';
+import sanitizeHtml from 'sanitize-html';
 
 @Injectable()
 export class UsersService {
@@ -112,6 +113,23 @@ export class UsersService {
   }
 
   private buildEmailHtml(body: string): string {
+    const cleanBody = sanitizeHtml(body, {
+      allowedTags: [
+        'p',
+        'strong',
+        'em',
+        'u',
+        's',
+        'h1',
+        'h2',
+        'h3',
+        'ul',
+        'ol',
+        'li',
+        'br',
+      ],
+      allowedAttributes: {},
+    });
     const raw = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -147,7 +165,7 @@ export class UsersService {
         <!-- Body -->
         <tr>
           <td style="padding:36px 40px" class="content">
-            ${body}
+            ${cleanBody}
           </td>
         </tr>
 

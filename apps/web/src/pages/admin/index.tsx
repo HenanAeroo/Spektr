@@ -60,7 +60,9 @@ const AdminPage = () => {
           <StudentsList users={users} promos={promos} navigate={navigate} />
         );
       case "promos":
-        return <PromoManager users={users} promos={promos} />;
+        return (
+          <PromoManager users={users} promos={promos} navigate={navigate} />
+        );
       case "objectifs":
         return <ObjectivesAdmin promos={promos} />;
       default:

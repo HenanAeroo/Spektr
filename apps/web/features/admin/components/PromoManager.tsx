@@ -12,9 +12,11 @@ import { Card } from "./Card";
 export function PromoManager({
   users,
   promos,
+  navigate,
 }: {
   users: any[];
   promos: any[];
+  navigate: (p: string) => void;
 }) {
   const queryClient = useQueryClient();
   const [newName, setNewName] = useState("");
@@ -182,18 +184,34 @@ export function PromoManager({
       </div>
 
       {selectedPromoId !== null && (
-        <div>
-          <h2 className="font-montserrat font-bold text-sm mb-3.5">
-            {selectedPromo?.name}
-          </h2>
-          {promoStudents.map((u) => (
-            <div key={u.id}>
-              <span>
-                {u.first_name} {u.last_name}
-              </span>
-              <span>{u.email}</span>
-            </div>
-          ))}
+        <div className="mt-4">
+          <Card>
+            <h2 className="font-montserrat font-bold text-sm mb-3.5">
+              {selectedPromo?.name}
+            </h2>
+            {promoStudents.length === 0 ? (
+              <p className="font-source-sans text-gray-400">
+                Aucun étudiant pour cette promo
+              </p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {promoStudents.map((u) => (
+                  <div
+                    key={u.id}
+                    onClick={() => navigate(`student-detail:${u.id}`)}
+                    className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border cursor-pointer"
+                  >
+                    <span className="flex-1 font-montserrat font-semibold text-xs">
+                      {u.first_name} {u.last_name}
+                    </span>
+                    <span className="font-source-sans text-[11px]">
+                      {u.email}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       )}
     </div>

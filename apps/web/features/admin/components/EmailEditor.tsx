@@ -1,6 +1,7 @@
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
+import { useEffect } from "react";
 import {
   Bold,
   Italic,
@@ -57,6 +58,13 @@ const EmailEditor = ({
       onChange(editor.getHTML());
     },
   });
+
+  useEffect(() => {
+    if (!editor) return;
+    if (editor.getHTML() !== value) {
+      editor.commands.setContent(value, false);
+    }
+  }, [editor, value]);
 
   if (!editor) return null;
 

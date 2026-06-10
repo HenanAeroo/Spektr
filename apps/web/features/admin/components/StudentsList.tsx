@@ -10,7 +10,7 @@ import EmailEditor from "./EmailEditor";
 
 const DEFAULT_SUBJECT = "Suivi — Votre recherche d'alternance";
 const DEFAULT_MESSAGE =
-  "Bonjour,\n\nNous souhaitons faire le point sur votre recherche d'alternance.\n\nN'hésitez pas à nous contacter pour planifier un rendez-vous.\n\nCordialement,\nL'équipe Relations Entreprises — Ynov Campus Rennes";
+  "<p>Bonjour,</p><p>Nous souhaitons faire le point sur votre recherche d'alternance.</p><p>N'hésitez pas à nous contacter pour planifier un rendez-vous.</p><p>Cordialement,<br>L'équipe Relations Entreprises — Ynov Campus Rennes</p>";
 
 export function StudentsList({
   promos,

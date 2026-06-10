@@ -262,7 +262,7 @@ export function StudentsList({
                   <SelectTrigger>
                     <SelectValue placeholder="Filtrer par promo" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-1000">
                     <SelectItem value="all">Toutes les promos</SelectItem>
                     {promos.map((promo) => {
                       return (

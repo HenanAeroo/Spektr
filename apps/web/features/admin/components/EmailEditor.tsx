@@ -21,7 +21,12 @@ type ToolbarButtonProps = {
   children: React.ReactNode;
 };
 
-const ToolbarButton = ({ onClick, active, title, children }: ToolbarButtonProps) => (
+const ToolbarButton = ({
+  onClick,
+  active,
+  title,
+  children,
+}: ToolbarButtonProps) => (
   <button
     type="button"
     onClick={onClick}
@@ -62,7 +67,7 @@ const EmailEditor = ({
   useEffect(() => {
     if (!editor) return;
     if (editor.getHTML() !== value) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value, { emitUpdate: false });
     }
   }, [editor, value]);
 
@@ -140,11 +145,13 @@ const EmailEditor = ({
         >
           {t.icon}
         </ToolbarButton>
-      )
+      ),
     );
 
   return (
-    <div className={`border border-spektr-border rounded-lg overflow-hidden ${className ?? ""}`}>
+    <div
+      className={`border border-spektr-border rounded-lg overflow-hidden ${className ?? ""}`}
+    >
       {/* Toolbar statique */}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-spektr-border bg-[#fafafa]">
         {renderTools()}

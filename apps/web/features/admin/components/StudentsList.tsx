@@ -98,7 +98,7 @@ export function StudentsList({
       setSelectedPromo(null);
       setSelected([]);
     } else {
-      const valueNum = parseInt(value);
+      const valueNum = parseInt(value, 10);
       setSelectedPromo(valueNum);
       const promoStudents = students.filter(
         (student) => student.promoId === valueNum,

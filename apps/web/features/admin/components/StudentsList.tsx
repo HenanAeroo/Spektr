@@ -210,15 +210,28 @@ export function StudentsList({
             })}
           </div>
         )}
+        <div ref={sentinelRef}></div>
       </Card>
 
       {/* Contact modal */}
       {showContact && (
-        <div className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center">
-          <div className="bg-white rounded-2xl w-[640px] max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="contact-modal-title"
+          onClick={() => setShowContact(false)}
+          className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl w-[640px] max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]"
+          >
             <div className="flex justify-between items-center px-7 py-[22px] border-b border-spektr-border">
               <div>
-                <div className="font-montserrat font-extrabold text-[17px]">
+                <div
+                  id="contact-modal-title"
+                  className="font-montserrat font-extrabold text-[17px]"
+                >
                   Contacter des étudiants
                 </div>
                 <div className="font-source-sans text-xs text-gray-400 mt-0.5">
@@ -226,6 +239,7 @@ export function StudentsList({
                 </div>
               </div>
               <button
+                aria-label="Fermer"
                 onClick={() => setShowContact(false)}
                 className="bg-transparent border-none cursor-pointer text-xl text-gray-400"
               >
@@ -330,8 +344,20 @@ export function StudentsList({
                 </button>
                 <button
                   onClick={() => handleBulkEmail()}
-                  disabled={selected.length === 0 || isPending}
-                  className={`px-5 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white ${selected.length === 0 || isPending ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer"}`}
+                  disabled={
+                    selected.length === 0 ||
+                    subject.trim() === "" ||
+                    message.replace(/<[^>]*>/g, "").trim() === "" ||
+                    isPending
+                  }
+                  className={`px-5 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white ${
+                    selected.length === 0 ||
+                    subject.trim() === "" ||
+                    message.replace(/<[^>]*>/g, "").trim() === "" ||
+                    isPending
+                      ? "bg-spektr-teal/50 cursor-not-allowed"
+                      : "bg-spektr-teal cursor-pointer"
+                  }`}
                 >
                   {isPending ? (
                     <div className="animate-spin w-4 h-4 rounded-full border-2 border-white border-t-transparent"></div>

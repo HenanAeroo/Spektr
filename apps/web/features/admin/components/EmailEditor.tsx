@@ -142,6 +142,7 @@ const EmailEditor = ({
           onClick={t.action!}
           active={t.active}
           title={t.title!}
+          aria-pressed={active ?? false}
         >
           {t.icon}
         </ToolbarButton>
@@ -153,7 +154,11 @@ const EmailEditor = ({
       className={`border border-spektr-border rounded-lg overflow-hidden ${className ?? ""}`}
     >
       {/* Toolbar statique */}
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-spektr-border bg-[#fafafa]">
+      <div
+        role="toolbar"
+        aria-label="Mise en forme"
+        className="flex items-center gap-0.5 px-2 py-1.5 border-b border-spektr-border bg-[#fafafa]"
+      >
         {renderTools()}
       </div>
 

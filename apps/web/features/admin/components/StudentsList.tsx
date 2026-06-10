@@ -7,6 +7,13 @@ import { fetchUsers } from "@/features/promos/actions/fetchUsers";
 import { sendBulkEmail } from "@/features/users/actions/sendBulkEmail";
 import { toast } from "sonner";
 import EmailEditor from "./EmailEditor";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 
 const DEFAULT_SUBJECT = "Suivi — Votre recherche d'alternance";
 const DEFAULT_MESSAGE =
@@ -24,6 +31,7 @@ export function StudentsList({
   const [selected, setSelected] = useState<number[]>([]);
   const [subject, setSubject] = useState(DEFAULT_SUBJECT);
   const [message, setMessage] = useState(DEFAULT_MESSAGE);
+  const [selectedPromo, setSelectedPromo] = useState<number | null>(null);
 
   const { data: objectivesWithCompletions = [] } = useQuery({
     queryKey: ["objectives", "completions"],
@@ -84,6 +92,21 @@ export function StudentsList({
 
     return () => observer.disconnect();
   }, [hasNextPage, fetchNextPage]);
+
+  function handlePromoSelect(value: string) {
+    if (value === "all") {
+      setSelectedPromo(null);
+      setSelected([]);
+    } else {
+      const valueNum = parseInt(value);
+      setSelectedPromo(valueNum);
+      const promoStudents = students.filter(
+        (student) => student.promoId === valueNum,
+      );
+      const ids = promoStudents.map((s) => s.id);
+      setSelected(ids);
+    }
+  }
 
   return (
     <div>
@@ -225,13 +248,31 @@ export function StudentsList({
                       Tous
                     </button>
                     <button
-                      onClick={() => setSelected([])}
+                      onClick={() => (setSelected([]), setSelectedPromo(null))}
                       className="text-[11px] font-semibold text-[#dc2626] bg-transparent border-none cursor-pointer"
                     >
                       Effacer
                     </button>
                   </div>
                 </div>
+                <Select
+                  onValueChange={(value) => handlePromoSelect(value)}
+                  value={selectedPromo === null ? "all" : String(selectedPromo)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrer par promo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes les promos</SelectItem>
+                    {promos.map((promo) => {
+                      return (
+                        <SelectItem value={String(promo.id)} key={promo.id}>
+                          {promo.name}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
                 <div className="flex flex-col gap-1 max-h-[160px] overflow-y-auto border border-spektr-border rounded-[10px] p-2">
                   {students.map((u) => {
                     const initials =
@@ -278,10 +319,7 @@ export function StudentsList({
               </div>
               <div>
                 <label className={labelCls}>Message</label>
-                <EmailEditor
-                  value={message}
-                  onChange={setMessage}
-                />
+                <EmailEditor value={message} onChange={setMessage} />
               </div>
               <div className="flex justify-end gap-2.5">
                 <button

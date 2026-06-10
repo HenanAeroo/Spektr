@@ -31,6 +31,7 @@ export class MailService {
       this.logger.log(`Email envoyé à ${to} — ${subject}`);
     } catch (err) {
       this.logger.error(`Échec d'envoi à ${to}: ${(err as Error).message}`);
+      throw err;
     }
   }
 }

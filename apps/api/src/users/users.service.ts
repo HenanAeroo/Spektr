@@ -6,10 +6,15 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, User, Provider } from '../../prisma/generated/prisma/client';
 import bcrypt from 'bcrypt';
+import { BulkEmailDto } from './dto/bulk-email.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   create(data: Prisma.UserCreateInput): Promise<User> {
     return this.prisma.user.create({
@@ -91,5 +96,15 @@ export class UsersService {
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
 
     return { success: true };
+  }
+
+  async bulkEmail(dto: BulkEmailDto) {
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: dto.userIds } },
+    });
+
+    return Promise.all(
+      users.map((u) => this.mailService.send(u.email, dto.subject, dto.body)),
+    );
   }
 }

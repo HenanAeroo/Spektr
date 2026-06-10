@@ -22,6 +22,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { NotificationsService } from '../notifications/notifications.service';
 import { Throttle } from '@nestjs/throttler';
+import { BulkEmailDto } from './dto/bulk-email.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -81,6 +82,13 @@ export class UsersController {
     );
     await this.notificationsService.sendPasswordChangedEmail(user.id);
     return result;
+  }
+
+  @Post('bulk-email')
+  @Roles(RoleModel.ADMIN)
+  @UseGuards(RolesGuard)
+  async bulkEmail(@Body() body: BulkEmailDto) {
+    await this.usersService.bulkEmail(body);
   }
 
   @Post(':id/feedback')

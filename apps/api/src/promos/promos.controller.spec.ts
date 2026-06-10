@@ -47,20 +47,20 @@ describe('PromosController', () => {
   });
 
   describe('findOne', () => {
-    it('delegates to promosService.findOne with id converted to number', async () => {
+    it('delegates to promosService.findOne with id as number', async () => {
       mockPromosService.findOne.mockResolvedValue({ id: 2 });
 
-      await controller.findOne('2');
+      await controller.findOne(2);
 
       expect(mockPromosService.findOne).toHaveBeenCalledWith(2);
     });
   });
 
   describe('remove', () => {
-    it('delegates to promosService.remove with id converted to number', async () => {
+    it('delegates to promosService.remove with id as number', async () => {
       mockPromosService.remove.mockResolvedValue({ id: 3 });
 
-      await controller.remove('3');
+      await controller.remove(3);
 
       expect(mockPromosService.remove).toHaveBeenCalledWith(3);
     });
@@ -70,7 +70,7 @@ describe('PromosController', () => {
     it('delegates to promosService.assignUser with promoId and userId', async () => {
       mockPromosService.assignUser.mockResolvedValue({ id: 5 });
 
-      await controller.assign('2', { userId: 5 });
+      await controller.assign(2, { userId: 5 });
 
       expect(mockPromosService.assignUser).toHaveBeenCalledWith(2, 5);
     });

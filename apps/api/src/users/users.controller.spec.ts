@@ -11,6 +11,7 @@ const mockUsersService = {
   update: jest.fn(),
   remove: jest.fn(),
   changePassword: jest.fn(),
+  bulkEmail: jest.fn(),
 };
 
 const mockNotificationsService = {
@@ -117,6 +118,17 @@ describe('UsersController', () => {
       expect(mockUsersService.changePassword).toHaveBeenCalledWith(studentUser.id, 'old', 'new');
       expect(mockNotificationsService.sendPasswordChangedEmail).toHaveBeenCalledWith(studentUser.id);
       expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('bulkEmail', () => {
+    it('delegates to usersService.bulkEmail with the dto', async () => {
+      const dto = { userIds: [1, 2], subject: 'Objet', body: 'Bonjour' } as any;
+      mockUsersService.bulkEmail.mockResolvedValue(undefined);
+
+      await controller.bulkEmail(dto);
+
+      expect(mockUsersService.bulkEmail).toHaveBeenCalledWith(dto);
     });
   });
 

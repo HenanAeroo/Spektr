@@ -4,8 +4,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import bcrypt from 'bcrypt';
 import { Provider } from '../../prisma/generated/prisma/client';
+
+const mockMailService = {
+  send: jest.fn(),
+};
 
 const mockPrisma = {
   user: {
@@ -33,6 +38,7 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: MailService, useValue: mockMailService },
       ],
     }).compile();
 
@@ -107,6 +113,35 @@ describe('UsersService', () => {
       await service.remove({ id: 1 });
 
       expect(mockPrisma.user.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+    });
+  });
+
+  describe('bulkEmail', () => {
+    it('calls findMany with in filter and sends email to each user', async () => {
+      const users = [
+        { id: 1, email: 'a@test.com' },
+        { id: 2, email: 'b@test.com' },
+      ];
+      mockPrisma.user.findMany.mockResolvedValue(users);
+      mockMailService.send.mockResolvedValue(undefined);
+
+      const dto = { userIds: [1, 2], subject: 'Objet', body: 'Bonjour' };
+      await service.bulkEmail(dto);
+
+      expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
+        where: { id: { in: [1, 2] } },
+      });
+      expect(mockMailService.send).toHaveBeenCalledTimes(2);
+      expect(mockMailService.send).toHaveBeenCalledWith('a@test.com', 'Objet', 'Bonjour');
+      expect(mockMailService.send).toHaveBeenCalledWith('b@test.com', 'Objet', 'Bonjour');
+    });
+
+    it('does not call send if no users match', async () => {
+      mockPrisma.user.findMany.mockResolvedValue([]);
+
+      await service.bulkEmail({ userIds: [99], subject: 'X', body: 'Y' });
+
+      expect(mockMailService.send).not.toHaveBeenCalled();
     });
   });
 

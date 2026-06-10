@@ -170,3 +170,15 @@ input, textarea, select {
     @apply font-sans;
     }
 }
+
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin-bottom: 10px;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 20px;
+  margin-bottom: 10px;
+}

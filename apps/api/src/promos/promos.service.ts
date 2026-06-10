@@ -1,11 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePromoDto } from './dto/create-promo.dto';
 import { UpdatePromoDto } from './dto/update-promo.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
+import { Role } from '../../prisma/generated/prisma/client';
 
 @Injectable()
 export class PromosService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   create(dto: CreatePromoDto) {
     return this.prismaService.promo.create({
@@ -45,5 +50,23 @@ export class PromosService {
       where: { id: userId },
       data: { promoId: promoId },
     });
+  }
+
+  async sendEmail(id: number, subject: string, body: string) {
+    const promo = await this.prismaService.promo.findUnique({
+      where: { id: id },
+    });
+
+    if (promo === null) {
+      throw new NotFoundException('Promo not found');
+    }
+
+    const students = await this.prismaService.user.findMany({
+      where: { promoId: id, role: Role.STUDENT },
+    });
+
+    return Promise.all(
+      students.map((u) => this.mailService.send(u.email, subject, body)),
+    );
   }
 }

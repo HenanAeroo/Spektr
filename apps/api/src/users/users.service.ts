@@ -8,6 +8,7 @@ import { Prisma, User, Provider } from '../../prisma/generated/prisma/client';
 import bcrypt from 'bcrypt';
 import { BulkEmailDto } from './dto/bulk-email.dto';
 import { MailService } from '../mail/mail.service';
+import juice from 'juice';
 
 @Injectable()
 export class UsersService {
@@ -111,7 +112,7 @@ export class UsersService {
   }
 
   private buildEmailHtml(body: string): string {
-    return `<!DOCTYPE html>
+    const raw = `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -166,5 +167,6 @@ export class UsersService {
   </table>
 </body>
 </html>`;
+    return juice(raw);
   }
 }

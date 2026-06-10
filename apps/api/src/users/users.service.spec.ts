@@ -125,23 +125,57 @@ describe('UsersService', () => {
       mockPrisma.user.findMany.mockResolvedValue(users);
       mockMailService.send.mockResolvedValue(undefined);
 
-      const dto = { userIds: [1, 2], subject: 'Objet', body: 'Bonjour' };
+      const dto = { userIds: [1, 2], subject: 'Objet', body: '<p>Bonjour</p>' };
       await service.bulkEmail(dto);
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
         where: { id: { in: [1, 2] } },
       });
       expect(mockMailService.send).toHaveBeenCalledTimes(2);
-      expect(mockMailService.send).toHaveBeenCalledWith('a@test.com', 'Objet', 'Bonjour');
-      expect(mockMailService.send).toHaveBeenCalledWith('b@test.com', 'Objet', 'Bonjour');
+      expect(mockMailService.send).toHaveBeenCalledWith(
+        'a@test.com',
+        'Objet',
+        expect.stringContaining('Bonjour'),
+      );
+      expect(mockMailService.send).toHaveBeenCalledWith(
+        'b@test.com',
+        'Objet',
+        expect.stringContaining('Bonjour'),
+      );
     });
 
     it('does not call send if no users match', async () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
 
-      await service.bulkEmail({ userIds: [99], subject: 'X', body: 'Y' });
+      await service.bulkEmail({ userIds: [99], subject: 'X', body: '<p>Y</p>' });
 
       expect(mockMailService.send).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('buildEmailHtml', () => {
+    const buildHtml = (body: string) =>
+      (service as unknown as { buildEmailHtml(b: string): string }).buildEmailHtml(body);
+
+    it('inlines styles on <p> tags', () => {
+      const html = buildHtml('<p>Test</p>');
+      expect(html).toMatch(/<p[^>]+style="[^"]*margin/);
+    });
+
+    it('inlines styles on <h1> tags', () => {
+      const html = buildHtml('<h1>Titre</h1>');
+      expect(html).toMatch(/<h1[^>]+style="[^"]*font-size/);
+    });
+
+    it('inlines styles on <ul> tags', () => {
+      const html = buildHtml('<ul><li>Item</li></ul>');
+      expect(html).toMatch(/<ul[^>]+style="[^"]*margin/);
+    });
+
+    it('contains the Spektr branding header', () => {
+      const html = buildHtml('<p>body</p>');
+      expect(html).toContain('Spektr');
+      expect(html).toContain('Ynov Campus Rennes');
     });
   });
 

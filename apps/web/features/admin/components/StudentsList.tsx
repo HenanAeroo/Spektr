@@ -1,9 +1,16 @@
 import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { inputCls, labelCls } from "../constants";
 import { Card } from "./Card";
 import { fetchUsers } from "@/features/promos/actions/fetchUsers";
+import { sendBulkEmail } from "@/features/users/actions/sendBulkEmail";
+import { toast } from "sonner";
+import EmailEditor from "./EmailEditor";
+
+const DEFAULT_SUBJECT = "Suivi — Votre recherche d'alternance";
+const DEFAULT_MESSAGE =
+  "Bonjour,\n\nNous souhaitons faire le point sur votre recherche d'alternance.\n\nN'hésitez pas à nous contacter pour planifier un rendez-vous.\n\nCordialement,\nL'équipe Relations Entreprises — Ynov Campus Rennes";
 
 export function StudentsList({
   promos,
@@ -15,12 +22,8 @@ export function StudentsList({
   const [search, setSearch] = useState("");
   const [showContact, setShowContact] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
-  const [subject, setSubject] = useState(
-    "Suivi — Votre recherche d'alternance",
-  );
-  const [message, setMessage] = useState(
-    "Bonjour,\n\nNous souhaitons faire le point sur votre recherche d'alternance.\n\nN'hésitez pas à nous contacter pour planifier un rendez-vous.\n\nCordialement,\nL'équipe Relations Entreprises — Ynov Campus Rennes",
-  );
+  const [subject, setSubject] = useState(DEFAULT_SUBJECT);
+  const [message, setMessage] = useState(DEFAULT_MESSAGE);
 
   const { data: objectivesWithCompletions = [] } = useQuery({
     queryKey: ["objectives", "completions"],
@@ -53,16 +56,16 @@ export function StudentsList({
     );
   });
 
-  const handleSendOutlook = () => {
-    const recipients = allUsers
-      .filter((u) => selected.includes(u.id))
-      .map((u) => u.email)
-      .join(";");
-    window.open(
-      `mailto:${recipients}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`,
-      "_blank",
-    );
-  };
+  const { mutate: handleBulkEmail, isPending } = useMutation({
+    mutationFn: () => sendBulkEmail(selected, subject, message),
+    onSuccess: () => (
+      setShowContact(false),
+      toast.success("Le mail a bien été envoyé"),
+      setSubject(DEFAULT_SUBJECT),
+      setMessage(DEFAULT_MESSAGE)
+    ),
+    onError: () => toast.error("Une erreur est survenue, veuillez réessayer"),
+  });
 
   const sentinelRef = useRef(null);
 
@@ -141,7 +144,10 @@ export function StudentsList({
                   ? Math.round((doneCount / promoObjectives.length) * 100)
                   : 0;
               return (
-                <Card key={u.id} onClick={() => navigate(`student-detail:${u.id}`)}>
+                <Card
+                  key={u.id}
+                  onClick={() => navigate(`student-detail:${u.id}`)}
+                >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[13px] font-bold flex-shrink-0">
                       {initials}
@@ -164,7 +170,9 @@ export function StudentsList({
                     <div>
                       <div className="flex justify-between text-[11px] text-gray-400 mb-1">
                         <span>Objectifs</span>
-                        <span>{doneCount}/{promoObjectives.length} — {pct}%</span>
+                        <span>
+                          {doneCount}/{promoObjectives.length} — {pct}%
+                        </span>
                       </div>
                       <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                         <div
@@ -175,7 +183,7 @@ export function StudentsList({
                     </div>
                   )}
                 </Card>
-              )
+              );
             })}
           </div>
         )}
@@ -270,11 +278,9 @@ export function StudentsList({
               </div>
               <div>
                 <label className={labelCls}>Message</label>
-                <textarea
+                <EmailEditor
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  rows={6}
-                  className={`${inputCls} resize-y leading-relaxed`}
+                  onChange={setMessage}
                 />
               </div>
               <div className="flex justify-end gap-2.5">
@@ -285,11 +291,15 @@ export function StudentsList({
                   Annuler
                 </button>
                 <button
-                  onClick={handleSendOutlook}
-                  disabled={selected.length === 0}
-                  className={`px-5 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white ${selected.length === 0 ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer"}`}
+                  onClick={() => handleBulkEmail()}
+                  disabled={selected.length === 0 || isPending}
+                  className={`px-5 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white ${selected.length === 0 || isPending ? "bg-spektr-teal/50 cursor-not-allowed" : "bg-spektr-teal cursor-pointer"}`}
                 >
-                  ✉ Ouvrir dans Outlook ({selected.length})
+                  {isPending ? (
+                    <div className="animate-spin w-4 h-4 rounded-full border-2 border-white border-t-transparent"></div>
+                  ) : (
+                    `Envoyer l'email (${selected.length})`
+                  )}
                 </button>
               </div>
             </div>

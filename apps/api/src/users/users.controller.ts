@@ -89,6 +89,7 @@ export class UsersController {
   @UseGuards(RolesGuard)
   async bulkEmail(@Body() body: BulkEmailDto) {
     await this.usersService.bulkEmail(body);
+    return { sent: true };
   }
 
   @Post(':id/feedback')

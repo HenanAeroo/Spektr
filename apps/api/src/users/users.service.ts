@@ -103,8 +103,68 @@ export class UsersService {
       where: { id: { in: dto.userIds } },
     });
 
+    const html = this.buildEmailHtml(dto.body);
+
     return Promise.all(
-      users.map((u) => this.mailService.send(u.email, dto.subject, dto.body)),
+      users.map((u) => this.mailService.send(u.email, dto.subject, html)),
     );
+  }
+
+  private buildEmailHtml(body: string): string {
+    return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { margin:0; padding:0; background:#f4f4f5; font-family:'Helvetica Neue',Arial,sans-serif; }
+    .content h1 { font-size:22px; font-weight:800; margin:0 0 12px 0; color:#1d1d1e; }
+    .content h2 { font-size:18px; font-weight:700; margin:0 0 10px 0; color:#1d1d1e; }
+    .content h3 { font-size:15px; font-weight:600; margin:0 0 8px 0; color:#1d1d1e; }
+    .content p  { margin:0 0 10px 0; line-height:1.7; color:#374151; font-size:14px; }
+    .content ul, .content ol { margin:0 0 10px 0; padding-left:20px; color:#374151; font-size:14px; }
+    .content li { margin-bottom:4px; line-height:1.6; }
+    .content strong { font-weight:700; }
+    .content em { font-style:italic; }
+    .content u { text-decoration:underline; }
+    .content s { text-decoration:line-through; }
+  </style>
+</head>
+<body>
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 0">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#23b2a4;padding:28px 40px">
+            <span style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px">Spektr</span>
+            <span style="font-size:13px;color:rgba(255,255,255,0.75);margin-left:10px">Ynov Campus Rennes</span>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:36px 40px" class="content">
+            ${body}
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:20px 40px;border-top:1px solid #e5e7eb;background:#fafafa">
+            <p style="margin:0;font-size:12px;color:#9ca3af;line-height:1.5">
+              Ce message vous a été envoyé par votre équipe Relations Entreprises —
+              <strong>Ynov Campus Rennes</strong>.<br>
+              Pour toute question, répondez directement à cet email.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
   }
 }

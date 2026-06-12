@@ -1,7 +1,11 @@
 jest.mock('bcrypt', () => ({ compare: jest.fn(), hash: jest.fn() }));
 
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
@@ -70,6 +74,7 @@ describe('UsersService', () => {
         skip: 3,
         take: 3,
         orderBy: { id: 'asc' },
+        where: {},
       });
       expect(mockPrisma.user.count).toHaveBeenCalled();
       expect(result).toEqual({ data: users, total: 10, hasNextPage: true });
@@ -91,7 +96,9 @@ describe('UsersService', () => {
 
       await service.findOne({ id: 1 });
 
-      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+      });
     });
   });
 
@@ -102,7 +109,10 @@ describe('UsersService', () => {
 
       await service.update({ where: { id: 1 }, data: dto });
 
-      expect(mockPrisma.user.update).toHaveBeenCalledWith({ data: dto, where: { id: 1 } });
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        data: dto,
+        where: { id: 1 },
+      });
     });
   });
 
@@ -147,15 +157,49 @@ describe('UsersService', () => {
     it('does not call send if no users match', async () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
 
-      await service.bulkEmail({ userIds: [99], subject: 'X', body: '<p>Y</p>' });
+      await service.bulkEmail({
+        userIds: [99],
+        subject: 'X',
+        body: '<p>Y</p>',
+      });
 
       expect(mockMailService.send).not.toHaveBeenCalled();
+    });
+
+    it('returns { sent, failed } on partial failure', async () => {
+      const user1 = { id: 1, email: 'a@test.com' };
+      const user2 = { id: 2, email: 'b@test.com' };
+      const dto = { userIds: [1, 2], subject: 'Objet', body: '<p>Bonjour</p>' };
+
+      mockPrisma.user.findMany.mockResolvedValue([user1, user2]);
+      mockMailService.send
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error());
+
+      const result = await service.bulkEmail(dto);
+
+      expect(result).toEqual({ sent: 1, failed: 1 });
+    });
+
+    it('throws InternalServerErrorException when all sends fail', async () => {
+      const user1 = { id: 1, email: 'a@test.com' };
+      const user2 = { id: 2, email: 'b@test.com' };
+      const dto = { userIds: [1, 2], subject: 'Objet', body: '<p>Bonjour</p>' };
+
+      mockPrisma.user.findMany.mockResolvedValue([user1, user2]);
+      mockMailService.send.mockRejectedValue(new Error());
+
+      await expect(service.bulkEmail(dto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
     });
   });
 
   describe('buildEmailHtml', () => {
     const buildHtml = (body: string) =>
-      (service as unknown as { buildEmailHtml(b: string): string }).buildEmailHtml(body);
+      (
+        service as unknown as { buildEmailHtml(b: string): string }
+      ).buildEmailHtml(body);
 
     it('inlines styles on <p> tags', () => {
       const html = buildHtml('<p>Test</p>');
@@ -184,7 +228,9 @@ describe('UsersService', () => {
       mockPrisma.authProvider.findUnique.mockResolvedValue(null);
 
       await expect(service.changePassword(1, 'old', 'new')).rejects.toThrow(
-        new BadRequestException('Aucun mot de passe local configuré pour ce compte.'),
+        new BadRequestException(
+          'Aucun mot de passe local configuré pour ce compte.',
+        ),
       );
     });
 
@@ -199,7 +245,9 @@ describe('UsersService', () => {
     });
 
     it('throws UnauthorizedException if bcrypt.compare returns false', async () => {
-      mockPrisma.authProvider.findUnique.mockResolvedValue({ password: 'hashed' });
+      mockPrisma.authProvider.findUnique.mockResolvedValue({
+        password: 'hashed',
+      });
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(service.changePassword(1, 'wrong', 'new')).rejects.toThrow(
@@ -208,7 +256,9 @@ describe('UsersService', () => {
     });
 
     it('hashes new password, updates authProvider, deletes refresh tokens, returns { success: true }', async () => {
-      mockPrisma.authProvider.findUnique.mockResolvedValue({ password: 'hashed' });
+      mockPrisma.authProvider.findUnique.mockResolvedValue({
+        password: 'hashed',
+      });
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (bcrypt.hash as jest.Mock).mockResolvedValue('new_hashed');
       mockPrisma.authProvider.update.mockResolvedValue({});
@@ -220,7 +270,9 @@ describe('UsersService', () => {
       expect(mockPrisma.authProvider.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { password: 'new_hashed' } }),
       );
-      expect(mockPrisma.refreshToken.deleteMany).toHaveBeenCalledWith({ where: { userId: 1 } });
+      expect(mockPrisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 1 },
+      });
       expect(result).toEqual({ success: true });
     });
   });

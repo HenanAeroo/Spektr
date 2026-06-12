@@ -41,19 +41,27 @@ describe('UsersController', () => {
 
   describe('findAll', () => {
     it('delegates to usersService.findAll with default page=1 and limit=9', async () => {
-      mockUsersService.findAll.mockResolvedValue({ data: [], total: 0, hasNextPage: false });
+      mockUsersService.findAll.mockResolvedValue({
+        data: [],
+        total: 0,
+        hasNextPage: false,
+      });
 
       await controller.findAll('1', '9');
 
-      expect(mockUsersService.findAll).toHaveBeenCalledWith(1, 9);
+      expect(mockUsersService.findAll).toHaveBeenCalledWith(1, 9, undefined);
     });
 
     it('parses string args to integers before delegating', async () => {
-      mockUsersService.findAll.mockResolvedValue({ data: [], total: 0, hasNextPage: false });
+      mockUsersService.findAll.mockResolvedValue({
+        data: [],
+        total: 0,
+        hasNextPage: false,
+      });
 
       await controller.findAll('2', '5');
 
-      expect(mockUsersService.findAll).toHaveBeenCalledWith(2, 5);
+      expect(mockUsersService.findAll).toHaveBeenCalledWith(2, 5, undefined);
     });
   });
 
@@ -84,7 +92,9 @@ describe('UsersController', () => {
     });
 
     it('non-admin requesting a different id throws ForbiddenException', () => {
-      expect(() => controller.findOne(5, studentUser)).toThrow(ForbiddenException);
+      expect(() => controller.findOne(5, studentUser)).toThrow(
+        ForbiddenException,
+      );
 
       expect(mockUsersService.findOne).not.toHaveBeenCalled();
     });
@@ -97,11 +107,16 @@ describe('UsersController', () => {
 
       await controller.update(2, dto, studentUser);
 
-      expect(mockUsersService.update).toHaveBeenCalledWith({ where: { id: 2 }, data: dto });
+      expect(mockUsersService.update).toHaveBeenCalledWith({
+        where: { id: 2 },
+        data: dto,
+      });
     });
 
     it('throws ForbiddenException when user.id !== id', () => {
-      expect(() => controller.update(5, {} as any, studentUser)).toThrow(ForbiddenException);
+      expect(() => controller.update(5, {} as any, studentUser)).toThrow(
+        ForbiddenException,
+      );
 
       expect(mockUsersService.update).not.toHaveBeenCalled();
     });
@@ -111,12 +126,20 @@ describe('UsersController', () => {
     it('calls usersService.changePassword then sendPasswordChangedEmail and returns the result', async () => {
       const body = { oldPassword: 'old', newPassword: 'new' } as any;
       mockUsersService.changePassword.mockResolvedValue({ success: true });
-      mockNotificationsService.sendPasswordChangedEmail.mockResolvedValue(undefined);
+      mockNotificationsService.sendPasswordChangedEmail.mockResolvedValue(
+        undefined,
+      );
 
       const result = await controller.changePassword(body, studentUser);
 
-      expect(mockUsersService.changePassword).toHaveBeenCalledWith(studentUser.id, 'old', 'new');
-      expect(mockNotificationsService.sendPasswordChangedEmail).toHaveBeenCalledWith(studentUser.id);
+      expect(mockUsersService.changePassword).toHaveBeenCalledWith(
+        studentUser.id,
+        'old',
+        'new',
+      );
+      expect(
+        mockNotificationsService.sendPasswordChangedEmail,
+      ).toHaveBeenCalledWith(studentUser.id);
       expect(result).toEqual({ success: true });
     });
   });
@@ -136,9 +159,16 @@ describe('UsersController', () => {
     it('calls notificationsService.sendFeedbackEmail and returns { sent: true }', async () => {
       mockNotificationsService.sendFeedbackEmail.mockResolvedValue(undefined);
 
-      const result = await controller.sendFeedback(5, { score: 4, comment: 'Bien' });
+      const result = await controller.sendFeedback(5, {
+        score: 4,
+        comment: 'Bien',
+      });
 
-      expect(mockNotificationsService.sendFeedbackEmail).toHaveBeenCalledWith(5, 4, 'Bien');
+      expect(mockNotificationsService.sendFeedbackEmail).toHaveBeenCalledWith(
+        5,
+        4,
+        'Bien',
+      );
       expect(result).toEqual({ sent: true });
     });
   });
@@ -153,7 +183,9 @@ describe('UsersController', () => {
     });
 
     it('throws ForbiddenException when user.id !== id', () => {
-      expect(() => controller.remove(5, studentUser)).toThrow(ForbiddenException);
+      expect(() => controller.remove(5, studentUser)).toThrow(
+        ForbiddenException,
+      );
 
       expect(mockUsersService.remove).not.toHaveBeenCalled();
     });

@@ -25,6 +25,8 @@ export class NotificationsService {
     private readonly mailService: MailService,
   ) {}
 
+  private readonly logger = new Logger(NotificationsService.name);
+
   async createAndEmit(
     userId: number,
     type: NotifType,
@@ -49,7 +51,7 @@ export class NotificationsService {
       try {
         await this.mailService.send(user.email, subject, html);
       } catch (err) {
-        Logger.error(err);
+        this.logger.error(err);
       }
     }
 
@@ -132,7 +134,7 @@ export class NotificationsService {
         html,
       );
     } catch (err) {
-      Logger.error(err);
+      this.logger.error(err);
     }
   }
 
@@ -283,7 +285,7 @@ export class NotificationsService {
         html,
       );
     } catch (err) {
-      Logger.error(err);
+      this.logger.error(err);
     }
   }
 

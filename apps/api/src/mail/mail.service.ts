@@ -28,9 +28,11 @@ export class MailService {
   async send(to: string, subject: string, html: string): Promise<void> {
     try {
       await this.transporter.sendMail({ from: this.from, to, subject, html });
-      this.logger.log(`Email envoyé à ${to} — ${subject}`);
+      this.logger.log(`Email envoyé avec succès - ${subject}`);
     } catch (err) {
-      this.logger.error(`Échec d'envoi à ${to}: ${(err as Error).message}`);
+      this.logger.error(
+        `Échec d'envoi de l'email - ${subject}: ${(err as Error).message}`,
+      );
       throw err;
     }
   }

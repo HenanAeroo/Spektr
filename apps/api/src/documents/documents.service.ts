@@ -42,11 +42,15 @@ export class DocumentsService {
       },
     });
 
-    await this.notificationsService.createAndEmit(
-      userId,
-      NotifType.DOCUMENT_ADDED,
-      { documentName: file.originalname },
-    );
+    try {
+      await this.notificationsService.createAndEmit(
+        userId,
+        NotifType.DOCUMENT_ADDED,
+        { documentName: file.originalname },
+      );
+    } catch {
+      // notification failure must not fail the upload
+    }
 
     return doc;
   }
@@ -71,8 +75,8 @@ export class DocumentsService {
     const doc = await this.prisma.document.findFirst({ where: { id, userId } });
 
     if (!doc) throw new NotFoundException();
-    await this.minio.deleteFile(doc.storageKey);
 
-    return this.prisma.document.delete({ where: { id } });
+    await this.prisma.document.delete({ where: { id } });
+    await this.minio.deleteFile(doc.storageKey);
   }
 }

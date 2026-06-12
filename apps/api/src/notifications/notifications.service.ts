@@ -42,7 +42,8 @@ export class NotificationsService {
     });
 
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (user?.email) {
+    if (!user) return notif;
+    if (user.email) {
       const { subject, html } = this.buildObjectiveEmail(
         type,
         payload,

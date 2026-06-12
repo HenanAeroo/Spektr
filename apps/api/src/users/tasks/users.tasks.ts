@@ -20,6 +20,12 @@ export class UsersTasks {
     const users = await this.prismaService.user.findMany({
       where: {
         last_seen_at: { not: null, lt: threshold },
+        notifications: {
+          none: {
+            type: NotifType.INACTIVITY_ALERT,
+            created_at: { gte: threshold },
+          },
+        },
       },
     });
 

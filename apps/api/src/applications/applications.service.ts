@@ -83,6 +83,8 @@ export class ApplicationsService {
       },
     });
 
+    if (doc.count === 0) return doc;
+
     if (
       updateApplicationDto.outcome === Outcome.ENTRETIEN ||
       updateApplicationDto.outcome === Outcome.DECROCHEE
@@ -94,7 +96,7 @@ export class ApplicationsService {
         await this.notificationsService.createAndEmit(
           admin.id,
           NotifType.APPLICATION_STATUS,
-          { studentId: userId, statut: updateApplicationDto.statut },
+          { studentId: userId, outcome: updateApplicationDto.outcome },
         );
       }
     }

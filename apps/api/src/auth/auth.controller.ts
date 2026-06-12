@@ -93,7 +93,7 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   async googleCallback(@Req() req: any, @Res() res: any) {
-    const { refreshToken } = req.user;
+    const { accessToken, refreshToken } = req.user;
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
@@ -103,7 +103,7 @@ export class AuthController {
     });
 
     return await res.redirect(
-      `${this.configService.get('FRONT_URL')}/oauth/callback`,
+      `${this.configService.get('FRONT_URL')}/oauth/callback?token=${accessToken}`,
     );
   }
 

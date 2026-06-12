@@ -66,6 +66,7 @@ export class DocumentsController {
     @Body('folderId') folderId: string | undefined,
     @CurrentUser() user: UserModel,
   ) {
+    if (!file) throw new BadRequestException('Fichier manquant');
     return this.documentsService.upload(
       file,
       folderId ? parseInt(folderId) : undefined,

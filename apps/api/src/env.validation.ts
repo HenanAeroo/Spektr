@@ -9,4 +9,12 @@ export const schema = Joi.object({
   PORT: Joi.number().default(3001).optional(),
   FRONT_URL: Joi.string().required(),
   NODE_ENV: Joi.string().default('development'),
+  SMTP_USER: Joi.string().required(),
+  SMTP_PASS: Joi.string().required(),
+  SMTP_FROM: Joi.string().optional(),
+  MINIO_ENDPOINT: Joi.string().required(),
+  MINIO_PORT: Joi.number().required(),
+  MINIO_ACCESS_KEY: Joi.string().required(),
+  MINIO_SECRET_KEY: Joi.string().required(),
+  MINIO_BUCKET: Joi.string().required(),
 });

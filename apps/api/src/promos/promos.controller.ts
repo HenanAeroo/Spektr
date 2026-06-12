@@ -12,6 +12,7 @@ import {
 import { PromosService } from './promos.service';
 import { CreatePromoDto } from './dto/create-promo.dto';
 import { UpdatePromoDto } from './dto/update-promo.dto';
+import { AssignUserDto } from './dto/assign-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -49,7 +50,7 @@ export class PromosController {
   @Patch(':id/assign')
   assign(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { userId: number },
+    @Body() body: AssignUserDto,
   ) {
     return this.promosService.assignUser(id, body.userId);
   }

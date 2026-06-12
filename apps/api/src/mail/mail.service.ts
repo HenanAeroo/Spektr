@@ -10,9 +10,9 @@ export class MailService {
   private readonly from: string;
 
   constructor(private readonly config: ConfigService) {
-    const user = config.get<string>('SMTP_USER');
-    const pass = config.get<string>('SMTP_PASS');
-    const fromAddress = config.get<string>('SMTP_FROM', user!);
+    const user = config.get<string>('SMTP_USER') ?? '';
+    const pass = config.get<string>('SMTP_PASS') ?? '';
+    const fromAddress = config.get<string>('SMTP_FROM') ?? user;
 
     this.from = `"Spektr — Ynov Campus" <${fromAddress}>`;
 

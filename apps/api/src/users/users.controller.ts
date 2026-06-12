@@ -41,8 +41,8 @@ export class UsersController {
     @Query('promoId') promoId = undefined,
   ) {
     return this.usersService.findAll(
-      parseInt(page),
-      parseInt(limit),
+      parseInt(page, 10),
+      parseInt(limit, 10),
       promoId ? parseInt(promoId, 10) : undefined,
     );
   }
@@ -63,6 +63,21 @@ export class UsersController {
     return this.usersService.findOne({ id });
   }
 
+  @Patch('me/password')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  async changePassword(
+    @Body() body: ChangePasswordDto,
+    @CurrentUser() user: UserModel,
+  ) {
+    const result = await this.usersService.changePassword(
+      user.id,
+      body.oldPassword,
+      body.newPassword,
+    );
+    void this.notificationsService.sendPasswordChangedEmail(user.id);
+    return result;
+  }
+
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -75,21 +90,6 @@ export class UsersController {
       where: { id },
       data: updateUserDto,
     });
-  }
-
-  @Patch('me/password')
-  @Throttle({ default: { ttl: 60000, limit: 5 } })
-  async changePassword(
-    @Body() body: ChangePasswordDto,
-    @CurrentUser() user: UserModel,
-  ) {
-    const result = await this.usersService.changePassword(
-      user.id,
-      body.oldPassword,
-      body.newPassword,
-    );
-    await this.notificationsService.sendPasswordChangedEmail(user.id);
-    return result;
   }
 
   @Post('bulk-email')

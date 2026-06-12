@@ -23,6 +23,8 @@ export class RolesGuard implements CanActivate {
     // user is populated by JwtStrategy.validate() on every protected request
     const user = context.switchToHttp().getRequest().user;
 
+    if (!user) return false;
+
     return requiredRoles.includes(user.role);
   }
 }

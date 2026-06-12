@@ -184,7 +184,9 @@ export class AuthService {
       where: { id: payload.sub },
     });
 
-    if (user!.emailVerified === false) {
+    if (!user) throw new UnauthorizedException();
+
+    if (user.emailVerified === false) {
       throw new UnauthorizedException('Veuillez confirmer votre email');
     } else {
       return this.issueTokens(payload.sub);

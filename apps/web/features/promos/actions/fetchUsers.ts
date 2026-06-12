@@ -8,9 +8,12 @@ type PaginatedUsers = {
   hasNextPage: boolean;
 };
 
-export async function fetchUsers(page: number) {
-  return apiFetch<PaginatedUsers>(`/users?page=${page}&limit=9`, {
-    method: "GET",
-    token: getToken() ?? undefined,
-  });
+export async function fetchUsers(page: number, promoId?: number) {
+  return apiFetch<PaginatedUsers>(
+    `/users?page=${page}&limit=9${promoId ? `&promoId=${promoId}` : ""}`,
+    {
+      method: "GET",
+      token: getToken() ?? undefined,
+    },
+  );
 }

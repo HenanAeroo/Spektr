@@ -35,8 +35,16 @@ export class UsersController {
   @Roles(RoleModel.ADMIN)
   @UseGuards(RolesGuard)
   @Get()
-  findAll(@Query('page') page = '1', @Query('limit') limit = '9') {
-    return this.usersService.findAll(parseInt(page), parseInt(limit));
+  findAll(
+    @Query('page') page = '1',
+    @Query('limit') limit = '9',
+    @Query('promoId') promoId = undefined,
+  ) {
+    return this.usersService.findAll(
+      parseInt(page),
+      parseInt(limit),
+      promoId ? parseInt(promoId, 10) : undefined,
+    );
   }
 
   @Get('me')

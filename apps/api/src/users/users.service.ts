@@ -25,16 +25,19 @@ export class UsersService {
     });
   }
 
-  async findAll(page: number, limit: number) {
+  async findAll(page: number, limit: number, promoId?: number) {
     const skip = (page - 1) * limit;
+
+    const wherePromo = promoId ? { promoId } : {};
 
     const users = await this.prisma.user.findMany({
       skip,
       take: limit,
       orderBy: { id: 'asc' },
+      where: wherePromo,
     });
 
-    const total = await this.prisma.user.count();
+    const total = await this.prisma.user.count({ where: wherePromo });
 
     return {
       data: users,

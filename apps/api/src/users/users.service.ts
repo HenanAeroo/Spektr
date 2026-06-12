@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, User, Provider } from '../../prisma/generated/prisma/client';
@@ -9,6 +10,7 @@ import bcrypt from 'bcrypt';
 import { BulkEmailDto } from './dto/bulk-email.dto';
 import { MailService } from '../mail/mail.service';
 import juice from 'juice';
+import sanitizeHtml from 'sanitize-html';
 
 @Injectable()
 export class UsersService {
@@ -23,16 +25,19 @@ export class UsersService {
     });
   }
 
-  async findAll(page: number, limit: number) {
+  async findAll(page: number, limit: number, promoId?: number) {
     const skip = (page - 1) * limit;
+
+    const wherePromo = promoId ? { promoId } : {};
 
     const users = await this.prisma.user.findMany({
       skip,
       take: limit,
       orderBy: { id: 'asc' },
+      where: wherePromo,
     });
 
-    const total = await this.prisma.user.count();
+    const total = await this.prisma.user.count({ where: wherePromo });
 
     return {
       data: users,
@@ -99,19 +104,71 @@ export class UsersService {
     return { success: true };
   }
 
+  private chunksOf(array: User[], size: number) {
+    const result = [];
+    let i = 0;
+
+    while (i < array.length) {
+      const chunk = array.slice(i, i + size);
+      result.push(chunk);
+      i = i + size;
+    }
+
+    return result;
+  }
+
   async bulkEmail(dto: BulkEmailDto) {
     const users = await this.prisma.user.findMany({
       where: { id: { in: dto.userIds } },
     });
 
-    const html = this.buildEmailHtml(dto.body);
+    if (users.length === 0) {
+      return { sent: 0, failed: 0 };
+    }
 
-    return Promise.all(
-      users.map((u) => this.mailService.send(u.email, dto.subject, html)),
-    );
+    const html = this.buildEmailHtml(dto.body);
+    const totalResults: PromiseSettledResult<void>[] = [];
+
+    const chunks = this.chunksOf(users, 10);
+
+    for (const chunk of chunks) {
+      const promises = chunk.map((u) =>
+        this.mailService.send(u.email, dto.subject, html),
+      );
+
+      const chunkResults = await Promise.allSettled(promises);
+      totalResults.push(...chunkResults);
+    }
+
+    const failed = totalResults.filter((c) => c.status === 'rejected');
+
+    const sent = totalResults.length - failed.length;
+
+    if (sent === 0) {
+      throw new InternalServerErrorException();
+    }
+
+    return { sent, failed: failed.length };
   }
 
   private buildEmailHtml(body: string): string {
+    const cleanBody = sanitizeHtml(body, {
+      allowedTags: [
+        'p',
+        'strong',
+        'em',
+        'u',
+        's',
+        'h1',
+        'h2',
+        'h3',
+        'ul',
+        'ol',
+        'li',
+        'br',
+      ],
+      allowedAttributes: {},
+    });
     const raw = `<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -147,7 +204,7 @@ export class UsersService {
         <!-- Body -->
         <tr>
           <td style="padding:36px 40px" class="content">
-            ${body}
+            ${cleanBody}
           </td>
         </tr>
 

@@ -15,19 +15,18 @@ import {
 } from "lucide-react";
 
 type ToolbarButtonProps = {
-  onClick: () => void;
   active?: boolean;
-  title: string;
-  children: React.ReactNode;
-};
+} & React.ComponentProps<"button">;
 
 const ToolbarButton = ({
   onClick,
   active,
   title,
   children,
+  ...rest
 }: ToolbarButtonProps) => (
   <button
+    {...rest}
     type="button"
     onClick={onClick}
     title={title}
@@ -142,6 +141,7 @@ const EmailEditor = ({
           onClick={t.action!}
           active={t.active}
           title={t.title!}
+          aria-pressed={t.active ?? false}
         >
           {t.icon}
         </ToolbarButton>
@@ -153,7 +153,11 @@ const EmailEditor = ({
       className={`border border-spektr-border rounded-lg overflow-hidden ${className ?? ""}`}
     >
       {/* Toolbar statique */}
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-spektr-border bg-[#fafafa]">
+      <div
+        role="toolbar"
+        aria-label="Mise en forme"
+        className="flex items-center gap-0.5 px-2 py-1.5 border-b border-spektr-border bg-[#fafafa]"
+      >
         {renderTools()}
       </div>
 

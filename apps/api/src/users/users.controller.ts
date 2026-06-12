@@ -35,8 +35,16 @@ export class UsersController {
   @Roles(RoleModel.ADMIN)
   @UseGuards(RolesGuard)
   @Get()
-  findAll(@Query('page') page = '1', @Query('limit') limit = '9') {
-    return this.usersService.findAll(parseInt(page), parseInt(limit));
+  findAll(
+    @Query('page') page = '1',
+    @Query('limit') limit = '9',
+    @Query('promoId') promoId = undefined,
+  ) {
+    return this.usersService.findAll(
+      parseInt(page),
+      parseInt(limit),
+      promoId ? parseInt(promoId, 10) : undefined,
+    );
   }
 
   @Get('me')
@@ -87,9 +95,10 @@ export class UsersController {
   @Post('bulk-email')
   @Roles(RoleModel.ADMIN)
   @UseGuards(RolesGuard)
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   async bulkEmail(@Body() body: BulkEmailDto) {
-    await this.usersService.bulkEmail(body);
-    return { sent: true };
+    const bilan = await this.usersService.bulkEmail(body);
+    return bilan;
   }
 
   @Post(':id/feedback')

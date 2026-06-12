@@ -96,7 +96,7 @@ export function ApplicationSheet({
   });
 
   useEffect(() => {
-    if (app !== null) {
+    if (app !== null && app !== undefined) {
       form.reset({
         entreprise: app.entreprise ?? "",
         statut: (app.statut ?? "A_CONTACTER") as Statut,
@@ -119,7 +119,7 @@ export function ApplicationSheet({
           : undefined,
       });
     }
-  }, [app]);
+  }, [app?.id]);
 
   const errors = form.formState.errors;
 

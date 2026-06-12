@@ -59,15 +59,17 @@ function NotificationBell() {
       socket.connect();
     }
 
-    socket.on("notification", (notif: Notification) => {
+    const handleNotification = (notif: Notification) => {
       queryClient.setQueryData<Notification[]>(
         ["notifications"],
         (prev = []) => [notif, ...prev],
       );
-    });
+    };
+
+    socket.on("notification", handleNotification);
 
     return () => {
-      socket.off("notification");
+      socket.off("notification", handleNotification);
     };
   }, [queryClient]);
 

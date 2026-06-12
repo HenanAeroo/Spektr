@@ -120,7 +120,7 @@ export function PromoManager({
                       {count} étudiant{count !== 1 ? "s" : ""}
                     </span>
                     <button
-                      onClick={() => handleDelete(p.id)}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
                       className="bg-[#fee2e2] border-none rounded-md px-2.5 py-[5px] cursor-pointer text-[11px] font-semibold text-[#dc2626]"
                     >
                       Supprimer

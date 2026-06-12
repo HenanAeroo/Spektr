@@ -90,6 +90,8 @@ const DocumentsPage = () => {
     onSuccess: (_, id) => {
       if (selectedFolderId === id) setSelectedFolderId(null);
       queryClient.invalidateQueries({ queryKey: ["folders"] });
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      setPendingDelete(null);
     },
     onError: () => setError("Impossible de supprimer le dossier."),
   });
@@ -106,7 +108,10 @@ const DocumentsPage = () => {
 
   const { mutate: removeDocument } = useMutation({
     mutationFn: deleteDocument,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      setPendingDelete(null);
+    },
     onError: () => setError("Impossible de supprimer le fichier."),
   });
 
@@ -169,8 +174,6 @@ const DocumentsPage = () => {
     } else {
       removeDocument(pendingDelete.id);
     }
-
-    setPendingDelete(null);
   }
 
   const visibleDocs =

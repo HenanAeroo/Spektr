@@ -338,7 +338,9 @@ const ApplicationsPage = () => {
         app={editApp}
         onClose={() => setEditApp(null)}
         onSave={(data) => {
-          updateApp({ id: editApp!.id, data: data as UpdateApplicationData });
+          const id = editApp?.id;
+          if (!id) return;
+          updateApp({ id, data: data as UpdateApplicationData });
           setEditApp(null);
         }}
       />

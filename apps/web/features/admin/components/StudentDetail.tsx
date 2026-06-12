@@ -29,7 +29,11 @@ export function StudentDetail({
     isPending: feedbackPending,
     isSuccess: feedbackSent,
   } = useMutation({
-    mutationFn: () => sendFeedback(userId, feedbackScore!, feedbackText),
+    mutationFn: () => {
+      const score = feedbackScore;
+      if (score === null) throw new Error('Score manquant');
+      return sendFeedback(userId, score, feedbackText);
+    },
   });
 
   const { data: user } = useQuery({
@@ -425,8 +429,8 @@ export function StudentDetail({
                     const dateCandidature = app.date_candidature
                       ? new Date(app.date_candidature).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })
                       : null;
-                    const dateRelance = app.date_relance
-                      ? new Date(app.date_relance).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
+                    const dateRelance = app.date_relance_contact
+                      ? new Date(app.date_relance_contact).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
                       : null;
                     return (
                       <div

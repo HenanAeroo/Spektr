@@ -84,14 +84,12 @@ const RegisterForm = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAccepted, setIsAccepted] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
-  const { emailSent } = useAuth();
+  const { emailSent, handleRegister, isLoading, error } = useAuth();
 
   const form = useForm<RegisterSchema>({
     resolver: zodResolver(registerSchema),
     defaultValues: { email: "", password: "", first_name: "", last_name: "" },
   });
-
-  const { handleRegister, isLoading, error } = useAuth();
 
   async function onSubmit(data: RegisterSchema) {
     await handleRegister(data);

@@ -27,10 +27,10 @@ export const Route = createFileRoute("/_protected")({
     const token = getToken();
 
     useEffect(() => {
-      if (isInitialized && !token) {
+      if (isInitialized && !getToken()) {
         navigate({ to: "/login" });
       }
-    }, [isInitialized]);
+    }, [isInitialized, navigate]);
 
     if (!isInitialized) {
       return (

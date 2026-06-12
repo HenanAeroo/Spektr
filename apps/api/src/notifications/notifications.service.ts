@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventsGateway } from '../events/events.gateway';
 import { Prisma, NotifType } from '../../prisma/generated/prisma/client';
@@ -46,7 +46,11 @@ export class NotificationsService {
         payload,
         user.first_name,
       );
-      await this.mailService.send(user.email, subject, html);
+      try {
+        await this.mailService.send(user.email, subject, html);
+      } catch (err) {
+        Logger.error(err);
+      }
     }
 
     this.eventsGateway.server.to(`user:${userId}`).emit('notification', notif);
@@ -121,7 +125,15 @@ export class NotificationsService {
 </body>
 </html>`;
 
-    await this.mailService.send(student.email, `Feedback RE — ${label}`, html);
+    try {
+      await this.mailService.send(
+        student.email,
+        `Feedback RE — ${label}`,
+        html,
+      );
+    } catch (err) {
+      Logger.error(err);
+    }
   }
 
   private buildObjectiveEmail(
@@ -264,11 +276,15 @@ export class NotificationsService {
 </body>
 </html>`;
 
-    await this.mailService.send(
-      user.email,
-      '🔐 Mot de passe modifié — Spektr',
-      html,
-    );
+    try {
+      await this.mailService.send(
+        user.email,
+        '🔐 Mot de passe modifié — Spektr',
+        html,
+      );
+    } catch (err) {
+      Logger.error(err);
+    }
   }
 
   async findAllForUser(userId: number) {

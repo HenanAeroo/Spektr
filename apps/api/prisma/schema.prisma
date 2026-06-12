@@ -21,8 +21,9 @@ model User {
   resetPasswordToken   String?
   resetPasswordExpiry  DateTime?
 
-  created_at  DateTime @default(now())
-  modified_at DateTime @updatedAt
+  created_at    DateTime  @default(now())
+  modified_at   DateTime  @updatedAt
+  last_seen_at DateTime?
 
   authProviders        AuthProvider[]
   refreshTokens        RefreshToken[]
@@ -146,6 +147,7 @@ enum NotifType {
   DOCUMENT_ADDED
   APPLICATION_STATUS
   OBJECTIVE_CREATED
+  INACTIVITY_ALERT
 }
 
 model Notification {

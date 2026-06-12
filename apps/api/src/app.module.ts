@@ -7,7 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { schema } from './env.validation';
 import { EventsModule } from './events/events.module';
 import { ApplicationsModule } from './applications/applications.module';
@@ -18,6 +18,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { MailModule } from './mail/mail.module';
 import { PromosModule } from './promos/promos.module';
 import { ObjectivesModule } from './objectives/objectives.module';
+import { ActivityInterceptor } from './shared/interceptors/activity.interceptor';
 
 @Module({
   imports: [
@@ -53,6 +54,10 @@ import { ObjectivesModule } from './objectives/objectives.module';
     AppService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     MinioService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ActivityInterceptor,
+    },
   ],
 })
 export class AppModule {}

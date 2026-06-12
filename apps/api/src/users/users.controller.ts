@@ -89,8 +89,8 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   async bulkEmail(@Body() body: BulkEmailDto) {
-    await this.usersService.bulkEmail(body);
-    return { sent: true };
+    const bilan = await this.usersService.bulkEmail(body);
+    return bilan;
   }
 
   @Post(':id/feedback')

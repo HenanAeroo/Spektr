@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, User, Provider } from '../../prisma/generated/prisma/client';
@@ -107,9 +108,21 @@ export class UsersService {
 
     const html = this.buildEmailHtml(dto.body);
 
-    return Promise.all(
-      users.map((u) => this.mailService.send(u.email, dto.subject, html)),
+    const promises = users.map((u) =>
+      this.mailService.send(u.email, dto.subject, html),
     );
+
+    const results = await Promise.allSettled(promises);
+
+    const failed = results.filter((c) => c.status === 'rejected');
+
+    const sent = results.length - failed.length;
+
+    if (sent === 0) {
+      throw new InternalServerErrorException();
+    }
+
+    return { sent, failed: failed.length };
   }
 
   private buildEmailHtml(body: string): string {

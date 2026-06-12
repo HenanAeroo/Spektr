@@ -210,6 +210,49 @@ export class NotificationsService {
 </html>`;
 
       return { subject: `Nouvel objectif : ${title}`, html };
+    } else if (type === NotifType.INACTIVITY_ALERT) {
+      const days = typeof payload.days === 'number' ? payload.days : 7;
+
+      const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Segoe UI',Arial,sans-serif;">
+  <div style="max-width:580px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <div style="background:#1d1d1e;padding:24px 32px;">
+      <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;">
+        Spek<span style="color:#23b2a4;">tr</span>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;letter-spacing:2px;margin-top:2px;">YNOV CAMPUS RENNES</div>
+    </div>
+
+    <div style="padding:32px;">
+      <div style="font-size:24px;margin-bottom:8px;">⏰ Alerte activité !</div>
+      <h1 style="margin:0 0 6px;font-size:20px;color:#1d1d1e;">Bonjour ${name},</h1>
+      <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">
+        Vous avez une alerte d'inactivité.
+      </p>
+
+      <div style="background:#f0fdf9;border:1px solid rgba(35,178,164,0.2);border-left:3px solid #23b2a4;border-radius:0 10px 10px 0;padding:20px 24px;margin-bottom:20px;">
+        <p style="margin:0 0 12px;font-size:14px;color:#6b7280;line-height:1.6;">Ça fait maintenant ${days} jours qu'on ne t'a pas vu sur Spektr.</p>
+        <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">Pense à venir voir ce qu'il se passe sur ta plateforme d'accompagnement ; des objectifs ont sûrement été mis à jour. Viens également mettre à jour tes candidatures afin qu'on puisse suivre ton avancement !</p>
+      </div>
+
+      <p style="font-size:13px;color:#6b7280;line-height:1.6;margin:0;">
+        Connectez-vous à Spektr pour retrouver tous vos objectifs et suivre votre avancement.
+      </p>
+    </div>
+
+    <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e8e8e8;text-align:center;">
+      <p style="margin:0;font-size:11px;color:#9ca3af;">
+        Ce message a été envoyé automatiquement par Spektr · Ynov Campus Rennes
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      return { subject: "Alerte d'activité !", html };
     }
 
     return {

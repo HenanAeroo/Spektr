@@ -104,22 +104,45 @@ export class UsersService {
     return { success: true };
   }
 
+  private chunksOf(array: User[], size: number) {
+    const result = [];
+    let i = 0;
+
+    while (i < array.length) {
+      const chunk = array.slice(i, i + size);
+      result.push(chunk);
+      i = i + size;
+    }
+
+    return result;
+  }
+
   async bulkEmail(dto: BulkEmailDto) {
     const users = await this.prisma.user.findMany({
       where: { id: { in: dto.userIds } },
     });
 
+    if (users.length === 0) {
+      return { sent: 0, failed: 0 };
+    }
+
     const html = this.buildEmailHtml(dto.body);
+    const totalResults: PromiseSettledResult<void>[] = [];
 
-    const promises = users.map((u) =>
-      this.mailService.send(u.email, dto.subject, html),
-    );
+    const chunks = this.chunksOf(users, 10);
 
-    const results = await Promise.allSettled(promises);
+    for (const chunk of chunks) {
+      const promises = chunk.map((u) =>
+        this.mailService.send(u.email, dto.subject, html),
+      );
 
-    const failed = results.filter((c) => c.status === 'rejected');
+      const chunkResults = await Promise.allSettled(promises);
+      totalResults.push(...chunkResults);
+    }
 
-    const sent = results.length - failed.length;
+    const failed = totalResults.filter((c) => c.status === 'rejected');
+
+    const sent = totalResults.length - failed.length;
 
     if (sent === 0) {
       throw new InternalServerErrorException();

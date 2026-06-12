@@ -15,19 +15,18 @@ import {
 } from "lucide-react";
 
 type ToolbarButtonProps = {
-  onClick: () => void;
   active?: boolean;
-  title: string;
-  children: React.ReactNode;
-};
+} & React.ComponentProps<"button">;
 
 const ToolbarButton = ({
   onClick,
   active,
   title,
   children,
+  ...rest
 }: ToolbarButtonProps) => (
   <button
+    {...rest}
     type="button"
     onClick={onClick}
     title={title}
@@ -142,7 +141,7 @@ const EmailEditor = ({
           onClick={t.action!}
           active={t.active}
           title={t.title!}
-          aria-pressed={active ?? false}
+          aria-pressed={t.active ?? false}
         >
           {t.icon}
         </ToolbarButton>

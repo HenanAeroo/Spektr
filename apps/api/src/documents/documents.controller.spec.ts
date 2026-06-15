@@ -35,7 +35,11 @@ describe('DocumentsController', () => {
 
       await controller.uploadFile(file, '3', student);
 
-      expect(mockDocumentsService.upload).toHaveBeenCalledWith(file, 3, student.id);
+      expect(mockDocumentsService.upload).toHaveBeenCalledWith(
+        file,
+        3,
+        student.id,
+      );
     });
 
     it('passes folderId as undefined if absent', async () => {
@@ -44,7 +48,11 @@ describe('DocumentsController', () => {
 
       await controller.uploadFile(file, undefined, student);
 
-      expect(mockDocumentsService.upload).toHaveBeenCalledWith(file, undefined, student.id);
+      expect(mockDocumentsService.upload).toHaveBeenCalledWith(
+        file,
+        undefined,
+        student.id,
+      );
     });
   });
 
@@ -60,19 +68,29 @@ describe('DocumentsController', () => {
 
   describe('getDownloadUrl', () => {
     it('passes userId as undefined for an admin', async () => {
-      mockDocumentsService.getDownloadUrl.mockResolvedValue({ url: 'http://...' });
+      mockDocumentsService.getDownloadUrl.mockResolvedValue({
+        url: 'http://...',
+      });
 
       await controller.getDownloadUrl('5', admin);
 
-      expect(mockDocumentsService.getDownloadUrl).toHaveBeenCalledWith(5, undefined);
+      expect(mockDocumentsService.getDownloadUrl).toHaveBeenCalledWith(
+        5,
+        undefined,
+      );
     });
 
     it('passes userId for a student', async () => {
-      mockDocumentsService.getDownloadUrl.mockResolvedValue({ url: 'http://...' });
+      mockDocumentsService.getDownloadUrl.mockResolvedValue({
+        url: 'http://...',
+      });
 
       await controller.getDownloadUrl('5', student);
 
-      expect(mockDocumentsService.getDownloadUrl).toHaveBeenCalledWith(5, student.id);
+      expect(mockDocumentsService.getDownloadUrl).toHaveBeenCalledWith(
+        5,
+        student.id,
+      );
     });
   });
 

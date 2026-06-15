@@ -363,9 +363,9 @@ describe('AuthService', () => {
       }) as any;
 
     it('throws Error if Google profile has no email', async () => {
-      await expect(
-        service.validateOAuthLogin(makeProfile()),
-      ).rejects.toThrow('Email Google manquant');
+      await expect(service.validateOAuthLogin(makeProfile())).rejects.toThrow(
+        'Email Google manquant',
+      );
     });
 
     it('returns tokens if Google provider already exists', async () => {

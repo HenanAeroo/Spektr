@@ -128,7 +128,9 @@ describe('ObjectivesService', () => {
       await service.toggleCompletion(2, 8);
 
       expect(mockPrisma.objectiveCompletion.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { objectiveId: 2, userId: 8, done: true } }),
+        expect.objectContaining({
+          data: { objectiveId: 2, userId: 8, done: true },
+        }),
       );
     });
   });

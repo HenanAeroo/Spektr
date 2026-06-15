@@ -13,10 +13,7 @@ describe('AuthTasks', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AuthTasks,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [AuthTasks, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     tasks = module.get<AuthTasks>(AuthTasks);

@@ -48,10 +48,7 @@ export class PromosController {
   }
 
   @Patch(':id/assign')
-  assign(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: AssignUserDto,
-  ) {
+  assign(@Param('id', ParseIntPipe) id: number, @Body() body: AssignUserDto) {
     return this.promosService.assignUser(id, body.userId);
   }
 

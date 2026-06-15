@@ -5,10 +5,13 @@ import {
   updateApplication,
   UpdateApplicationData,
 } from "@/features/applications/actions/updateApplication";
+import { importCsv } from "@/features/applications/actions/importCsv";
 import { Application, Statut } from "@/features/applications/types";
 import { AppModal } from "@/features/applications/components/AppModal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import ConfirmDialog from "@/shared/components/ConfirmDialog";
+import { toast } from "sonner";
 import {
   inputCls,
   STATUT_COLORS,
@@ -34,6 +37,27 @@ const ApplicationsPage = () => {
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [editApp, setEditApp] = useState<Application | null>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+
+  const { mutate: importFromCsv, isPending: isImporting } = useMutation({
+    mutationFn: (file: File) => importCsv(file),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      if (result.skipped > 0) {
+        toast.success(
+          `${result.imported} candidature${result.imported !== 1 ? "s" : ""} importée${result.imported !== 1 ? "s" : ""}, ${result.skipped} ignorée${result.skipped !== 1 ? "s" : ""}`,
+        );
+      } else {
+        toast.success(
+          `${result.imported} candidature${result.imported !== 1 ? "s" : ""} importée${result.imported !== 1 ? "s" : ""} avec succès`,
+        );
+      }
+    },
+    onError: (err: Error) => {
+      toast.error(err.message ?? "Erreur lors de l'import CSV");
+    },
+  });
 
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ["applications"],
@@ -49,9 +73,16 @@ const ApplicationsPage = () => {
 
   const { mutate: deleteApp } = useMutation({
     mutationFn: (id: number) => deleteApplication(id),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["applications"] }),
+    onSuccess: () => {
+      setPendingDeleteId(null);
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
   });
+
+  function handleDelete() {
+    if (pendingDeleteId === null) return;
+    deleteApp(pendingDeleteId);
+  }
 
   const { mutate: updateApp } = useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateApplicationData }) =>
@@ -80,7 +111,10 @@ const ApplicationsPage = () => {
       queryClient.setQueryData(["applications"], context?.snapshot);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({
+        queryKey: ["applications"],
+        refetchType: "none",
+      });
     },
   });
 
@@ -114,12 +148,32 @@ const ApplicationsPage = () => {
             {applications.length !== 1 ? "s" : ""} au total
           </p>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="px-5 py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer flex items-center gap-1.5"
-        >
-          + Nouvelle candidature
-        </button>
+        <div className="flex gap-2">
+          <input
+            ref={csvInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) importFromCsv(file);
+              e.target.value = "";
+            }}
+          />
+          <button
+            onClick={() => csvInputRef.current?.click()}
+            disabled={isImporting}
+            className="px-5 py-2.5 rounded-lg border border-spektr-border bg-white text-spektr-dark font-montserrat font-bold text-[13px] cursor-pointer disabled:opacity-50"
+          >
+            {isImporting ? "Import…" : "Importer CSV"}
+          </button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="px-5 py-2.5 rounded-lg border-none bg-spektr-teal text-white font-montserrat font-bold text-[13px] cursor-pointer flex items-center gap-1.5"
+          >
+            + Nouvelle candidature
+          </button>
+        </div>
       </div>
 
       {/* Status summary */}
@@ -304,7 +358,7 @@ const ApplicationsPage = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteApp(app.id);
+                            setPendingDeleteId(app.id);
                           }}
                           className="bg-[#fee2e2] border-none rounded-md px-2.5 py-5px cursor-pointer text-[11px] font-semibold text-[#dc2626]"
                         >
@@ -343,6 +397,14 @@ const ApplicationsPage = () => {
           updateApp({ id, data: data as UpdateApplicationData });
           setEditApp(null);
         }}
+      />
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(val) => { if (!val) setPendingDeleteId(null); }}
+        title="Confirmer la suppression"
+        description="Cette action est irréversible."
+        onConfirm={handleDelete}
       />
     </div>
   );

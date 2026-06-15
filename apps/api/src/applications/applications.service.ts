@@ -1,4 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
+import * as Papa from 'papaparse';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -9,9 +15,24 @@ import {
   type Application,
 } from '../../prisma/generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import {
+  ApplicationCsvRow,
+  ApplicationField,
+  COLUMN_MAP,
+  CSV_BATCH_SIZE,
+  ImportResult,
+  MAX_CSV_ROWS,
+  mapOutcome,
+  mapStatut,
+  normalizeKey,
+  parseDate,
+  sanitizeCsvCell,
+} from './applications.csv-mapper';
 
 @Injectable()
 export class ApplicationsService {
+  private readonly logger = new Logger(ApplicationsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
@@ -45,6 +66,7 @@ export class ApplicationsService {
       where: {
         userId: userId,
       },
+      orderBy: { created_at: 'asc' },
     });
   }
 
@@ -111,5 +133,118 @@ export class ApplicationsService {
         userId: userId,
       },
     });
+  }
+
+  async importFromCsv(buffer: Buffer, userId: number): Promise<ImportResult> {
+    // Fix #2: strip UTF-8 BOM (common in Excel-exported CSVs)
+    const csv = buffer.toString('utf-8').replace(/^ /, '');
+
+    const { data: rows, errors: parseErrors } = Papa.parse<
+      Record<string, string>
+    >(csv, { header: true, skipEmptyLines: true });
+
+    if (parseErrors.length > 0 && rows.length === 0) {
+      throw new BadRequestException('Fichier CSV invalide');
+    }
+    if (rows.length === 0) return { imported: 0, skipped: 0, errors: [] };
+
+    // Fix #4: cap row count to prevent DoS
+    if (rows.length > MAX_CSV_ROWS) {
+      throw new BadRequestException(
+        `Le fichier contient ${rows.length} lignes. Maximum autorisé : ${MAX_CSV_ROWS}`,
+      );
+    }
+
+    const colMap = new Map<string, ApplicationField>();
+    for (const header of Object.keys(rows[0])) {
+      const field = COLUMN_MAP[normalizeKey(header)];
+      if (field) colMap.set(header, field);
+    }
+
+    const result: ImportResult = { imported: 0, skipped: 0, errors: [] };
+    const validRows: ApplicationCsvRow[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rowNum = i + 2;
+
+      const data: Partial<Record<ApplicationField, string>> = {};
+      for (const [csvCol, dbField] of colMap.entries()) {
+        const raw = row[csvCol]?.trim();
+        if (raw) data[dbField] = raw;
+      }
+
+      if (!data.entreprise) {
+        result.skipped++;
+        result.errors.push({
+          row: rowNum,
+          message: 'Colonne "entreprise" absente ou vide',
+        });
+        continue;
+      }
+
+      // Fix #10: warn on unrecognized enum values (don't silently discard)
+      if (data.statut && mapStatut(data.statut) === undefined) {
+        result.errors.push({
+          row: rowNum,
+          message: `Statut "${data.statut}" non reconnu, valeur ignorée`,
+        });
+      }
+      if (data.outcome && mapOutcome(data.outcome) === undefined) {
+        result.errors.push({
+          row: rowNum,
+          message: `Outcome "${data.outcome}" non reconnu, valeur ignorée`,
+        });
+      }
+
+      validRows.push({
+        entreprise: sanitizeCsvCell(data.entreprise),
+        lien: data.lien ? sanitizeCsvCell(data.lien) : null,
+        commentaire: data.commentaire
+          ? sanitizeCsvCell(data.commentaire)
+          : null,
+        // Fix #5: use undefined (not null) so Prisma applies @default(A_CONTACTER)
+        statut: data.statut ? mapStatut(data.statut) : undefined,
+        contact_nom: data.contact_nom
+          ? sanitizeCsvCell(data.contact_nom)
+          : null,
+        contact_email: data.contact_email ?? null,
+        contact_tel: data.contact_tel ?? null,
+        date_candidature: data.date_candidature
+          ? parseDate(data.date_candidature)
+          : null,
+        date_relance_contact: data.date_relance_contact
+          ? parseDate(data.date_relance_contact)
+          : null,
+        date_relance_tel: data.date_relance_tel
+          ? parseDate(data.date_relance_tel)
+          : null,
+        date_reponse_entreprise: data.date_reponse_entreprise
+          ? parseDate(data.date_reponse_entreprise)
+          : null,
+        // Fix #5: use undefined so @default(RAPPEL) applies when no outcome
+        outcome: data.outcome
+          ? (mapOutcome(data.outcome) ?? undefined)
+          : undefined,
+        userId,
+      });
+    }
+
+    // Fix #4: batch inserts instead of N sequential creates
+    try {
+      for (let i = 0; i < validRows.length; i += CSV_BATCH_SIZE) {
+        const batch = validRows.slice(i, i + CSV_BATCH_SIZE);
+        const res = await this.prisma.application.createMany({ data: batch });
+        result.imported += res.count;
+      }
+    } catch (err) {
+      // Fix #7: distinguish systemic errors (infra/FK) from row-level errors
+      this.logger.error("Erreur systémique lors de l'import CSV", err);
+      throw new InternalServerErrorException(
+        "Erreur lors de l'import en base de données",
+      );
+    }
+
+    return result;
   }
 }

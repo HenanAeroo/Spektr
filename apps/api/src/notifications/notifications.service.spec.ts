@@ -56,7 +56,10 @@ describe('NotificationsService', () => {
 
       expect(mockPrisma.notification.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ userId: 5, type: NotifType.DOCUMENT_ADDED }),
+          data: expect.objectContaining({
+            userId: 5,
+            type: NotifType.DOCUMENT_ADDED,
+          }),
         }),
       );
       expect(mockTo).toHaveBeenCalledWith('user:5');

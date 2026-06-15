@@ -83,6 +83,7 @@ export function StudentsList({
     mutationFn: (file: File) => importStudents(file),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["promos"] });
       if (result.imported > 0) {
         toast.success(
           `${result.imported} étudiant${result.imported !== 1 ? "s" : ""} importé${result.imported !== 1 ? "s" : ""}${result.skipped > 0 ? ` · ${result.skipped} ignoré${result.skipped !== 1 ? "s" : ""}` : ""}`,

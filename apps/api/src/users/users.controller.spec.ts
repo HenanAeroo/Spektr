@@ -47,9 +47,15 @@ describe('UsersController', () => {
         hasNextPage: false,
       });
 
-      await controller.findAll('1', '9');
+      await controller.findAll('1', '9', undefined, adminUser);
 
-      expect(mockUsersService.findAll).toHaveBeenCalledWith(1, 9, undefined);
+      expect(mockUsersService.findAll).toHaveBeenCalledWith(
+        1,
+        9,
+        undefined,
+        adminUser.id,
+        adminUser.role,
+      );
     });
 
     it('parses string args to integers before delegating', async () => {
@@ -59,9 +65,15 @@ describe('UsersController', () => {
         hasNextPage: false,
       });
 
-      await controller.findAll('2', '5');
+      await controller.findAll('2', '5', undefined, adminUser);
 
-      expect(mockUsersService.findAll).toHaveBeenCalledWith(2, 5, undefined);
+      expect(mockUsersService.findAll).toHaveBeenCalledWith(
+        2,
+        5,
+        undefined,
+        adminUser.id,
+        adminUser.role,
+      );
     });
   });
 
@@ -179,7 +191,11 @@ describe('UsersController', () => {
 
       await controller.remove(2, studentUser);
 
-      expect(mockUsersService.remove).toHaveBeenCalledWith({ id: 2 });
+      expect(mockUsersService.remove).toHaveBeenCalledWith(
+        { id: 2 },
+        studentUser.id,
+        studentUser.role,
+      );
     });
 
     it('throws ForbiddenException when user.id !== id', () => {

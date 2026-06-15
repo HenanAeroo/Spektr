@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PromosController } from './promos.controller';
 import { PromosService } from './promos.service';
+import { Role } from '../../prisma/generated/prisma/client';
 
 const mockPromosService = {
   create: jest.fn(),
@@ -9,7 +10,11 @@ const mockPromosService = {
   update: jest.fn(),
   remove: jest.fn(),
   assignUser: jest.fn(),
+  assignAdmin: jest.fn(),
+  removeAdmin: jest.fn(),
 };
+
+const mockUser = { id: 1, role: Role.SUPER_ADMIN };
 
 describe('PromosController', () => {
   let controller: PromosController;
@@ -37,22 +42,29 @@ describe('PromosController', () => {
   });
 
   describe('findAll', () => {
-    it('delegates to promosService.findAll', async () => {
+    it('delegates to promosService.findAll with user id and role', async () => {
       mockPromosService.findAll.mockResolvedValue([]);
 
-      await controller.findAll();
+      await controller.findAll(mockUser as any);
 
-      expect(mockPromosService.findAll).toHaveBeenCalled();
+      expect(mockPromosService.findAll).toHaveBeenCalledWith(
+        mockUser.id,
+        mockUser.role,
+      );
     });
   });
 
   describe('findOne', () => {
-    it('delegates to promosService.findOne with id as number', async () => {
+    it('delegates to promosService.findOne with id, user id and role', async () => {
       mockPromosService.findOne.mockResolvedValue({ id: 2 });
 
-      await controller.findOne(2);
+      await controller.findOne(2, mockUser as any);
 
-      expect(mockPromosService.findOne).toHaveBeenCalledWith(2);
+      expect(mockPromosService.findOne).toHaveBeenCalledWith(
+        2,
+        mockUser.id,
+        mockUser.role,
+      );
     });
   });
 
@@ -67,12 +79,37 @@ describe('PromosController', () => {
   });
 
   describe('assign', () => {
-    it('delegates to promosService.assignUser with promoId and userId', async () => {
+    it('delegates to promosService.assignUser with promoId, userId, and user context', async () => {
       mockPromosService.assignUser.mockResolvedValue({ id: 5 });
 
-      await controller.assign(2, { userId: 5 });
+      await controller.assign(2, { userId: 5 }, mockUser as any);
 
-      expect(mockPromosService.assignUser).toHaveBeenCalledWith(2, 5);
+      expect(mockPromosService.assignUser).toHaveBeenCalledWith(
+        2,
+        5,
+        mockUser.id,
+        mockUser.role,
+      );
+    });
+  });
+
+  describe('assignAdmin', () => {
+    it('delegates to promosService.assignAdmin', async () => {
+      mockPromosService.assignAdmin.mockResolvedValue({});
+
+      await controller.assignAdmin(2, { adminId: 10, role: undefined } as any);
+
+      expect(mockPromosService.assignAdmin).toHaveBeenCalledWith(2, 10, undefined);
+    });
+  });
+
+  describe('removeAdmin', () => {
+    it('delegates to promosService.removeAdmin', async () => {
+      mockPromosService.removeAdmin.mockResolvedValue({});
+
+      await controller.removeAdmin(2, 10);
+
+      expect(mockPromosService.removeAdmin).toHaveBeenCalledWith(2, 10);
     });
   });
 });

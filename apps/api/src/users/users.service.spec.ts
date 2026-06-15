@@ -9,11 +9,16 @@ import {
 import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { ConfigService } from '@nestjs/config';
 import bcrypt from 'bcrypt';
-import { Provider } from '../../prisma/generated/prisma/client';
+import { Provider, Role } from '../../prisma/generated/prisma/client';
 
 const mockMailService = {
   send: jest.fn(),
+};
+
+const mockConfigService = {
+  get: jest.fn().mockReturnValue('test-secret'),
 };
 
 const mockPrisma = {
@@ -43,6 +48,7 @@ describe('UsersService', () => {
         UsersService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: MailService, useValue: mockMailService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -68,7 +74,7 @@ describe('UsersService', () => {
       mockPrisma.user.findMany.mockResolvedValue(users);
       mockPrisma.user.count.mockResolvedValue(10);
 
-      const result = await service.findAll(2, 3);
+      const result = await service.findAll(2, 3, undefined, 1, Role.SUPER_ADMIN);
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
         skip: 3,
@@ -84,7 +90,7 @@ describe('UsersService', () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(6);
 
-      const result = await service.findAll(2, 3);
+      const result = await service.findAll(2, 3, undefined, 1, Role.SUPER_ADMIN);
 
       expect(result.hasNextPage).toBe(false);
     });
@@ -118,6 +124,7 @@ describe('UsersService', () => {
 
   describe('remove', () => {
     it('calls prisma.user.delete with { where: { id: 1 } }', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 1, role: 'STUDENT' });
       mockPrisma.user.delete.mockResolvedValue({ id: 1 });
 
       await service.remove({ id: 1 });

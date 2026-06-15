@@ -1,6 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PromosService } from './promos.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AdminPromoRole, Role } from '../../prisma/generated/prisma/client';
+
+const PROMO_INCLUDE = {
+  include: {
+    adminPromos: {
+      include: {
+        admin: {
+          select: {
+            id: true,
+            email: true,
+            first_name: true,
+            last_name: true,
+          },
+        },
+      },
+    },
+  },
+};
 
 const mockPrisma = {
   promo: {
@@ -12,6 +31,12 @@ const mockPrisma = {
   },
   user: {
     update: jest.fn(),
+  },
+  adminPromo: {
+    findFirst: jest.fn(),
+    count: jest.fn(),
+    upsert: jest.fn(),
+    delete: jest.fn(),
   },
 };
 
@@ -44,24 +69,65 @@ describe('PromosService', () => {
   });
 
   describe('findAll', () => {
-    it('calls promo.findMany with no arguments', async () => {
+    it('SUPER_ADMIN: returns all promos with adminPromos included', async () => {
       mockPrisma.promo.findMany.mockResolvedValue([]);
 
-      await service.findAll();
+      await service.findAll(1, Role.SUPER_ADMIN);
 
-      expect(mockPrisma.promo.findMany).toHaveBeenCalled();
+      expect(mockPrisma.promo.findMany).toHaveBeenCalledWith(
+        expect.objectContaining(PROMO_INCLUDE),
+      );
+    });
+
+    it('ADMIN: filters by adminId in adminPromos', async () => {
+      mockPrisma.promo.findMany.mockResolvedValue([]);
+
+      await service.findAll(42, Role.ADMIN);
+
+      expect(mockPrisma.promo.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { adminPromos: { some: { adminId: 42 } } },
+        }),
+      );
     });
   });
 
   describe('findOne', () => {
-    it('calls promo.findUnique with { where: { id } }', async () => {
-      mockPrisma.promo.findUnique.mockResolvedValue({ id: 2 });
+    it('SUPER_ADMIN: returns promo with adminPromos included', async () => {
+      mockPrisma.promo.findUnique.mockResolvedValue({
+        id: 2,
+        adminPromos: [],
+      });
 
-      await service.findOne(2);
+      const result = await service.findOne(2, 1, Role.SUPER_ADMIN);
 
       expect(mockPrisma.promo.findUnique).toHaveBeenCalledWith({
         where: { id: 2 },
+        ...PROMO_INCLUDE,
       });
+      expect(result).toMatchObject({ id: 2 });
+    });
+
+    it('ADMIN with access: returns promo', async () => {
+      mockPrisma.promo.findUnique.mockResolvedValue({
+        id: 2,
+        adminPromos: [{ adminId: 42 }],
+      });
+
+      const result = await service.findOne(2, 42, Role.ADMIN);
+
+      expect(result).toMatchObject({ id: 2 });
+    });
+
+    it('ADMIN without access: throws ForbiddenException', async () => {
+      mockPrisma.promo.findUnique.mockResolvedValue({
+        id: 2,
+        adminPromos: [{ adminId: 99 }],
+      });
+
+      await expect(service.findOne(2, 42, Role.ADMIN)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -78,15 +144,73 @@ describe('PromosService', () => {
   });
 
   describe('assignUser', () => {
-    it('calls user.update with where userId and data promoId', async () => {
+    it('SUPER_ADMIN: skips access check and updates user promoId', async () => {
       mockPrisma.user.update.mockResolvedValue({ id: 5, promoId: 2 });
 
-      await service.assignUser(2, 5);
+      await service.assignUser(2, 5, 1, Role.SUPER_ADMIN);
+
+      expect(mockPrisma.adminPromo.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
+        where: { id: 5 },
+        data: { promoId: 2 },
+      });
+    });
+
+    it('ADMIN with access: updates user promoId', async () => {
+      mockPrisma.adminPromo.findFirst.mockResolvedValue({ adminId: 42, promoId: 2 });
+      mockPrisma.user.update.mockResolvedValue({ id: 5, promoId: 2 });
+
+      await service.assignUser(2, 5, 42, Role.ADMIN);
 
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: 5 },
         data: { promoId: 2 },
       });
+    });
+
+    it('ADMIN without access: throws ForbiddenException', async () => {
+      mockPrisma.adminPromo.findFirst.mockResolvedValue(null);
+
+      await expect(service.assignUser(2, 5, 42, Role.ADMIN)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+  });
+
+  describe('assignAdmin', () => {
+    it('upserts adminPromo with given role', async () => {
+      mockPrisma.adminPromo.upsert.mockResolvedValue({});
+
+      await service.assignAdmin(2, 10, AdminPromoRole.OWNER);
+
+      expect(mockPrisma.adminPromo.upsert).toHaveBeenCalledWith({
+        where: { adminId_promoId: { adminId: 10, promoId: 2 } },
+        create: { adminId: 10, promoId: 2, role: AdminPromoRole.OWNER },
+        update: { role: AdminPromoRole.OWNER },
+      });
+    });
+  });
+
+  describe('removeAdmin', () => {
+    it('removes admin when not last OWNER', async () => {
+      mockPrisma.adminPromo.count.mockResolvedValue(2);
+      mockPrisma.adminPromo.findFirst.mockResolvedValue({ adminId: 10, role: AdminPromoRole.OWNER });
+      mockPrisma.adminPromo.delete.mockResolvedValue({});
+
+      await service.removeAdmin(2, 10);
+
+      expect(mockPrisma.adminPromo.delete).toHaveBeenCalledWith({
+        where: { adminId_promoId: { adminId: 10, promoId: 2 } },
+      });
+    });
+
+    it('throws BadRequestException when removing last OWNER', async () => {
+      mockPrisma.adminPromo.count.mockResolvedValue(1);
+      mockPrisma.adminPromo.findFirst.mockResolvedValue({ adminId: 10, role: AdminPromoRole.OWNER });
+
+      await expect(service.removeAdmin(2, 10)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

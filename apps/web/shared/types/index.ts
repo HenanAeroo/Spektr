@@ -9,9 +9,11 @@ export type AuthResponse = {
   accessToken: string;
 };
 
+export type Role = "STUDENT" | "ADMIN" | "SUPER_ADMIN";
+
 export type JwtPayload = {
   sub: number;
-  role: "STUDENT" | "ADMIN";
+  role: Role;
   exp?: number;
   iat?: number;
 };
@@ -21,6 +23,6 @@ export type User = {
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  role: "STUDENT" | "ADMIN";
+  role: Role;
   promoId: number | null;
 };

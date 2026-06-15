@@ -1,10 +1,11 @@
 import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
-import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { inputCls, labelCls } from "../constants";
 import { Card } from "./Card";
 import { fetchUsers } from "@/features/promos/actions/fetchUsers";
 import { sendBulkEmail } from "@/features/users/actions/sendBulkEmail";
+import { importStudents } from "@/features/admin/actions/importStudents";
 import { toast } from "sonner";
 import EmailEditor from "./EmailEditor";
 import {
@@ -26,6 +27,8 @@ export function StudentsList({
   promos: any[];
   navigate: (p: string) => void;
 }) {
+  const queryClient = useQueryClient();
+  const csvInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
   const [showContact, setShowContact] = useState(false);
   const [selected, setSelected] = useState<number[]>([]);
@@ -74,6 +77,17 @@ export function StudentsList({
       setMessage(DEFAULT_MESSAGE)
     ),
     onError: () => toast.error("Une erreur est survenue, veuillez réessayer"),
+  });
+
+  const { mutate: handleImportStudents, isPending: isImporting } = useMutation({
+    mutationFn: (file: File) => importStudents(file),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success(
+        `${result.imported} étudiant${result.imported !== 1 ? "s" : ""} importé${result.imported !== 1 ? "s" : ""}${result.skipped > 0 ? ` · ${result.skipped} ignoré${result.skipped !== 1 ? "s" : ""}` : ""}`,
+      );
+    },
+    onError: () => toast.error("Erreur lors de l'import CSV"),
   });
 
   const sentinelRef = useRef(null);
@@ -127,12 +141,35 @@ export function StudentsList({
             {students.length} étudiant{students.length !== 1 ? "s" : ""} suivis
           </p>
         </div>
-        <button
-          onClick={() => setShowContact(true)}
-          className="px-4 py-2.5 rounded-lg border-[1.5px] border-spektr-teal bg-transparent text-spektr-teal font-montserrat font-bold text-[13px] cursor-pointer"
-        >
-          ✉ Contacter des étudiants
-        </button>
+        <div className="flex gap-2">
+          <input
+            ref={csvInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                handleImportStudents(file);
+                e.target.value = "";
+              }
+            }}
+          />
+          <button
+            onClick={() => csvInputRef.current?.click()}
+            disabled={isImporting}
+            title="Format CSV attendu : email, prenom, nom, promo"
+            className="px-4 py-2.5 rounded-lg border-[1.5px] border-gray-300 bg-white text-gray-600 font-montserrat font-bold text-[13px] cursor-pointer disabled:opacity-50"
+          >
+            {isImporting ? "Import…" : "⬆ Importer des étudiants"}
+          </button>
+          <button
+            onClick={() => setShowContact(true)}
+            className="px-4 py-2.5 rounded-lg border-[1.5px] border-spektr-teal bg-transparent text-spektr-teal font-montserrat font-bold text-[13px] cursor-pointer"
+          >
+            ✉ Contacter des étudiants
+          </button>
+        </div>
       </div>
 
       <Card className="p-0">

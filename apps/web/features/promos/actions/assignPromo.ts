@@ -5,7 +5,7 @@ import { User } from "@/shared/types";
 export async function assignPromo(promoId: number, userId: number) {
   return apiFetch<User>(`/promos/${promoId}/assign`, {
     method: "PATCH",
-    body: JSON.stringify({ userId, promoId }),
+    body: JSON.stringify({ userId }),
     token: getToken() ?? undefined,
   });
 }

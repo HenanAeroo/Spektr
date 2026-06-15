@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_protected/michel")({
   validateSearch: searchSchema,
   beforeLoad: () => {
     const user = getUser();
-    if (user?.role !== "ADMIN") {
+    if (user?.role !== "ADMIN" && user?.role !== "SUPER_ADMIN") {
       throw redirect({ to: "/" });
     }
   },

@@ -107,7 +107,7 @@ function AdminNavItem({
 const Sidebar = () => {
   const { handleLogout } = useAuth();
   const { user } = useAuthContext();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
   const navigate = useNavigate();
   const location = useRouterState({ select: (s) => s.location });
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -240,7 +240,7 @@ const Sidebar = () => {
               {fullName}
             </div>
             <div className="text-[10px] text-white/40">
-              {isAdmin ? "Chargé RE" : "Étudiant"}
+              {user?.role === "SUPER_ADMIN" ? "Super Admin" : isAdmin ? "Chargé RE" : "Étudiant"}
             </div>
           </div>
           <LogOut size={14} color="rgba(255,255,255,0.3)" aria-hidden="true" />

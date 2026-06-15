@@ -99,7 +99,7 @@ describe('PromosController', () => {
 
       await controller.assignAdmin(2, { adminId: 10, role: undefined } as any);
 
-      expect(mockPromosService.assignAdmin).toHaveBeenCalledWith(2, 10, undefined);
+      expect(mockPromosService.assignAdmin).toHaveBeenCalledWith(2, 10, 'OWNER');
     });
   });
 

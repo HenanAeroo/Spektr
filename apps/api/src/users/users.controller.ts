@@ -10,7 +10,11 @@ import {
   Query,
   ForbiddenException,
   ParseIntPipe,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -39,11 +43,14 @@ export class UsersController {
     @Query('page') page = '1',
     @Query('limit') limit = '9',
     @Query('promoId') promoId = undefined,
+    @CurrentUser() user: UserModel,
   ) {
     return this.usersService.findAll(
       parseInt(page, 10),
       parseInt(limit, 10),
       promoId ? parseInt(promoId, 10) : undefined,
+      user.id,
+      user.role,
     );
   }
 
@@ -57,7 +64,11 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() currentUser: UserModel,
   ): Promise<UserModel | null> {
-    if (currentUser.role !== RoleModel.ADMIN && currentUser.id !== id) {
+    if (
+      currentUser.role !== RoleModel.ADMIN &&
+      currentUser.role !== RoleModel.SUPER_ADMIN &&
+      currentUser.id !== id
+    ) {
       throw new ForbiddenException();
     }
     return this.usersService.findOne({ id });
@@ -97,8 +108,7 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   async bulkEmail(@Body() body: BulkEmailDto) {
-    const bilan = await this.usersService.bulkEmail(body);
-    return bilan;
+    return this.usersService.bulkEmail(body);
   }
 
   @Post(':id/feedback')
@@ -116,13 +126,50 @@ export class UsersController {
     return { sent: true };
   }
 
+  @Post('import')
+  @Roles(RoleModel.ADMIN)
+  @UseGuards(RolesGuard)
+  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        const allowed = [
+          'text/csv',
+          'text/plain',
+          'application/vnd.ms-excel',
+          'application/csv',
+        ];
+        if (allowed.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException(
+              'Format de fichier non supporté (CSV requis)',
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  importStudents(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: UserModel,
+  ) {
+    if (!file) throw new BadRequestException('Fichier manquant');
+    return this.usersService.importStudentsFromCsv(file, user.id, user.role);
+  }
+
   @Delete(':id')
   remove(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: UserModel,
   ): Promise<UserModel> {
-    if (user.id !== id) throw new ForbiddenException();
+    if (user.id !== id && user.role !== RoleModel.SUPER_ADMIN) {
+      throw new ForbiddenException();
+    }
 
-    return this.usersService.remove({ id });
+    return this.usersService.remove({ id }, user.id, user.role);
   }
 }

@@ -32,6 +32,7 @@ model User {
   documents            Document[]
   notifications        Notification[]
   objectiveCompletions ObjectiveCompletion[]
+  adminPromos          AdminPromo[]           @relation("AdminPromos")
   promoId              Int?
   promo                Promo? @relation(fields: [promoId], references: [id], onDelete: SetNull)
 }
@@ -68,8 +69,14 @@ model RefreshToken {
 }
 
 enum Role {
+  SUPER_ADMIN
   ADMIN
   STUDENT
+}
+
+enum AdminPromoRole {
+  OWNER
+  COLLABORATOR
 }
 
 model Application {
@@ -171,6 +178,19 @@ model Promo {
 
   users       User[]
   objectives  Objective[]
+  adminPromos AdminPromo[]
+}
+
+model AdminPromo {
+  adminId Int
+  admin   User           @relation("AdminPromos", fields: [adminId], references: [id], onDelete: Cascade)
+  promoId Int
+  promo   Promo          @relation(fields: [promoId], references: [id], onDelete: Cascade)
+  role    AdminPromoRole @default(OWNER)
+
+  created_at DateTime @default(now())
+
+  @@id([adminId, promoId])
 }
 
 model Objective {

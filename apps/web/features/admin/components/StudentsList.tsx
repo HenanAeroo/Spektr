@@ -83,9 +83,26 @@ export function StudentsList({
     mutationFn: (file: File) => importStudents(file),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
-      toast.success(
-        `${result.imported} étudiant${result.imported !== 1 ? "s" : ""} importé${result.imported !== 1 ? "s" : ""}${result.skipped > 0 ? ` · ${result.skipped} ignoré${result.skipped !== 1 ? "s" : ""}` : ""}`,
-      );
+      if (result.imported > 0) {
+        toast.success(
+          `${result.imported} étudiant${result.imported !== 1 ? "s" : ""} importé${result.imported !== 1 ? "s" : ""}${result.skipped > 0 ? ` · ${result.skipped} ignoré${result.skipped !== 1 ? "s" : ""}` : ""}`,
+        );
+      } else {
+        toast.error(
+          `0 étudiant importé · ${result.skipped} ignoré${result.skipped !== 1 ? "s" : ""}`,
+        );
+      }
+      if (result.errors.length > 0) {
+        const preview = result.errors
+          .slice(0, 5)
+          .map((e) => `Ligne ${e.row}${e.email ? ` (${e.email})` : ""} : ${e.message}`)
+          .join("\n");
+        const suffix = result.errors.length > 5 ? `\n… et ${result.errors.length - 5} autre(s)` : "";
+        toast.warning(`Détail des erreurs :\n${preview}${suffix}`, {
+          duration: 8000,
+          style: { whiteSpace: "pre-line" },
+        });
+      }
     },
     onError: () => toast.error("Erreur lors de l'import CSV"),
   });

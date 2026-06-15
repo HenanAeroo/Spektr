@@ -179,9 +179,20 @@ export class UsersService {
     const raw = file.buffer.toString('utf-8');
     const csv = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
 
+    const firstLine = csv.split('\n')[0];
+    const delimiterCounts = { ',': 0, ';': 0, '\t': 0 };
+    for (const ch of firstLine) {
+      if (ch in delimiterCounts)
+        delimiterCounts[ch as keyof typeof delimiterCounts]++;
+    }
+    const delimiter = (
+      Object.entries(delimiterCounts).sort((a, b) => b[1] - a[1])[0][0]
+    );
+
     const { data: rows, errors } = Papa.parse<Record<string, string>>(csv, {
       header: true,
       skipEmptyLines: true,
+      delimiter,
     });
 
     if (errors.length > 0 && rows.length === 0) {
@@ -200,7 +211,10 @@ export class UsersService {
     const headers = Object.keys(rows[0]);
     const colMap = new Map<string, string>();
     for (const h of headers) {
-      const field = STUDENT_COLUMN_MAP[normalizeStudentKey(h)];
+      const normalized = normalizeStudentKey(h);
+      const field =
+        STUDENT_COLUMN_MAP[normalized] ??
+        STUDENT_COLUMN_MAP[normalized.replace(/^\d+/, '')];
       if (field) colMap.set(h, field);
     }
 
@@ -256,19 +270,24 @@ export class UsersService {
         continue;
       }
 
-      // Resolve promo
+      // Resolve promo — auto-create if not found
       let promoId: number | undefined;
       const promoName = get('promoName');
       if (promoName) {
-        const found = promoByName.get(normalizeStudentKey(promoName));
+        const key = normalizeStudentKey(promoName);
+        let found = promoByName.get(key);
         if (!found) {
-          result.errors.push({
-            row: rowNum,
-            email,
-            message: `Promo introuvable ou accès refusé : "${promoName}"`,
+          const newPromo = await this.prisma.promo.create({
+            data: {
+              name: promoName,
+              adminPromos: {
+                create: { adminId: requesterId, role: AdminPromoRole.OWNER },
+              },
+            },
+            select: { id: true, name: true },
           });
-          result.skipped++;
-          continue;
+          found = newPromo;
+          promoByName.set(key, found);
         }
         promoId = found.id;
       }

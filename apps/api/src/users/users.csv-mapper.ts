@@ -20,6 +20,7 @@ export const STUDENT_COLUMN_MAP: Record<string, StudentField> = {
   email: 'email',
   courriel: 'email',
   mail: 'email',
+  mailynov: 'email',
   emailetudiant: 'email',
   emaileleve: 'email',
   prenom: 'first_name',
@@ -40,6 +41,7 @@ export const STUDENT_COLUMN_MAP: Record<string, StudentField> = {
   groupe: 'promoName',
   class: 'promoName',
   formation: 'promoName',
+  programme: 'promoName',
 };
 
 export function normalizeStudentKey(s: string): string {

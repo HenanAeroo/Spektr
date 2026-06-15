@@ -185,9 +185,9 @@ export class UsersService {
       if (ch in delimiterCounts)
         delimiterCounts[ch as keyof typeof delimiterCounts]++;
     }
-    const delimiter = (
-      Object.entries(delimiterCounts).sort((a, b) => b[1] - a[1])[0][0]
-    );
+    const delimiter = Object.entries(delimiterCounts).sort(
+      (a, b) => b[1] - a[1],
+    )[0][0];
 
     const { data: rows, errors } = Papa.parse<Record<string, string>>(csv, {
       header: true,

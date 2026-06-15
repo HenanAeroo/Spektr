@@ -90,6 +90,7 @@ describe('ApplicationsService', () => {
 
       expect(mockPrisma.application.findMany).toHaveBeenCalledWith({
         where: { userId: 7 },
+        orderBy: { created_at: 'asc' },
       });
     });
   });

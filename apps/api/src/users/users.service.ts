@@ -189,9 +189,11 @@ export class UsersService {
     requesterId: number,
     requesterRole: Role,
   ): Promise<ImportStudentResult> {
+    // Get the Byte Order Mark, invisible char at the beginning of our file
     const raw = file.buffer.toString('utf-8');
     const csv = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
 
+    // Get the first line of the file + checks the separator
     const firstLine = csv.split('\n')[0];
     const delimiterCounts = { ',': 0, ';': 0, '\t': 0 };
     for (const ch of firstLine) {
@@ -202,12 +204,14 @@ export class UsersService {
       (a, b) => b[1] - a[1],
     )[0][0];
 
+    // Parse the file with header and skip the empty lines
     const { data: rows, errors } = Papa.parse<Record<string, string>>(csv, {
       header: true,
       skipEmptyLines: true,
       delimiter,
     });
 
+    // Errors check : if the csv if invalid or if the max student size is exceed (500 rows)
     if (errors.length > 0 && rows.length === 0) {
       throw new BadRequestException('Fichier CSV invalide ou mal formaté');
     }
@@ -218,12 +222,14 @@ export class UsersService {
       );
     }
 
+    // If the file contains no rows : return the empty result
     if (rows.length === 0) return { imported: 0, skipped: 0, errors: [] };
 
     // Build column mapping
     const headers = Object.keys(rows[0]);
     const colMap = new Map<string, string>();
     for (const h of headers) {
+      // normalizeStudentKey is in mapper : it normalizes with the same format
       const normalized = normalizeStudentKey(h);
       const field =
         STUDENT_COLUMN_MAP[normalized] ??
@@ -248,6 +254,7 @@ export class UsersService {
       accessiblePromos.map((p) => [normalizeStudentKey(p.name), p]),
     );
 
+    // Default constants
     const result: ImportStudentResult = { imported: 0, skipped: 0, errors: [] };
     const frontUrl = this.config.get<string>('FRONT_URL');
 
@@ -262,6 +269,7 @@ export class UsersService {
         return '';
       };
 
+      // Checks if the email associate to the student exists
       const email = get('email').toLowerCase();
       if (!email) {
         result.errors.push({ row: rowNum, message: 'Email manquant' });

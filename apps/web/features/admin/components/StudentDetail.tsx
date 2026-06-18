@@ -13,6 +13,13 @@ import { Card } from "./Card";
 import { StatusBadge } from "./StatusBadge";
 import { fetchCommunications } from "@/features/users/actions/fetchCommunications";
 import { Mail, MessageCircleMore } from "lucide-react";
+import { Communications } from "@/shared/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 
 export function StudentDetail({
   userId,
@@ -28,6 +35,7 @@ export function StudentDetail({
   >("profile");
   const [feedbackScore, setFeedbackScore] = useState<number | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
+  const [selectedComm, setSelectedComm] = useState<Communications | null>(null);
 
   const {
     mutate: submitFeedback,
@@ -615,44 +623,100 @@ export function StudentDetail({
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
-              {communications.map((comm) => {
-                return (
+            <div>
+              <div className="flex flex-col gap-2">
+                {communications.map((comm) => (
                   <div
                     key={comm.id}
-                    className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border"
+                    onClick={() => setSelectedComm(comm)}
+                    className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border cursor-pointer hover:bg-spektr-border/30 transition-colors"
                   >
-                    <div>
+                    <div className="flex-shrink-0 text-spektr-teal">
                       {comm.type === "EMAIL" ? (
-                        <div>
-                          <Mail />
-                        </div>
+                        <Mail size={18} />
                       ) : (
-                        <div>
-                          <MessageCircleMore />
-                        </div>
+                        <MessageCircleMore size={18} />
                       )}
                     </div>
-                    <div>
-                      {comm.sender.first_name ?? ""}{" "}
-                      {comm.sender.last_name ?? ""}{" "}
-                      {new Date(comm.created_at).toLocaleDateString("fr-FR")}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
+                        {comm.type === "EMAIL"
+                          ? (comm.subject ?? "(sans objet)")
+                          : `Feedback ${comm.score !== null ? smileys[comm.score] : "?"}`}
+                      </div>
+                      <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
+                        {comm.sender.first_name} {comm.sender.last_name} ·{" "}
+                        {new Date(comm.created_at).toLocaleDateString("fr-FR")}
+                      </div>
                     </div>
-                    {comm.type === "EMAIL" ? (
-                      <div>{comm.subject}</div>
-                    ) : (
-                      <div>
-                        {comm.score === null ? (
-                          <div>?</div>
-                        ) : (
-                          smileys[comm.score!]
-                        )}
+                    {comm.body && (
+                      <div className="font-source-sans text-[12px] text-gray-400 truncate max-w-[200px]">
                         {comm.body}
                       </div>
                     )}
                   </div>
-                );
-              })}
+                ))}
+              </div>
+
+              <Dialog
+                open={selectedComm !== null}
+                onOpenChange={(open) => {
+                  if (!open) setSelectedComm(null);
+                }}
+              >
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="font-montserrat text-[15px]">
+                      {selectedComm?.type === "EMAIL" ? (
+                        <span className="flex items-center gap-2">
+                          <Mail size={16} className="text-spektr-teal" />
+                          {selectedComm.subject ?? "(sans objet)"}
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <MessageCircleMore
+                            size={16}
+                            className="text-spektr-teal"
+                          />
+                          Feedback{" "}
+                          {selectedComm?.score !== null &&
+                          selectedComm?.score !== undefined
+                            ? `${smileys[selectedComm.score]} ${smileyLabels[selectedComm.score]}`
+                            : ""}
+                        </span>
+                      )}
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <div className="font-source-sans text-[12px] text-gray-400 mb-3">
+                    De :{" "}
+                    <span className="font-semibold text-spektr-dark">
+                      {selectedComm?.sender.first_name}{" "}
+                      {selectedComm?.sender.last_name}
+                    </span>{" "}
+                    ·{" "}
+                    {selectedComm &&
+                      new Date(selectedComm.created_at).toLocaleDateString(
+                        "fr-FR",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        },
+                      )}
+                  </div>
+
+                  {selectedComm?.body ? (
+                    <div className="font-source-sans text-[13px] text-spektr-dark whitespace-pre-wrap leading-relaxed">
+                      {selectedComm.body}
+                    </div>
+                  ) : (
+                    <div className="text-gray-400 text-[13px] italic">
+                      (aucun contenu)
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </div>
           )}
         </Card>

@@ -9,6 +9,12 @@ import { getDocumentUrl } from "@/features/documents/actions/getDocumentUrl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Document, DocumentType } from "@/features/documents/types";
 import ConfirmDialog from "@/shared/components/ConfirmDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} o`;
@@ -65,7 +71,9 @@ const DocumentsPage = () => {
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [uploadDocType, setUploadDocType] = useState<DocumentType>("OTHER");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingDelete, setPendingDelete] = useState<
     { type: "folder"; id: number } | { type: "document"; id: number } | null
   >(null);
@@ -131,29 +139,37 @@ const DocumentsPage = () => {
       setError(err.message ?? "Échec de l'import du fichier."),
   });
 
-  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
-
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError(
-        "Format non supporté. Utilisez PDF, Word ou image (JPG, PNG, WebP).",
-      );
-      e.target.value = "";
+      setError("Format non supporté. Utilisez PDF, Word ou image (JPG, PNG, WebP).");
       return;
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
       setError(`Fichier trop volumineux (max ${MAX_SIZE_MB} Mo).`);
-      e.target.value = "";
       return;
     }
+    setPendingFile(file);
+  }
 
+  function handleImportConfirm() {
+    if (!pendingFile) return;
     upload({
-      file,
+      file: pendingFile,
       folderId: selectedFolderId ?? undefined,
       docType: uploadDocType,
     });
-    e.target.value = "";
+    setShowImportDialog(false);
+    setPendingFile(null);
+    setUploadDocType("OTHER");
+  }
+
+  function handleImportDialogClose() {
+    setShowImportDialog(false);
+    setPendingFile(null);
+    setUploadDocType("OTHER");
   }
 
   async function handleDownload(doc: Document) {
@@ -214,32 +230,9 @@ const DocumentsPage = () => {
           >
             + Nouveau dossier
           </button>
-          <div className="flex items-center gap-2 bg-white border border-spektr-border rounded-lg px-2 py-1">
-            <span className="font-montserrat font-semibold text-[11px] text-gray-400 whitespace-nowrap">
-              Type :
-            </span>
-            {(
-              [
-                { value: "CV", label: "CV" },
-                { value: "LM", label: "LM" },
-                { value: "OTHER", label: "Autre" },
-              ] as { value: DocumentType; label: string }[]
-            ).map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => setUploadDocType(value)}
-                className={[
-                  "px-3 py-1.5 rounded-[5px] border-none font-montserrat font-bold text-[11px] cursor-pointer transition-all",
-                  uploadDocType === value
-                    ? "bg-spektr-teal text-white"
-                    : "bg-transparent text-gray-400",
-                ].join(" ")}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <label
+          <button
+            onClick={() => setShowImportDialog(true)}
+            disabled={uploading}
             className={[
               "px-4 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white",
               uploading
@@ -248,14 +241,7 @@ const DocumentsPage = () => {
             ].join(" ")}
           >
             {uploading ? "Envoi…" : "⬆ Importer"}
-            <input
-              type="file"
-              className="hidden"
-              onChange={handleUpload}
-              disabled={uploading}
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
-            />
-          </label>
+          </button>
         </div>
       </div>
 
@@ -500,6 +486,118 @@ const DocumentsPage = () => {
         description="Cette action est irréversible."
         onConfirm={handleDelete}
       />
+
+      <Dialog open={showImportDialog} onOpenChange={(open) => { if (!open) handleImportDialogClose(); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-montserrat text-[16px] text-spektr-dark">
+              Importer un document
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Type selection */}
+          <div>
+            <p className="font-montserrat font-semibold text-[11px] text-gray-400 uppercase tracking-[0.5px] mb-2.5">
+              Type de document
+            </p>
+            <div className="grid grid-cols-3 gap-2.5">
+              {(
+                [
+                  { value: "CV", label: "CV", icon: "📄", desc: "Curriculum vitæ" },
+                  { value: "LM", label: "Lettre de motivation", icon: "✉️", desc: "Lettre de motivation" },
+                  { value: "OTHER", label: "Autre", icon: "📁", desc: "Autre document" },
+                ] as { value: DocumentType; label: string; icon: string; desc: string }[]
+              ).map(({ value, icon, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setUploadDocType(value)}
+                  className={[
+                    "flex flex-col items-center gap-1.5 py-3.5 px-2 rounded-xl border-2 cursor-pointer transition-all bg-white",
+                    uploadDocType === value
+                      ? "border-spektr-teal bg-spektr-teal/5"
+                      : "border-spektr-border hover:border-spektr-teal/40",
+                  ].join(" ")}
+                >
+                  <span className="text-[22px]">{icon}</span>
+                  <span
+                    className={[
+                      "font-montserrat font-bold text-[11px] text-center leading-tight",
+                      uploadDocType === value ? "text-spektr-teal" : "text-spektr-dark",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* File zone */}
+          <div>
+            <p className="font-montserrat font-semibold text-[11px] text-gray-400 uppercase tracking-[0.5px] mb-2.5">
+              Fichier
+            </p>
+            <label
+              className={[
+                "flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl px-4 py-6 cursor-pointer transition-colors",
+                pendingFile
+                  ? "border-spektr-teal bg-spektr-teal/5"
+                  : "border-spektr-border hover:border-spektr-teal/50 bg-white",
+              ].join(" ")}
+            >
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp"
+                onChange={handleFileSelect}
+              />
+              {pendingFile ? (
+                <>
+                  <span className="text-[28px]">📄</span>
+                  <span className="font-montserrat font-semibold text-[13px] text-spektr-dark text-center break-all">
+                    {pendingFile.name}
+                  </span>
+                  <span className="font-source-sans text-[11px] text-gray-400">
+                    {formatSize(pendingFile.size)} · Cliquer pour changer
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-[28px] opacity-40">⬆</span>
+                  <span className="font-montserrat font-semibold text-[13px] text-gray-500">
+                    Cliquer pour sélectionner
+                  </span>
+                  <span className="font-source-sans text-[11px] text-gray-400">
+                    PDF, Word, image · Max 10 Mo
+                  </span>
+                </>
+              )}
+            </label>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={handleImportDialogClose}
+              className="flex-1 py-2.5 rounded-lg border-[1.5px] border-spektr-border bg-white font-montserrat font-bold text-[13px] text-gray-500 cursor-pointer"
+            >
+              Annuler
+            </button>
+            <button
+              disabled={!pendingFile || uploading}
+              onClick={handleImportConfirm}
+              className={[
+                "flex-1 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white",
+                pendingFile && !uploading
+                  ? "bg-spektr-teal cursor-pointer"
+                  : "bg-spektr-teal/40 cursor-not-allowed",
+              ].join(" ")}
+            >
+              {uploading ? "Envoi…" : "Importer"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -10,6 +10,7 @@ import { UsersService } from './users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { ConfigService } from '@nestjs/config';
+import { CommunicationsService } from '../communications/communications.service';
 import bcrypt from 'bcrypt';
 import { Provider, Role } from '../../prisma/generated/prisma/client';
 
@@ -49,6 +50,7 @@ describe('UsersService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: MailService, useValue: mockMailService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: CommunicationsService, useValue: { create: jest.fn().mockResolvedValue({}) } },
       ],
     }).compile();
 
@@ -143,7 +145,7 @@ describe('UsersService', () => {
       mockMailService.send.mockResolvedValue(undefined);
 
       const dto = { userIds: [1, 2], subject: 'Objet', body: '<p>Bonjour</p>' };
-      await service.bulkEmail(dto);
+      await service.bulkEmail(dto, 1);
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
         where: { id: { in: [1, 2] } },
@@ -168,7 +170,7 @@ describe('UsersService', () => {
         userIds: [99],
         subject: 'X',
         body: '<p>Y</p>',
-      });
+      }, 1);
 
       expect(mockMailService.send).not.toHaveBeenCalled();
     });
@@ -183,7 +185,7 @@ describe('UsersService', () => {
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(new Error());
 
-      const result = await service.bulkEmail(dto);
+      const result = await service.bulkEmail(dto, 1);
 
       expect(result).toEqual({ sent: 1, failed: 1 });
     });
@@ -196,7 +198,7 @@ describe('UsersService', () => {
       mockPrisma.user.findMany.mockResolvedValue([user1, user2]);
       mockMailService.send.mockRejectedValue(new Error());
 
-      await expect(service.bulkEmail(dto)).rejects.toThrow(
+      await expect(service.bulkEmail(dto, 1)).rejects.toThrow(
         InternalServerErrorException,
       );
     });

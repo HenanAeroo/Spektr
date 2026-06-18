@@ -7,6 +7,8 @@ const mockDocumentsService = {
   findAll: jest.fn(),
   getDownloadUrl: jest.fn(),
   remove: jest.fn(),
+  review: jest.fn(),
+  getPendingReviews: jest.fn(),
 };
 
 describe('DocumentsController', () => {
@@ -33,12 +35,13 @@ describe('DocumentsController', () => {
       const file = { originalname: 'cv.pdf' } as any;
       mockDocumentsService.upload.mockResolvedValue({ id: 1 });
 
-      await controller.uploadFile(file, '3', student);
+      await controller.uploadFile(file, '3', undefined, student);
 
       expect(mockDocumentsService.upload).toHaveBeenCalledWith(
         file,
         3,
         student.id,
+        undefined,
       );
     });
 
@@ -46,12 +49,13 @@ describe('DocumentsController', () => {
       const file = { originalname: 'cv.pdf' } as any;
       mockDocumentsService.upload.mockResolvedValue({ id: 1 });
 
-      await controller.uploadFile(file, undefined, student);
+      await controller.uploadFile(file, undefined, undefined, student);
 
       expect(mockDocumentsService.upload).toHaveBeenCalledWith(
         file,
         undefined,
         student.id,
+        undefined,
       );
     });
   });

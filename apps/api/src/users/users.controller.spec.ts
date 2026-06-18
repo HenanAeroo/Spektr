@@ -3,6 +3,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { CommunicationsService } from '../communications/communications.service';
 import { Role } from '../../prisma/generated/prisma/client';
 
 const mockUsersService = {
@@ -19,6 +20,10 @@ const mockNotificationsService = {
   sendFeedbackEmail: jest.fn(),
 };
 
+const mockCommunicationsService = {
+  create: jest.fn().mockResolvedValue({}),
+};
+
 describe('UsersController', () => {
   let controller: UsersController;
 
@@ -28,6 +33,7 @@ describe('UsersController', () => {
       providers: [
         { provide: UsersService, useValue: mockUsersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: CommunicationsService, useValue: mockCommunicationsService },
       ],
     }).compile();
 
@@ -161,9 +167,9 @@ describe('UsersController', () => {
       const dto = { userIds: [1, 2], subject: 'Objet', body: 'Bonjour' } as any;
       mockUsersService.bulkEmail.mockResolvedValue(undefined);
 
-      await controller.bulkEmail(dto);
+      await controller.bulkEmail(dto, adminUser);
 
-      expect(mockUsersService.bulkEmail).toHaveBeenCalledWith(dto);
+      expect(mockUsersService.bulkEmail).toHaveBeenCalledWith(dto, adminUser.id);
     });
   });
 
@@ -174,7 +180,7 @@ describe('UsersController', () => {
       const result = await controller.sendFeedback(5, {
         score: 4,
         comment: 'Bien',
-      });
+      }, adminUser);
 
       expect(mockNotificationsService.sendFeedbackEmail).toHaveBeenCalledWith(
         5,

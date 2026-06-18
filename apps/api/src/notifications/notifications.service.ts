@@ -256,6 +256,63 @@ export class NotificationsService {
       return { subject: "Alerte d'activité !", html };
     }
 
+    if (type === NotifType.DOCUMENT_REVIEW) {
+      const docName = escapeHtml(
+        typeof payload.documentName === 'string' ? payload.documentName : 'document',
+      );
+      const status = payload.status as string;
+      const docType = payload.docType as string;
+      const docTypeLabel =
+        docType === 'CV' ? 'CV' : docType === 'LM' ? 'lettre de motivation' : 'document';
+      const isValidated = status === 'VALIDATED';
+
+      const color = isValidated ? '#16a34a' : '#ea580c';
+      const emoji = isValidated ? '✅' : '⚠️';
+      const statusLabel = isValidated ? 'Validé' : 'À corriger';
+      const message = isValidated
+        ? `Votre ${docTypeLabel} a été examiné et <strong style="color:${color};">validé</strong> par votre chargé RE. Bravo !`
+        : `Votre ${docTypeLabel} a été examiné et nécessite des <strong style="color:${color};">corrections</strong>. Connectez-vous à Spektr pour en savoir plus.`;
+
+      const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Segoe UI',Arial,sans-serif;">
+  <div style="max-width:580px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+    <div style="background:#1d1d1e;padding:24px 32px;">
+      <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;">
+        Spek<span style="color:#23b2a4;">tr</span>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;letter-spacing:2px;margin-top:2px;">YNOV CAMPUS RENNES</div>
+    </div>
+    <div style="padding:32px;">
+      <div style="font-size:24px;margin-bottom:8px;">${emoji} Avis sur votre ${docTypeLabel}</div>
+      <h1 style="margin:0 0 6px;font-size:20px;color:#1d1d1e;">Bonjour ${name},</h1>
+      <p style="margin:0 0 24px;font-size:14px;color:#6b7280;line-height:1.6;">${message}</p>
+      <div style="background:#f9fafb;border:1px solid #e8e8e8;border-left:3px solid ${color};border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Document concerné</div>
+        <div style="font-size:14px;color:#1d1d1e;font-weight:600;">${docName}</div>
+        <div style="margin-top:8px;display:inline-block;background:${isValidated ? '#f0fdf4' : '#fff7ed'};border:1px solid ${isValidated ? '#bbf7d0' : '#fed7aa'};border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;color:${color};">${emoji} ${statusLabel}</div>
+      </div>
+      <p style="font-size:13px;color:#6b7280;line-height:1.6;margin:0;">
+        Connectez-vous à Spektr pour consulter vos documents et mettre à jour votre dossier.
+      </p>
+    </div>
+    <div style="padding:16px 32px;background:#f9fafb;border-top:1px solid #e8e8e8;text-align:center;">
+      <p style="margin:0;font-size:11px;color:#9ca3af;">
+        Ce message a été envoyé automatiquement par Spektr · Ynov Campus Rennes
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      return {
+        subject: `${emoji} Votre ${docTypeLabel} — ${statusLabel}`,
+        html,
+      };
+    }
+
     return {
       subject: 'Nouvelle notification — Spektr',
       html: `<p>Bonjour ${name},<br>Vous avez reçu une nouvelle notification sur Spektr.</p>`,

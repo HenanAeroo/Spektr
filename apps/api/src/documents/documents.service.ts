@@ -5,7 +5,11 @@ import 'multer';
 import { extname } from 'path';
 import { randomUUID } from 'crypto';
 import { NotificationsService } from '../notifications/notifications.service';
-import { NotifType } from '../../prisma/generated/prisma/client';
+import {
+  DocumentType,
+  NotifType,
+} from '../../prisma/generated/prisma/client';
+import { ReviewDocumentDto } from './dto/review-document.dto';
 
 @Injectable()
 export class DocumentsService {
@@ -19,6 +23,7 @@ export class DocumentsService {
     file: Express.Multer.File,
     folderId: number | undefined,
     userId: number,
+    docType?: DocumentType,
   ) {
     const ext = extname(file.originalname)
       .replace(/[^a-zA-Z0-9.]/g, '')
@@ -39,6 +44,7 @@ export class DocumentsService {
         storageKey,
         folderId,
         userId,
+        ...(docType ? { docType } : {}),
       },
     });
 
@@ -78,5 +84,54 @@ export class DocumentsService {
 
     await this.prisma.document.delete({ where: { id } });
     await this.minio.deleteFile(doc.storageKey);
+  }
+
+  async review(id: number, dto: ReviewDocumentDto) {
+    const doc = await this.prisma.document.update({
+      where: { id },
+      data: {
+        status: dto.status,
+        ...(dto.docType ? { docType: dto.docType } : {}),
+      },
+      include: {
+        user: { select: { id: true, first_name: true, last_name: true } },
+      },
+    });
+
+    try {
+      await this.notificationsService.createAndEmit(
+        doc.userId,
+        NotifType.DOCUMENT_REVIEW,
+        {
+          documentName: doc.name,
+          status: dto.status,
+          docType: doc.docType,
+        },
+      );
+    } catch {
+      // notification failure must not fail the review
+    }
+
+    return doc;
+  }
+
+  getPendingReviews() {
+    return this.prisma.document.findMany({
+      where: {
+        docType: { in: ['CV', 'LM'] },
+        status: { in: ['PENDING', 'TO_CORRECT'] },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            first_name: true,
+            last_name: true,
+            promoId: true,
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+    });
   }
 }

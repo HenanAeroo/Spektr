@@ -143,13 +143,15 @@ model Document {
   mimeType    String
   size        Int
   storageKey  String
+  status      DocumentStatus @default(PENDING)
+  docType     DocumentType   @default(OTHER)
 
   folderId Int?
   folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   created_at DateTime @default(now())
 }
 
@@ -158,6 +160,19 @@ enum NotifType {
   APPLICATION_STATUS
   OBJECTIVE_CREATED
   INACTIVITY_ALERT
+  DOCUMENT_REVIEW
+}
+
+enum DocumentStatus {
+  PENDING
+  VALIDATED
+  TO_CORRECT
+}
+
+enum DocumentType {
+  CV
+  LM
+  OTHER
 }
 
 model Notification {

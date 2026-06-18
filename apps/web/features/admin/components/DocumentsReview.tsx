@@ -52,29 +52,55 @@ function ReviewCard({
           </span>
         </div>
       </div>
-      <div className="flex flex-col gap-1.5 flex-shrink-0">
-        <button
-          disabled={pending || doc.status === "VALIDATED"}
-          onClick={() => onReview(doc.id, "VALIDATED")}
-          className={[
-            "border-none rounded-md px-3 py-1.5 text-[11px] font-bold whitespace-nowrap",
-            "bg-green-50 text-green-700 cursor-pointer hover:bg-green-100",
-          ].join(" ")}
-        >
-          ✅ Valider
-        </button>
-        <button
-          disabled={pending || doc.status === "TO_CORRECT"}
-          onClick={() => onReview(doc.id, "TO_CORRECT")}
-          className={[
-            "border-none rounded-md px-3 py-1.5 text-[11px] font-bold whitespace-nowrap",
-            doc.status === "TO_CORRECT"
-              ? "bg-amber-100 text-amber-700 cursor-default"
-              : "bg-amber-50 text-amber-700 cursor-pointer hover:bg-amber-100",
-          ].join(" ")}
-        >
-          ⚠️ À corriger
-        </button>
+      <div className="flex flex-col gap-2 flex-shrink-0">
+        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            className="sr-only"
+            checked={doc.status === "VALIDATED"}
+            disabled={pending || doc.status === "VALIDATED"}
+            onChange={() => onReview(doc.id, "VALIDATED")}
+          />
+          <div
+            className={[
+              "w-[15px] h-[15px] rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+              doc.status === "VALIDATED"
+                ? "bg-green-500 border-green-500"
+                : "border-gray-300 bg-white",
+            ].join(" ")}
+          >
+            {doc.status === "VALIDATED" && (
+              <span className="text-white text-[8px] font-black leading-none">✓</span>
+            )}
+          </div>
+          <span className="font-source-sans text-[12px] font-semibold text-gray-600 whitespace-nowrap">
+            Validé
+          </span>
+        </label>
+        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            className="sr-only"
+            checked={doc.status === "TO_CORRECT"}
+            disabled={pending || doc.status === "TO_CORRECT"}
+            onChange={() => onReview(doc.id, "TO_CORRECT")}
+          />
+          <div
+            className={[
+              "w-[15px] h-[15px] rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+              doc.status === "TO_CORRECT"
+                ? "bg-amber-500 border-amber-500"
+                : "border-gray-300 bg-white",
+            ].join(" ")}
+          >
+            {doc.status === "TO_CORRECT" && (
+              <span className="text-white text-[8px] font-black leading-none">✓</span>
+            )}
+          </div>
+          <span className="font-source-sans text-[12px] font-semibold text-gray-600 whitespace-nowrap">
+            À corriger
+          </span>
+        </label>
       </div>
     </div>
   );

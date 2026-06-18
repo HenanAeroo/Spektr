@@ -629,46 +629,74 @@ export function StudentDetail({
                           : "—"}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <div className="flex items-center gap-3 flex-shrink-0">
                       {isReviewable && (
-                        <>
-                          <button
-                            disabled={reviewPending || doc.status === "VALIDATED"}
-                            onClick={() =>
-                              submitReview({
-                                id: doc.id,
-                                status: "VALIDATED",
-                                docType: doc.docType as DocumentType,
-                              })
-                            }
-                            className={[
-                              "border-none rounded-md px-2.5 py-1.5 text-[11px] font-semibold whitespace-nowrap",
-                              doc.status === "VALIDATED"
-                                ? "bg-green-100 text-green-600 cursor-default"
-                                : "bg-green-50 text-green-700 cursor-pointer hover:bg-green-100",
-                            ].join(" ")}
-                          >
-                            ✅ Valider
-                          </button>
-                          <button
-                            disabled={reviewPending || doc.status === "TO_CORRECT"}
-                            onClick={() =>
-                              submitReview({
-                                id: doc.id,
-                                status: "TO_CORRECT",
-                                docType: doc.docType as DocumentType,
-                              })
-                            }
-                            className={[
-                              "border-none rounded-md px-2.5 py-1.5 text-[11px] font-semibold whitespace-nowrap",
-                              doc.status === "TO_CORRECT"
-                                ? "bg-amber-100 text-amber-700 cursor-default"
-                                : "bg-amber-50 text-amber-700 cursor-pointer hover:bg-amber-100",
-                            ].join(" ")}
-                          >
-                            ⚠️ À corriger
-                          </button>
-                        </>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              className="sr-only"
+                              checked={doc.status === "VALIDATED"}
+                              disabled={reviewPending || doc.status === "VALIDATED"}
+                              onChange={() =>
+                                submitReview({
+                                  id: doc.id,
+                                  status: "VALIDATED",
+                                  docType: doc.docType as DocumentType,
+                                })
+                              }
+                            />
+                            <div
+                              className={[
+                                "w-[15px] h-[15px] rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+                                doc.status === "VALIDATED"
+                                  ? "bg-green-500 border-green-500"
+                                  : "border-gray-300 bg-white",
+                              ].join(" ")}
+                            >
+                              {doc.status === "VALIDATED" && (
+                                <span className="text-white text-[8px] font-black leading-none">
+                                  ✓
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-source-sans text-[12px] font-semibold text-gray-600 whitespace-nowrap">
+                              Validé
+                            </span>
+                          </label>
+                          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              className="sr-only"
+                              checked={doc.status === "TO_CORRECT"}
+                              disabled={reviewPending || doc.status === "TO_CORRECT"}
+                              onChange={() =>
+                                submitReview({
+                                  id: doc.id,
+                                  status: "TO_CORRECT",
+                                  docType: doc.docType as DocumentType,
+                                })
+                              }
+                            />
+                            <div
+                              className={[
+                                "w-[15px] h-[15px] rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors",
+                                doc.status === "TO_CORRECT"
+                                  ? "bg-amber-500 border-amber-500"
+                                  : "border-gray-300 bg-white",
+                              ].join(" ")}
+                            >
+                              {doc.status === "TO_CORRECT" && (
+                                <span className="text-white text-[8px] font-black leading-none">
+                                  ✓
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-source-sans text-[12px] font-semibold text-gray-600 whitespace-nowrap">
+                              À corriger
+                            </span>
+                          </label>
+                        </div>
                       )}
                       <button
                         onClick={async () => {

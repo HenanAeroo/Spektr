@@ -214,7 +214,10 @@ const DocumentsPage = () => {
           >
             + Nouveau dossier
           </button>
-          <div className="flex items-center gap-1 bg-white border border-spektr-border rounded-lg p-1">
+          <div className="flex items-center gap-2 bg-white border border-spektr-border rounded-lg px-2 py-1">
+            <span className="font-montserrat font-semibold text-[11px] text-gray-400 whitespace-nowrap">
+              Type :
+            </span>
             {(
               [
                 { value: "CV", label: "CV" },

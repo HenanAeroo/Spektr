@@ -1,4 +1,8 @@
-export type NotifType = "DOCUMENT_ADDED" | "APPLICATION_STATUS" | "OBJECTIVE_CREATED";
+export type NotifType =
+  | "DOCUMENT_ADDED"
+  | "APPLICATION_STATUS"
+  | "OBJECTIVE_CREATED"
+  | "DOCUMENT_REVIEW";
 
 export type Notification = {
   id: number;
@@ -12,4 +16,5 @@ export const NOTIF_LABELS: Record<NotifType, string> = {
   DOCUMENT_ADDED: "Nouveau document ajouté",
   APPLICATION_STATUS: "Statut de candidature mis à jour",
   OBJECTIVE_CREATED: "Nouvel objectif créé",
+  DOCUMENT_REVIEW: "Avis sur votre document",
 };

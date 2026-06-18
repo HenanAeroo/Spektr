@@ -169,7 +169,11 @@ function NotificationBell() {
                       ? "🎯"
                       : n.type === "DOCUMENT_ADDED"
                         ? "📄"
-                        : "📋"}
+                        : n.type === "DOCUMENT_REVIEW"
+                          ? n.payload?.status === "VALIDATED"
+                            ? "✅"
+                            : "⚠️"
+                          : "📋"}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div
@@ -180,7 +184,11 @@ function NotificationBell() {
                           : "text-spektr-dark font-semibold",
                       ].join(" ")}
                     >
-                      {NOTIF_LABELS[n.type] ?? n.type}
+                      {n.type === "DOCUMENT_REVIEW"
+                        ? n.payload?.status === "VALIDATED"
+                          ? `${n.payload?.docType === "CV" ? "CV" : n.payload?.docType === "LM" ? "Lettre de motivation" : "Document"} validé ✅`
+                          : `${n.payload?.docType === "CV" ? "CV" : n.payload?.docType === "LM" ? "Lettre de motivation" : "Document"} à corriger ⚠️`
+                        : NOTIF_LABELS[n.type] ?? n.type}
                       {n.type === "OBJECTIVE_CREATED" &&
                         typeof n.payload?.title === "string" && (
                           <span className="text-spektr-teal font-bold">

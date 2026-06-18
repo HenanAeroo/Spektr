@@ -7,7 +7,7 @@ import { deleteDocument } from "@/features/documents/actions/deleteDocument";
 import { uploadDocument } from "@/features/documents/actions/uploadDocument";
 import { getDocumentUrl } from "@/features/documents/actions/getDocumentUrl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Document } from "@/features/documents/types";
+import { Document, DocumentType } from "@/features/documents/types";
 import ConfirmDialog from "@/shared/components/ConfirmDialog";
 
 function formatSize(bytes: number): string {
@@ -65,6 +65,7 @@ const DocumentsPage = () => {
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [uploadDocType, setUploadDocType] = useState<DocumentType>("OTHER");
   const [pendingDelete, setPendingDelete] = useState<
     { type: "folder"; id: number } | { type: "document"; id: number } | null
   >(null);
@@ -116,8 +117,15 @@ const DocumentsPage = () => {
   });
 
   const { mutate: upload, isPending: uploading } = useMutation({
-    mutationFn: ({ file, folderId }: { file: File; folderId?: number }) =>
-      uploadDocument(file, folderId),
+    mutationFn: ({
+      file,
+      folderId,
+      docType,
+    }: {
+      file: File;
+      folderId?: number;
+      docType: DocumentType;
+    }) => uploadDocument(file, folderId, docType),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["documents"] }),
     onError: (err: Error) =>
       setError(err.message ?? "Échec de l'import du fichier."),
@@ -140,7 +148,11 @@ const DocumentsPage = () => {
       return;
     }
 
-    upload({ file, folderId: selectedFolderId ?? undefined });
+    upload({
+      file,
+      folderId: selectedFolderId ?? undefined,
+      docType: uploadDocType,
+    });
     e.target.value = "";
   }
 
@@ -195,13 +207,35 @@ const DocumentsPage = () => {
             Gérez vos CV, lettres de motivation et certifications
           </p>
         </div>
-        <div className="flex gap-2.5">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => setShowNewFolder(true)}
             className="px-4 py-2.5 rounded-lg border-[1.5px] border-spektr-teal bg-transparent text-spektr-teal font-montserrat font-bold text-[13px] cursor-pointer"
           >
             + Nouveau dossier
           </button>
+          <div className="flex items-center gap-1 bg-white border border-spektr-border rounded-lg p-1">
+            {(
+              [
+                { value: "CV", label: "CV" },
+                { value: "LM", label: "LM" },
+                { value: "OTHER", label: "Autre" },
+              ] as { value: DocumentType; label: string }[]
+            ).map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => setUploadDocType(value)}
+                className={[
+                  "px-3 py-1.5 rounded-[5px] border-none font-montserrat font-bold text-[11px] cursor-pointer transition-all",
+                  uploadDocType === value
+                    ? "bg-spektr-teal text-white"
+                    : "bg-transparent text-gray-400",
+                ].join(" ")}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <label
             className={[
               "px-4 py-2.5 rounded-lg border-none font-montserrat font-bold text-[13px] text-white",
@@ -210,7 +244,7 @@ const DocumentsPage = () => {
                 : "bg-spektr-teal cursor-pointer",
             ].join(" ")}
           >
-            {uploading ? "Envoi…" : "⬆ Importer un fichier"}
+            {uploading ? "Envoi…" : "⬆ Importer"}
             <input
               type="file"
               className="hidden"
@@ -399,8 +433,25 @@ const DocumentsPage = () => {
                     <FileIcon mimeType={doc.mimeType} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
-                      {doc.name}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
+                        {doc.name}
+                      </span>
+                      {doc.docType !== "OTHER" && (
+                        <span className="px-1.5 py-0.5 rounded bg-spektr-teal/10 text-spektr-teal text-[10px] font-bold flex-shrink-0">
+                          {doc.docType}
+                        </span>
+                      )}
+                      {doc.status === "VALIDATED" && (
+                        <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-600 text-[10px] font-bold flex-shrink-0">
+                          ✅ Validé
+                        </span>
+                      )}
+                      {doc.status === "TO_CORRECT" && (
+                        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-bold flex-shrink-0">
+                          ⚠️ À corriger
+                        </span>
+                      )}
                     </div>
                     <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
                       {formatSize(doc.size)} ·{" "}

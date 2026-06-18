@@ -19,6 +19,7 @@ import { MailModule } from './mail/mail.module';
 import { PromosModule } from './promos/promos.module';
 import { ObjectivesModule } from './objectives/objectives.module';
 import { ActivityInterceptor } from './shared/interceptors/activity.interceptor';
+import { CommunicationsModule } from './communications/communications.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { ActivityInterceptor } from './shared/interceptors/activity.interceptor'
     MailModule,
     PromosModule,
     ObjectivesModule,
+    CommunicationsModule,
   ],
   controllers: [AppController],
   providers: [

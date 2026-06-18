@@ -1,5 +1,3 @@
-import { ReactNode } from "react";
-
 export type ApiError = {
   message: string;
   statusCode: number;
@@ -25,4 +23,24 @@ export type User = {
   last_name: string | null;
   role: Role;
   promoId: number | null;
+};
+
+type CommunicationType = "EMAIL" | "FEEDBACK";
+
+type CommunicationUser = {
+  id: number;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+};
+
+export type Communications = {
+  id: number;
+  type: CommunicationType;
+  subject: string | null;
+  body: string | null;
+  score: number | null;
+  created_at: string;
+  sender: CommunicationUser;
+  recipient: CommunicationUser;
 };

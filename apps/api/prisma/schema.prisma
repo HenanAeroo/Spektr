@@ -25,14 +25,17 @@ model User {
   modified_at   DateTime  @updatedAt
   last_seen_at DateTime?
 
-  authProviders        AuthProvider[]
-  refreshTokens        RefreshToken[]
-  applications         Application[]
-  folders              Folder[]
-  documents            Document[]
-  notifications        Notification[]
-  objectiveCompletions ObjectiveCompletion[]
-  adminPromos          AdminPromo[]           @relation("AdminPromos")
+  authProviders           AuthProvider[]
+  refreshTokens           RefreshToken[]
+  applications            Application[]
+  folders                 Folder[]
+  documents               Document[]
+  notifications           Notification[]
+  objectiveCompletions    ObjectiveCompletion[]
+  adminPromos             AdminPromo[]    @relation("AdminPromos")
+  sentCommunications      Communication[] @relation("SentCommunications")
+  receivedCommunications  Communication[] @relation("ReceivedCommunications")
+
   promoId              Int?
   promo                Promo? @relation(fields: [promoId], references: [id], onDelete: SetNull)
 }
@@ -222,4 +225,25 @@ model ObjectiveCompletion {
   modified_at DateTime @updatedAt
 
   @@unique([objectiveId, userId])
+}
+
+enum CommunicationType {
+  EMAIL
+  FEEDBACK
+}
+
+model Communication {
+  id      Int @id @default(autoincrement())
+  type    CommunicationType
+  subject String?
+  body    String?
+  score   Int?
+
+  senderId  Int
+  sender    User @relation("SentCommunications", fields: [senderId], references: [id], onDelete: Cascade)
+
+  recipientId Int
+  recipient   User @relation("ReceivedCommunications", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  created_at  DateTime @default(now())
 }

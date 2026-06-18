@@ -19,7 +19,10 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import type { User as UserModel } from '../../prisma/generated/prisma/client';
-import { Role as RoleModel } from '../../prisma/generated/prisma/client';
+import {
+  CommunicationType,
+  Role as RoleModel,
+} from '../../prisma/generated/prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -27,6 +30,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { NotificationsService } from '../notifications/notifications.service';
 import { Throttle } from '@nestjs/throttler';
 import { BulkEmailDto } from './dto/bulk-email.dto';
+import { CommunicationsService } from '../communications/communications.service';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -34,6 +38,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly notificationsService: NotificationsService,
+    private readonly communicationsService: CommunicationsService,
   ) {}
 
   @Roles(RoleModel.ADMIN)
@@ -107,8 +112,8 @@ export class UsersController {
   @Roles(RoleModel.ADMIN)
   @UseGuards(RolesGuard)
   @Throttle({ default: { ttl: 60000, limit: 5 } })
-  async bulkEmail(@Body() body: BulkEmailDto) {
-    return this.usersService.bulkEmail(body);
+  async bulkEmail(@Body() body: BulkEmailDto, @CurrentUser() user: UserModel) {
+    return this.usersService.bulkEmail(body, user.id);
   }
 
   @Post(':id/feedback')
@@ -117,12 +122,24 @@ export class UsersController {
   async sendFeedback(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: { score: number; comment: string },
+    @CurrentUser() user: UserModel,
   ) {
     await this.notificationsService.sendFeedbackEmail(
       id,
       body.score,
       body.comment,
     );
+
+    void this.communicationsService
+      .create({
+        senderId: user.id,
+        recipientId: id,
+        type: CommunicationType.FEEDBACK,
+        score: body.score,
+        body: body.comment,
+      })
+      .catch(() => null);
+
     return { sent: true };
   }
 

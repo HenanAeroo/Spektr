@@ -1,5 +1,8 @@
 import { fetchUserApplications } from "@/features/applications/actions/fetchUserApplications";
-import { STATUT_COLORS, STATUT_LABELS } from "@/features/applications/constants";
+import {
+  STATUT_COLORS,
+  STATUT_LABELS,
+} from "@/features/applications/constants";
 import { getUserDocuments } from "@/features/documents/actions/getUserDocuments";
 import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
 import { fetchUser } from "@/features/promos/actions/fetchUser";
@@ -8,6 +11,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card } from "./Card";
 import { StatusBadge } from "./StatusBadge";
+import { fetchCommunications } from "@/features/users/actions/fetchCommunications";
+import { Mail, MessageCircleMore } from "lucide-react";
 
 export function StudentDetail({
   userId,
@@ -19,7 +24,7 @@ export function StudentDetail({
   navigate: (p: string) => void;
 }) {
   const [activeTab, setActiveTab] = useState<
-    "profile" | "objectifs" | "documents" | "candidatures"
+    "profile" | "objectifs" | "documents" | "candidatures" | "communications"
   >("profile");
   const [feedbackScore, setFeedbackScore] = useState<number | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
@@ -31,7 +36,7 @@ export function StudentDetail({
   } = useMutation({
     mutationFn: () => {
       const score = feedbackScore;
-      if (score === null) throw new Error('Score manquant');
+      if (score === null) throw new Error("Score manquant");
       return sendFeedback(userId, score, feedbackText);
     },
   });
@@ -61,6 +66,13 @@ export function StudentDetail({
     queryKey: ["applications", "user", userId],
     queryFn: () => fetchUserApplications(userId),
     enabled: activeTab === "candidatures" || activeTab === "profile",
+    staleTime: 3 * 60 * 1000,
+  });
+
+  const { data: communications = [], isLoading: commsLoading } = useQuery({
+    queryKey: ["communications", userId],
+    queryFn: () => fetchCommunications(userId),
+    enabled: activeTab === "communications",
     staleTime: 3 * 60 * 1000,
   });
 
@@ -104,9 +116,13 @@ export function StudentDetail({
 
   const tabs = [
     { id: "profile" as const, label: "Profil" },
-    { id: "candidatures" as const, label: `Candidatures${applications.length ? ` (${applications.length})` : ""}` },
+    {
+      id: "candidatures" as const,
+      label: `Candidatures${applications.length ? ` (${applications.length})` : ""}`,
+    },
     { id: "objectifs" as const, label: "Objectifs" },
     { id: "documents" as const, label: "Documents" },
+    { id: "communications" as const, label: "Communications" },
   ];
 
   return (
@@ -391,13 +407,35 @@ export function StudentDetail({
           {/* Stats row */}
           <div className="grid grid-cols-4 gap-3">
             {[
-              { label: "Total", value: applications.length, color: "text-spektr-dark", bg: "bg-white" },
-              { label: "Positifs", value: appPositive, color: "text-green-600", bg: "bg-green-50" },
-              { label: "Refus", value: appRefus, color: "text-red-500", bg: "bg-red-50" },
-              { label: "En cours", value: appEnCours, color: "text-amber-600", bg: "bg-amber-50" },
+              {
+                label: "Total",
+                value: applications.length,
+                color: "text-spektr-dark",
+                bg: "bg-white",
+              },
+              {
+                label: "Positifs",
+                value: appPositive,
+                color: "text-green-600",
+                bg: "bg-green-50",
+              },
+              {
+                label: "Refus",
+                value: appRefus,
+                color: "text-red-500",
+                bg: "bg-red-50",
+              },
+              {
+                label: "En cours",
+                value: appEnCours,
+                color: "text-amber-600",
+                bg: "bg-amber-50",
+              },
             ].map((s) => (
               <Card key={s.label} className={s.bg}>
-                <div className={`font-montserrat font-extrabold text-[32px] ${s.color}`}>
+                <div
+                  className={`font-montserrat font-extrabold text-[32px] ${s.color}`}
+                >
                   {s.value}
                 </div>
                 <div className="font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] mt-1">
@@ -423,14 +461,24 @@ export function StudentDetail({
             ) : (
               <div className="flex flex-col gap-2">
                 {[...applications]
-                  .sort((a, b) => new Date(b.modified_at).getTime() - new Date(a.modified_at).getTime())
+                  .sort(
+                    (a, b) =>
+                      new Date(b.modified_at).getTime() -
+                      new Date(a.modified_at).getTime(),
+                  )
                   .map((app) => {
                     const colors = STATUT_COLORS[app.statut];
                     const dateCandidature = app.date_candidature
-                      ? new Date(app.date_candidature).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })
+                      ? new Date(app.date_candidature).toLocaleDateString(
+                          "fr-FR",
+                          { day: "numeric", month: "short", year: "numeric" },
+                        )
                       : null;
                     const dateRelance = app.date_relance_contact
-                      ? new Date(app.date_relance_contact).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
+                      ? new Date(app.date_relance_contact).toLocaleDateString(
+                          "fr-FR",
+                          { day: "numeric", month: "short" },
+                        )
                       : null;
                     return (
                       <div
@@ -544,6 +592,64 @@ export function StudentDetail({
                     >
                       ⬇ Télécharger
                     </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {activeTab === "communications" && (
+        <Card>
+          <div className="font-montserrat font-bold text-sm mb-4">
+            Communications avec {user.first_name} {user.last_name}
+          </div>
+          {commsLoading ? (
+            <div className="text-center py-8 text-gray-400">Chargement…</div>
+          ) : communications.length === 0 ? (
+            <div className="text-center py-10">
+              <div className="text-[32px] mb-2">📂</div>
+              <p className="font-montserrat font-semibold text-sm text-gray-500">
+                Aucune communication
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {communications.map((comm) => {
+                return (
+                  <div
+                    key={comm.id}
+                    className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border"
+                  >
+                    <div>
+                      {comm.type === "EMAIL" ? (
+                        <div>
+                          <Mail />
+                        </div>
+                      ) : (
+                        <div>
+                          <MessageCircleMore />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      {comm.sender.first_name ?? ""}{" "}
+                      {comm.sender.last_name ?? ""}{" "}
+                      {new Date(comm.created_at).toLocaleDateString("fr-FR")}
+                    </div>
+                    {comm.type === "EMAIL" ? (
+                      <div>{comm.subject}</div>
+                    ) : (
+                      <div>
+                        {comm.score === null ? (
+                          <div>?</div>
+                        ) : (
+                          smileys[comm.score!]
+                        )}
+                        {comm.body}
+                      </div>
+                    )}
                   </div>
                 );
               })}

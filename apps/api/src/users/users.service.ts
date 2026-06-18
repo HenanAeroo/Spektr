@@ -13,6 +13,7 @@ import {
   Provider,
   Role,
   AdminPromoRole,
+  CommunicationType,
 } from '../../prisma/generated/prisma/client';
 import bcrypt from 'bcrypt';
 import { BulkEmailDto } from './dto/bulk-email.dto';
@@ -28,6 +29,7 @@ import {
   normalizeStudentKey,
   MAX_STUDENT_CSV_ROWS,
 } from './users.csv-mapper';
+import { CommunicationsService } from '../communications/communications.service';
 
 @Injectable()
 export class UsersService {
@@ -35,6 +37,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     private readonly config: ConfigService,
+    private readonly communicationService: CommunicationsService,
   ) {}
 
   private hashToken(token: string): string {
@@ -378,7 +381,7 @@ export class UsersService {
     return result;
   }
 
-  async bulkEmail(dto: BulkEmailDto) {
+  async bulkEmail(dto: BulkEmailDto, senderId: number) {
     const users = await this.prisma.user.findMany({
       where: { id: { in: dto.userIds } },
     });
@@ -392,9 +395,22 @@ export class UsersService {
       const chunkResults = await Promise.allSettled(
         chunk.map((u) => this.mailService.send(u.email, dto.subject, html)),
       );
+
+      chunkResults.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+          void this.communicationService
+            .create({
+              senderId: senderId,
+              recipientId: chunk[i].id,
+              type: CommunicationType.EMAIL,
+              subject: dto.subject,
+              body: dto.body,
+            })
+            .catch(() => null);
+        }
+      });
       totalResults.push(...chunkResults);
     }
-
     const failed = totalResults.filter((c) => c.status === 'rejected');
     const sent = totalResults.length - failed.length;
 

@@ -651,7 +651,7 @@ export function StudentDetail({
                     </div>
                     {comm.body && (
                       <div className="font-source-sans text-[12px] text-gray-400 truncate max-w-[200px]">
-                        {comm.body}
+                        {comm.body.replace(/<[^>]*>/g, " ").trim()}
                       </div>
                     )}
                   </div>
@@ -664,9 +664,9 @@ export function StudentDetail({
                   if (!open) setSelectedComm(null);
                 }}
               >
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-lg bg-spektr-dark border-spektr-dark">
                   <DialogHeader>
-                    <DialogTitle className="font-montserrat text-[15px]">
+                    <DialogTitle className="font-montserrat text-[15px] text-white">
                       {selectedComm?.type === "EMAIL" ? (
                         <span className="flex items-center gap-2">
                           <Mail size={16} className="text-spektr-teal" />
@@ -688,9 +688,9 @@ export function StudentDetail({
                     </DialogTitle>
                   </DialogHeader>
 
-                  <div className="font-source-sans text-[12px] text-gray-400 mb-3">
+                  <div className="font-source-sans text-[12px] text-white/50 mb-3">
                     De :{" "}
-                    <span className="font-semibold text-spektr-dark">
+                    <span className="font-semibold text-white">
                       {selectedComm?.sender.first_name}{" "}
                       {selectedComm?.sender.last_name}
                     </span>{" "}
@@ -707,11 +707,12 @@ export function StudentDetail({
                   </div>
 
                   {selectedComm?.body ? (
-                    <div className="font-source-sans text-[13px] text-spektr-dark whitespace-pre-wrap leading-relaxed">
-                      {selectedComm.body}
-                    </div>
+                    <div
+                      className="font-source-sans text-[13px] text-white leading-relaxed [&_p]:mb-3 [&_p:last-child]:mb-0 [&_br]:block"
+                      dangerouslySetInnerHTML={{ __html: selectedComm.body }}
+                    />
                   ) : (
-                    <div className="text-gray-400 text-[13px] italic">
+                    <div className="text-white/40 text-[13px] italic">
                       (aucun contenu)
                     </div>
                   )}

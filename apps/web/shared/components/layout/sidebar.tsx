@@ -9,6 +9,7 @@ import {
   FileText,
   User,
   LogOut,
+  ClipboardCheck,
 } from "lucide-react";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 
@@ -24,6 +25,7 @@ const AdminNav = [
   { page: "students", label: "Étudiants", icon: Users },
   { page: "promos", label: "Promotions", icon: Users },
   { page: "objectifs", label: "Objectifs", icon: CheckSquare },
+  { page: "documents-revue", label: "Revue docs", icon: ClipboardCheck },
 ];
 
 function StudentNavItem({

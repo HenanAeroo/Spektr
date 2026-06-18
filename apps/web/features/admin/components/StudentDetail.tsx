@@ -7,7 +7,7 @@ import { getUserDocuments } from "@/features/documents/actions/getUserDocuments"
 import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
 import { fetchUser } from "@/features/promos/actions/fetchUser";
 import { sendFeedback } from "@/features/users/actions/sendFeedback";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card } from "./Card";
 import { StatusBadge } from "./StatusBadge";
@@ -20,6 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import { reviewDocument } from "@/features/documents/actions/reviewDocument";
+import { DocumentType } from "@/features/documents/types";
 
 export function StudentDetail({
   userId,
@@ -36,6 +38,21 @@ export function StudentDetail({
   const [feedbackScore, setFeedbackScore] = useState<number | null>(null);
   const [feedbackText, setFeedbackText] = useState("");
   const [selectedComm, setSelectedComm] = useState<Communications | null>(null);
+  const queryClient = useQueryClient();
+
+  const { mutate: submitReview, isPending: reviewPending } = useMutation({
+    mutationFn: ({
+      id,
+      status,
+      docType,
+    }: {
+      id: number;
+      status: "VALIDATED" | "TO_CORRECT";
+      docType: DocumentType;
+    }) => reviewDocument(id, status, docType),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["documents", "user", userId] }),
+  });
 
   const {
     mutate: submitFeedback,
@@ -570,17 +587,40 @@ export function StudentDetail({
               {documents.map((doc) => {
                 const sizeKb = Math.round(doc.size / 1024);
                 const ext = doc.name.split(".").pop()?.toUpperCase() ?? "FILE";
+                const isReviewable = doc.docType === "CV" || doc.docType === "LM";
                 return (
                   <div
                     key={doc.id}
-                    className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border"
+                    className="flex items-center gap-3 px-3.5 py-3 bg-[#fafafa] rounded-lg border border-spektr-border"
                   >
                     <div className="w-[38px] h-[38px] rounded-lg bg-spektr-teal/10 flex items-center justify-center text-[10px] font-bold text-spektr-teal flex-shrink-0">
                       {ext}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
-                        {doc.name}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
+                          {doc.name}
+                        </span>
+                        {isReviewable && (
+                          <span className="px-1.5 py-0.5 rounded bg-spektr-teal/10 text-spektr-teal text-[10px] font-bold flex-shrink-0">
+                            {doc.docType}
+                          </span>
+                        )}
+                        {doc.status === "VALIDATED" && (
+                          <span className="px-1.5 py-0.5 rounded bg-green-100 text-green-600 text-[10px] font-bold flex-shrink-0">
+                            ✅ Validé
+                          </span>
+                        )}
+                        {doc.status === "TO_CORRECT" && (
+                          <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 text-[10px] font-bold flex-shrink-0">
+                            ⚠️ À corriger
+                          </span>
+                        )}
+                        {doc.status === "PENDING" && isReviewable && (
+                          <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 text-[10px] font-bold flex-shrink-0">
+                            En attente
+                          </span>
+                        )}
                       </div>
                       <div className="font-source-sans text-[11px] text-gray-400 mt-px">
                         {sizeKb} Ko ·{" "}
@@ -589,17 +629,60 @@ export function StudentDetail({
                           : "—"}
                       </div>
                     </div>
-                    <button
-                      onClick={async () => {
-                        const { getDocumentUrl } =
-                          await import("@/features/documents/actions/getDocumentUrl");
-                        const { url } = await getDocumentUrl(doc.id);
-                        window.open(url, "_blank");
-                      }}
-                      className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-spektr-teal whitespace-nowrap flex-shrink-0"
-                    >
-                      ⬇ Télécharger
-                    </button>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {isReviewable && (
+                        <>
+                          <button
+                            disabled={reviewPending || doc.status === "VALIDATED"}
+                            onClick={() =>
+                              submitReview({
+                                id: doc.id,
+                                status: "VALIDATED",
+                                docType: doc.docType as DocumentType,
+                              })
+                            }
+                            className={[
+                              "border-none rounded-md px-2.5 py-1.5 text-[11px] font-semibold whitespace-nowrap",
+                              doc.status === "VALIDATED"
+                                ? "bg-green-100 text-green-600 cursor-default"
+                                : "bg-green-50 text-green-700 cursor-pointer hover:bg-green-100",
+                            ].join(" ")}
+                          >
+                            ✅ Valider
+                          </button>
+                          <button
+                            disabled={reviewPending || doc.status === "TO_CORRECT"}
+                            onClick={() =>
+                              submitReview({
+                                id: doc.id,
+                                status: "TO_CORRECT",
+                                docType: doc.docType as DocumentType,
+                              })
+                            }
+                            className={[
+                              "border-none rounded-md px-2.5 py-1.5 text-[11px] font-semibold whitespace-nowrap",
+                              doc.status === "TO_CORRECT"
+                                ? "bg-amber-100 text-amber-700 cursor-default"
+                                : "bg-amber-50 text-amber-700 cursor-pointer hover:bg-amber-100",
+                            ].join(" ")}
+                          >
+                            ⚠️ À corriger
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={async () => {
+                          const { getDocumentUrl } = await import(
+                            "@/features/documents/actions/getDocumentUrl"
+                          );
+                          const { url } = await getDocumentUrl(doc.id);
+                          window.open(url, "_blank");
+                        }}
+                        className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-spektr-teal whitespace-nowrap"
+                      >
+                        ⬇ Télécharger
+                      </button>
+                    </div>
                   </div>
                 );
               })}

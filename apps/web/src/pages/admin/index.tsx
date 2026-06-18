@@ -1,6 +1,7 @@
 import { fetchPromos } from "@/features/promos/actions/fetchPromos";
 import { fetchUsers } from "@/features/promos/actions/fetchUsers";
 import { Dashboard } from "@/features/admin/components/Dashboard";
+import { DocumentsReview } from "@/features/admin/components/DocumentsReview";
 import { ObjectivesAdmin } from "@/features/admin/components/ObjectivesAdmin";
 import { PromoManager } from "@/features/admin/components/PromoManager";
 import { StudentDetail } from "@/features/admin/components/StudentDetail";
@@ -65,6 +66,8 @@ const AdminPage = () => {
         );
       case "objectifs":
         return <ObjectivesAdmin promos={promos} />;
+      case "documents-revue":
+        return <DocumentsReview navigate={navigate} />;
       default:
         return <Dashboard navigate={navigate} users={users} promos={promos} />;
     }

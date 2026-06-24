@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import sanitizeHtml from 'sanitize-html';
 import { CreateCommunicationDto } from './dto/create-communication.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -16,7 +17,10 @@ export class CommunicationsService {
         recipientId: dto.recipientId,
         type: dto.type,
         subject: dto.subject,
-        body: dto.body,
+        // Sanitize on write: the body is later rendered with
+        // dangerouslySetInnerHTML in the admin UI, so neutralize any
+        // script/onerror/etc. before it is ever persisted (stored-XSS defense).
+        body: dto.body ? sanitizeHtml(dto.body) : dto.body,
         score: dto.score,
       },
     });

@@ -19,11 +19,14 @@ export class ActivityInterceptor implements NestInterceptor {
 
     const user = request.user;
 
-    if (user) {
-      void this.prisma.user.update({
-        where: { id: user.sub },
-        data: { last_seen_at: new Date() },
-      });
+    if (user?.id) {
+      // Best-effort activity tracking — must never reject the request pipeline.
+      void this.prisma.user
+        .update({
+          where: { id: user.id },
+          data: { last_seen_at: new Date() },
+        })
+        .catch(() => {});
     }
 
     return next.handle();

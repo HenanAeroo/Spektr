@@ -1,3 +1,4 @@
+import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationsController } from './applications.controller';
 import { ApplicationsService } from './applications.service';
@@ -5,6 +6,7 @@ import { ApplicationsService } from './applications.service';
 const mockApplicationsService = {
   create: jest.fn(),
   findMyApplications: jest.fn(),
+  findForUser: jest.fn(),
   findOne: jest.fn(),
   update: jest.fn(),
   remove: jest.fn(),
@@ -47,6 +49,35 @@ describe('ApplicationsController', () => {
 
       expect(mockApplicationsService.findMyApplications).toHaveBeenCalledWith(
         user.id,
+      );
+    });
+  });
+
+  describe('findByUser', () => {
+    it('delegates to applicationsService.findForUser with userId and requester', async () => {
+      const admin = { id: 9, role: 'ADMIN' } as any;
+      mockApplicationsService.findForUser.mockResolvedValue([]);
+
+      await controller.findByUser(7, admin);
+
+      expect(mockApplicationsService.findForUser).toHaveBeenCalledWith(
+        7,
+        admin,
+      );
+    });
+
+    it('propagates ForbiddenException when requester is outside the target promo (cross-promo)', async () => {
+      const admin = { id: 9, role: 'ADMIN' } as any;
+      mockApplicationsService.findForUser.mockRejectedValue(
+        new ForbiddenException('Hors de votre périmètre de promo'),
+      );
+
+      await expect(controller.findByUser(7, admin)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(mockApplicationsService.findForUser).toHaveBeenCalledWith(
+        7,
+        admin,
       );
     });
   });

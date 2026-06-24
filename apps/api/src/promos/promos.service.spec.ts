@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PromosService } from './promos.service';
+import { PromoAccessService } from './promo-access.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminPromoRole, Role } from '../../prisma/generated/prisma/client';
 
@@ -30,6 +31,7 @@ const mockPrisma = {
     delete: jest.fn(),
   },
   user: {
+    findUnique: jest.fn(),
     update: jest.fn(),
   },
   adminPromo: {
@@ -40,6 +42,12 @@ const mockPrisma = {
   },
 };
 
+const mockPromoAccess = {
+  administeredPromoIds: jest.fn().mockResolvedValue([]),
+  administersPromo: jest.fn().mockResolvedValue(true),
+  assertAdministersPromo: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('PromosService', () => {
   let service: PromosService;
 
@@ -48,13 +56,19 @@ describe('PromosService', () => {
       providers: [
         PromosService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: PromoAccessService, useValue: mockPromoAccess },
       ],
     }).compile();
 
     service = module.get<PromosService>(PromosService);
   });
 
-  afterEach(() => jest.clearAllMocks());
+  afterEach(() => {
+    jest.clearAllMocks();
+    mockPromoAccess.administeredPromoIds.mockResolvedValue([]);
+    mockPromoAccess.administersPromo.mockResolvedValue(true);
+    mockPromoAccess.assertAdministersPromo.mockResolvedValue(undefined);
+  });
 
   describe('create', () => {
     it('calls promo.create with { data: { name } }', async () => {
@@ -144,12 +158,15 @@ describe('PromosService', () => {
   });
 
   describe('assignUser', () => {
-    it('SUPER_ADMIN: skips access check and updates user promoId', async () => {
+    it('SUPER_ADMIN: bypasses access check and updates user promoId', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        promoId: null,
+        role: Role.STUDENT,
+      });
       mockPrisma.user.update.mockResolvedValue({ id: 5, promoId: 2 });
 
       await service.assignUser(2, 5, 1, Role.SUPER_ADMIN);
 
-      expect(mockPrisma.adminPromo.findFirst).not.toHaveBeenCalled();
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: 5 },
         data: { promoId: 2 },
@@ -157,11 +174,18 @@ describe('PromosService', () => {
     });
 
     it('ADMIN with access: updates user promoId', async () => {
-      mockPrisma.adminPromo.findFirst.mockResolvedValue({ adminId: 42, promoId: 2 });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        promoId: null,
+        role: Role.STUDENT,
+      });
       mockPrisma.user.update.mockResolvedValue({ id: 5, promoId: 2 });
 
       await service.assignUser(2, 5, 42, Role.ADMIN);
 
+      expect(mockPromoAccess.assertAdministersPromo).toHaveBeenCalledWith(
+        { id: 42, role: Role.ADMIN },
+        2,
+      );
       expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { id: 5 },
         data: { promoId: 2 },
@@ -169,11 +193,30 @@ describe('PromosService', () => {
     });
 
     it('ADMIN without access: throws ForbiddenException', async () => {
-      mockPrisma.adminPromo.findFirst.mockResolvedValue(null);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        promoId: null,
+        role: Role.STUDENT,
+      });
+      mockPromoAccess.assertAdministersPromo.mockRejectedValue(
+        new ForbiddenException(),
+      );
 
       await expect(service.assignUser(2, 5, 42, Role.ADMIN)).rejects.toThrow(
         ForbiddenException,
       );
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects assigning a non-student user', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        promoId: null,
+        role: Role.ADMIN,
+      });
+
+      await expect(
+        service.assignUser(2, 5, 1, Role.SUPER_ADMIN),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
     });
   });
 
@@ -194,7 +237,10 @@ describe('PromosService', () => {
   describe('removeAdmin', () => {
     it('removes admin when not last OWNER', async () => {
       mockPrisma.adminPromo.count.mockResolvedValue(2);
-      mockPrisma.adminPromo.findFirst.mockResolvedValue({ adminId: 10, role: AdminPromoRole.OWNER });
+      mockPrisma.adminPromo.findFirst.mockResolvedValue({
+        adminId: 10,
+        role: AdminPromoRole.OWNER,
+      });
       mockPrisma.adminPromo.delete.mockResolvedValue({});
 
       await service.removeAdmin(2, 10);
@@ -206,7 +252,10 @@ describe('PromosService', () => {
 
     it('throws BadRequestException when removing last OWNER', async () => {
       mockPrisma.adminPromo.count.mockResolvedValue(1);
-      mockPrisma.adminPromo.findFirst.mockResolvedValue({ adminId: 10, role: AdminPromoRole.OWNER });
+      mockPrisma.adminPromo.findFirst.mockResolvedValue({
+        adminId: 10,
+        role: AdminPromoRole.OWNER,
+      });
 
       await expect(service.removeAdmin(2, 10)).rejects.toThrow(
         BadRequestException,

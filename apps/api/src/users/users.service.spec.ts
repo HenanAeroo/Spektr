@@ -11,6 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { ConfigService } from '@nestjs/config';
 import { CommunicationsService } from '../communications/communications.service';
+import { PromoAccessService } from '../promos/promo-access.service';
 import bcrypt from 'bcrypt';
 import { Provider, Role } from '../../prisma/generated/prisma/client';
 
@@ -40,6 +41,12 @@ const mockPrisma = {
   },
 };
 
+const mockPromoAccess = {
+  administeredPromoIds: jest.fn().mockResolvedValue([]),
+  administersPromo: jest.fn().mockResolvedValue(true),
+  assertAdministersPromo: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('UsersService', () => {
   let service: UsersService;
 
@@ -50,7 +57,11 @@ describe('UsersService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: MailService, useValue: mockMailService },
         { provide: ConfigService, useValue: mockConfigService },
-        { provide: CommunicationsService, useValue: { create: jest.fn().mockResolvedValue({}) } },
+        {
+          provide: CommunicationsService,
+          useValue: { create: jest.fn().mockResolvedValue({}) },
+        },
+        { provide: PromoAccessService, useValue: mockPromoAccess },
       ],
     }).compile();
 
@@ -76,7 +87,13 @@ describe('UsersService', () => {
       mockPrisma.user.findMany.mockResolvedValue(users);
       mockPrisma.user.count.mockResolvedValue(10);
 
-      const result = await service.findAll(2, 3, undefined, 1, Role.SUPER_ADMIN);
+      const result = await service.findAll(
+        2,
+        3,
+        undefined,
+        1,
+        Role.SUPER_ADMIN,
+      );
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
         skip: 3,
@@ -92,7 +109,13 @@ describe('UsersService', () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
       mockPrisma.user.count.mockResolvedValue(6);
 
-      const result = await service.findAll(2, 3, undefined, 1, Role.SUPER_ADMIN);
+      const result = await service.findAll(
+        2,
+        3,
+        undefined,
+        1,
+        Role.SUPER_ADMIN,
+      );
 
       expect(result.hasNextPage).toBe(false);
     });
@@ -145,7 +168,7 @@ describe('UsersService', () => {
       mockMailService.send.mockResolvedValue(undefined);
 
       const dto = { userIds: [1, 2], subject: 'Objet', body: '<p>Bonjour</p>' };
-      await service.bulkEmail(dto, 1);
+      await service.bulkEmail(dto, { id: 1, role: Role.SUPER_ADMIN });
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
         where: { id: { in: [1, 2] } },
@@ -166,11 +189,14 @@ describe('UsersService', () => {
     it('does not call send if no users match', async () => {
       mockPrisma.user.findMany.mockResolvedValue([]);
 
-      await service.bulkEmail({
-        userIds: [99],
-        subject: 'X',
-        body: '<p>Y</p>',
-      }, 1);
+      await service.bulkEmail(
+        {
+          userIds: [99],
+          subject: 'X',
+          body: '<p>Y</p>',
+        },
+        { id: 1, role: Role.SUPER_ADMIN },
+      );
 
       expect(mockMailService.send).not.toHaveBeenCalled();
     });
@@ -185,7 +211,10 @@ describe('UsersService', () => {
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(new Error());
 
-      const result = await service.bulkEmail(dto, 1);
+      const result = await service.bulkEmail(dto, {
+        id: 1,
+        role: Role.SUPER_ADMIN,
+      });
 
       expect(result).toEqual({ sent: 1, failed: 1 });
     });
@@ -198,9 +227,9 @@ describe('UsersService', () => {
       mockPrisma.user.findMany.mockResolvedValue([user1, user2]);
       mockMailService.send.mockRejectedValue(new Error());
 
-      await expect(service.bulkEmail(dto, 1)).rejects.toThrow(
-        InternalServerErrorException,
-      );
+      await expect(
+        service.bulkEmail(dto, { id: 1, role: Role.SUPER_ADMIN }),
+      ).rejects.toThrow(InternalServerErrorException);
     });
   });
 

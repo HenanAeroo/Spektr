@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import * as Papa from 'papaparse';
 import { CreateApplicationDto } from './dto/create-application.dto';
@@ -11,10 +12,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   NotifType,
   Outcome,
-  Role,
   type Application,
 } from '../../prisma/generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PromoAccessService, Requester } from '../promos/promo-access.service';
+import { ADMIN_ROLES } from '../auth/roles';
 import {
   ApplicationCsvRow,
   ApplicationField,
@@ -36,6 +38,7 @@ export class ApplicationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    private readonly promoAccess: PromoAccessService,
   ) {}
 
   create(
@@ -70,6 +73,20 @@ export class ApplicationsService {
     });
   }
 
+  /**
+   * Admin view of another user's applications — scoped to promos the requester
+   * administers (AC-10). SUPER_ADMIN bypasses.
+   */
+  async findForUser(targetUserId: number, requester: Requester) {
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { promoId: true },
+    });
+    if (!target) throw new NotFoundException();
+    await this.promoAccess.assertAdministersPromo(requester, target.promoId);
+    return this.findMyApplications(targetUserId);
+  }
+
   findOne(id: number, userId: number) {
     return this.prisma.application.findFirst({
       where: {
@@ -84,7 +101,10 @@ export class ApplicationsService {
     updateApplicationDto: UpdateApplicationDto,
     userId: number,
   ) {
-    const doc = await this.prisma.application.updateMany({
+    // Ownership-scoped update; count===0 means no row matched (wrong or foreign
+    // id) — surface it as a 404 instead of a silent {count:0} no-op the
+    // optimistic client never reconciles.
+    const { count } = await this.prisma.application.updateMany({
       where: {
         id: id,
         userId: userId,
@@ -105,39 +125,51 @@ export class ApplicationsService {
       },
     });
 
-    if (doc.count === 0) return doc;
+    if (count === 0) throw new NotFoundException('Candidature introuvable');
 
     if (
       updateApplicationDto.outcome === Outcome.ENTRETIEN ||
       updateApplicationDto.outcome === Outcome.DECROCHEE
     ) {
       const admins = await this.prisma.user.findMany({
-        where: { role: Role.ADMIN },
+        where: { role: { in: [...ADMIN_ROLES] } },
+        select: { id: true },
       });
-      for (const admin of admins) {
-        await this.notificationsService.createAndEmit(
-          admin.id,
-          NotifType.APPLICATION_STATUS,
-          { studentId: userId, outcome: updateApplicationDto.outcome },
-        );
-      }
+      // Fan out notifications concurrently (db-11) — one slow SMTP send no
+      // longer blocks the rest, and one failure doesn't abort the others.
+      await Promise.allSettled(
+        admins.map((admin) =>
+          this.notificationsService.createAndEmit(
+            admin.id,
+            NotifType.APPLICATION_STATUS,
+            { studentId: userId, outcome: updateApplicationDto.outcome },
+          ),
+        ),
+      );
     }
 
-    return doc;
+    return this.prisma.application.findFirst({
+      where: { id: id, userId: userId },
+    });
   }
 
-  remove(id: number, userId: number) {
-    return this.prisma.application.deleteMany({
+  async remove(id: number, userId: number) {
+    const { count } = await this.prisma.application.deleteMany({
       where: {
         id: id,
         userId: userId,
       },
     });
+
+    if (count === 0) throw new NotFoundException('Candidature introuvable');
+
+    return { id };
   }
 
   async importFromCsv(buffer: Buffer, userId: number): Promise<ImportResult> {
-    // Fix #2: strip UTF-8 BOM (common in Excel-exported CSVs)
-    const csv = buffer.toString('utf-8').replace(/^ /, '');
+    // Strip the UTF-8 BOM (U+FEFF) that Excel-exported CSVs often prepend.
+    const raw = buffer.toString('utf-8');
+    const csv = raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
 
     const { data: rows, errors: parseErrors } = Papa.parse<
       Record<string, string>

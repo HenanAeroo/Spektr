@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   ForbiddenException,
+  NotFoundException,
   ParseIntPipe,
   UploadedFile,
   UseInterceptors,
@@ -30,7 +31,10 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { NotificationsService } from '../notifications/notifications.service';
 import { Throttle } from '@nestjs/throttler';
 import { BulkEmailDto } from './dto/bulk-email.dto';
+import { SendFeedbackDto } from './dto/send-feedback.dto';
 import { CommunicationsService } from '../communications/communications.service';
+import { PromoAccessService } from '../promos/promo-access.service';
+import { isAdmin } from '../auth/roles';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -39,6 +43,7 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly notificationsService: NotificationsService,
     private readonly communicationsService: CommunicationsService,
+    private readonly promoAccess: PromoAccessService,
   ) {}
 
   @Roles(RoleModel.ADMIN)
@@ -65,18 +70,21 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(
+  async findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() currentUser: UserModel,
   ): Promise<UserModel | null> {
-    if (
-      currentUser.role !== RoleModel.ADMIN &&
-      currentUser.role !== RoleModel.SUPER_ADMIN &&
-      currentUser.id !== id
-    ) {
+    if (currentUser.id === id) {
+      return this.usersService.findOne({ id });
+    }
+    if (!isAdmin(currentUser.role)) {
       throw new ForbiddenException();
     }
-    return this.usersService.findOne({ id });
+    // Admins may only read users within promos they administer (AC-10).
+    const target = await this.usersService.findOne({ id });
+    if (!target) throw new NotFoundException();
+    await this.promoAccess.assertAdministersPromo(currentUser, target.promoId);
+    return target;
   }
 
   @Patch('me/password')
@@ -113,7 +121,7 @@ export class UsersController {
   @UseGuards(RolesGuard)
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   async bulkEmail(@Body() body: BulkEmailDto, @CurrentUser() user: UserModel) {
-    return this.usersService.bulkEmail(body, user.id);
+    return this.usersService.bulkEmail(body, user);
   }
 
   @Post(':id/feedback')
@@ -121,13 +129,18 @@ export class UsersController {
   @UseGuards(RolesGuard)
   async sendFeedback(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { score: number; comment: string },
+    @Body() body: SendFeedbackDto,
     @CurrentUser() user: UserModel,
   ) {
+    // Feedback may only target a user within a promo the sender administers (AC-07).
+    const target = await this.usersService.findOne({ id });
+    if (!target) throw new NotFoundException();
+    await this.promoAccess.assertAdministersPromo(user, target.promoId);
+
     await this.notificationsService.sendFeedbackEmail(
       id,
       body.score,
-      body.comment,
+      body.comment ?? '',
     );
 
     void this.communicationsService
@@ -136,7 +149,7 @@ export class UsersController {
         recipientId: id,
         type: CommunicationType.FEEDBACK,
         score: body.score,
-        body: body.comment,
+        body: body.comment ?? '',
       })
       .catch(() => null);
 

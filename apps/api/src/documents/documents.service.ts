@@ -8,8 +8,10 @@ import { NotificationsService } from '../notifications/notifications.service';
 import {
   DocumentType,
   NotifType,
+  Role,
 } from '../../prisma/generated/prisma/client';
 import { ReviewDocumentDto } from './dto/review-document.dto';
+import { PromoAccessService, Requester } from '../promos/promo-access.service';
 
 @Injectable()
 export class DocumentsService {
@@ -17,6 +19,7 @@ export class DocumentsService {
     private readonly prisma: PrismaService,
     private readonly minio: MinioService,
     private readonly notificationsService: NotificationsService,
+    private readonly promoAccess: PromoAccessService,
   ) {}
 
   async upload(
@@ -65,15 +68,37 @@ export class DocumentsService {
     return this.prisma.document.findMany({ where: { userId } });
   }
 
-  async getDownloadUrl(id: number, userId?: number) {
-    const doc = await this.prisma.document.findFirst({
-      where: userId !== undefined ? { id, userId } : { id },
+  /**
+   * Admin listing of another user's documents — scoped to promos the requester
+   * administers (AC-02). SUPER_ADMIN bypasses.
+   */
+  async findForUser(targetUserId: number, requester: Requester) {
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { promoId: true },
     });
+    if (!target) throw new NotFoundException();
+    await this.promoAccess.assertAdministersPromo(requester, target.promoId);
+    return this.prisma.document.findMany({ where: { userId: targetUserId } });
+  }
 
+  async getDownloadUrl(id: number, requester: Requester) {
+    const doc = await this.prisma.document.findUnique({
+      where: { id },
+      include: { user: { select: { promoId: true } } },
+    });
     if (!doc) throw new NotFoundException();
 
-    const url = await this.minio.getPresignedUrl(doc.storageKey, 3600);
+    // Owner can always download; otherwise the requester must administer the
+    // owner's promo (AC-01). A non-admin third party is rejected here.
+    if (doc.userId !== requester.id) {
+      await this.promoAccess.assertAdministersPromo(
+        requester,
+        doc.user.promoId,
+      );
+    }
 
+    const url = await this.minio.getPresignedUrl(doc.storageKey, 3600);
     return { url };
   }
 
@@ -86,7 +111,17 @@ export class DocumentsService {
     await this.minio.deleteFile(doc.storageKey);
   }
 
-  async review(id: number, dto: ReviewDocumentDto) {
+  async review(id: number, dto: ReviewDocumentDto, requester: Requester) {
+    const existing = await this.prisma.document.findUnique({
+      where: { id },
+      include: { user: { select: { promoId: true } } },
+    });
+    if (!existing) throw new NotFoundException();
+    await this.promoAccess.assertAdministersPromo(
+      requester,
+      existing.user.promoId,
+    );
+
     const doc = await this.prisma.document.update({
       where: { id },
       data: {
@@ -115,11 +150,22 @@ export class DocumentsService {
     return doc;
   }
 
-  getPendingReviews() {
+  getPendingReviews(requester: Requester) {
+    // Only surface CV/LM awaiting review for promos the requester administers (AC-03).
+    const promoScope =
+      requester.role === Role.SUPER_ADMIN
+        ? {}
+        : {
+            user: {
+              promo: { adminPromos: { some: { adminId: requester.id } } },
+            },
+          };
+
     return this.prisma.document.findMany({
       where: {
         docType: { in: ['CV', 'LM'] },
         status: { in: ['PENDING', 'TO_CORRECT'] },
+        ...promoScope,
       },
       include: {
         user: {

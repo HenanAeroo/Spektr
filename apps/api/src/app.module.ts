@@ -12,7 +12,6 @@ import { schema } from './env.validation';
 import { EventsModule } from './events/events.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { FoldersModule } from './folders/folders.module';
-import { MinioService } from './minio/minio.service';
 import { DocumentsModule } from './documents/documents.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { MailModule } from './mail/mail.module';
@@ -20,6 +19,7 @@ import { PromosModule } from './promos/promos.module';
 import { ObjectivesModule } from './objectives/objectives.module';
 import { ActivityInterceptor } from './shared/interceptors/activity.interceptor';
 import { CommunicationsModule } from './communications/communications.module';
+import { PromoAccessModule } from './promos/promo-access.module';
 
 @Module({
   imports: [
@@ -31,6 +31,7 @@ import { CommunicationsModule } from './communications/communications.module';
     }),
     UsersModule,
     PrismaModule,
+    PromoAccessModule,
     AuthModule,
     ThrottlerModule.forRoot({
       throttlers: [
@@ -55,7 +56,6 @@ import { CommunicationsModule } from './communications/communications.module';
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    MinioService,
     {
       provide: APP_INTERCEPTOR,
       useClass: ActivityInterceptor,

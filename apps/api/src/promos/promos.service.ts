@@ -2,15 +2,41 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreatePromoDto } from './dto/create-promo.dto';
 import { UpdatePromoDto } from './dto/update-promo.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { AdminPromoRole, Role } from '../../prisma/generated/prisma/client';
+import {
+  AdminPromoRole,
+  Prisma,
+  Role,
+} from '../../prisma/generated/prisma/client';
+import { PromoAccessService } from './promo-access.service';
+
+// Single source of truth for the "promo + its admins" shape returned by the
+// list/detail endpoints (be-12).
+const PROMO_WITH_ADMINS_INCLUDE = {
+  adminPromos: {
+    include: {
+      admin: {
+        select: {
+          id: true,
+          email: true,
+          first_name: true,
+          last_name: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.PromoInclude;
 
 @Injectable()
 export class PromosService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly promoAccess: PromoAccessService,
+  ) {}
 
   create(dto: CreatePromoDto) {
     return this.prismaService.promo.create({
@@ -19,60 +45,21 @@ export class PromosService {
   }
 
   findAll(userId?: number, userRole?: Role) {
-    if (userRole === Role.SUPER_ADMIN) {
-      return this.prismaService.promo.findMany({
-        include: {
-          adminPromos: {
-            include: {
-              admin: {
-                select: {
-                  id: true,
-                  email: true,
-                  first_name: true,
-                  last_name: true,
-                },
-              },
-            },
-          },
-        },
-      });
-    }
+    const where: Prisma.PromoWhereInput =
+      userRole === Role.SUPER_ADMIN
+        ? {}
+        : { adminPromos: { some: { adminId: userId } } };
+
     return this.prismaService.promo.findMany({
-      where: { adminPromos: { some: { adminId: userId } } },
-      include: {
-        adminPromos: {
-          include: {
-            admin: {
-              select: {
-                id: true,
-                email: true,
-                first_name: true,
-                last_name: true,
-              },
-            },
-          },
-        },
-      },
+      where,
+      include: PROMO_WITH_ADMINS_INCLUDE,
     });
   }
 
   async findOne(id: number, userId?: number, userRole?: Role) {
     const promo = await this.prismaService.promo.findUnique({
       where: { id },
-      include: {
-        adminPromos: {
-          include: {
-            admin: {
-              select: {
-                id: true,
-                email: true,
-                first_name: true,
-                last_name: true,
-              },
-            },
-          },
-        },
-      },
+      include: PROMO_WITH_ADMINS_INCLUDE,
     });
 
     if (!promo) return null;
@@ -103,11 +90,25 @@ export class PromosService {
     requesterId: number,
     requesterRole: Role,
   ) {
-    if (requesterRole !== Role.SUPER_ADMIN) {
-      const access = await this.prismaService.adminPromo.findFirst({
-        where: { promoId, adminId: requesterId },
-      });
-      if (!access) throw new ForbiddenException('Accès refusé à cette promo');
+    const requester = { id: requesterId, role: requesterRole };
+
+    const target = await this.prismaService.user.findUnique({
+      where: { id: userId },
+      select: { promoId: true, role: true },
+    });
+    if (!target) throw new NotFoundException('Utilisateur introuvable');
+    if (target.role !== Role.STUDENT) {
+      throw new BadRequestException(
+        'Seuls les étudiants peuvent être affectés à une promo',
+      );
+    }
+
+    // The requester must administer the destination promo AND (if the student
+    // already belongs to one) their current promo — preventing cross-promo
+    // annexation of students (AC-08). SUPER_ADMIN bypasses both checks.
+    await this.promoAccess.assertAdministersPromo(requester, promoId);
+    if (target.promoId !== null) {
+      await this.promoAccess.assertAdministersPromo(requester, target.promoId);
     }
 
     return this.prismaService.user.update({

@@ -30,6 +30,8 @@ import {
   MAX_STUDENT_CSV_ROWS,
 } from './users.csv-mapper';
 import { CommunicationsService } from '../communications/communications.service';
+import { PromoAccessService, Requester } from '../promos/promo-access.service';
+import { isAdmin } from '../auth/roles';
 
 @Injectable()
 export class UsersService {
@@ -38,6 +40,7 @@ export class UsersService {
     private readonly mailService: MailService,
     private readonly config: ConfigService,
     private readonly communicationService: CommunicationsService,
+    private readonly promoAccess: PromoAccessService,
   ) {}
 
   private hashToken(token: string): string {
@@ -109,32 +112,38 @@ export class UsersService {
     const userToDelete = await this.prisma.user.findUnique({ where });
     if (!userToDelete) throw new BadRequestException('Utilisateur introuvable');
 
-    if (
-      userToDelete.role === Role.ADMIN ||
-      userToDelete.role === Role.SUPER_ADMIN
-    ) {
+    if (isAdmin(userToDelete.role)) {
       if (callerRole !== Role.SUPER_ADMIN && callerId !== userToDelete.id) {
         throw new ForbiddenException('Accès refusé');
       }
 
-      // Check if last OWNER of any promo
+      // Block deletion if the admin is the sole OWNER of any promo. Resolve the
+      // owner counts for all their owned promos in a single groupBy (db-10)
+      // instead of one count() per relation.
       const ownerRelations = await this.prisma.adminPromo.findMany({
         where: { adminId: userToDelete.id, role: AdminPromoRole.OWNER },
         include: { promo: { select: { name: true } } },
       });
 
-      for (const rel of ownerRelations) {
-        const otherOwners = await this.prisma.adminPromo.count({
+      if (ownerRelations.length > 0) {
+        const ownerCounts = await this.prisma.adminPromo.groupBy({
+          by: ['promoId'],
           where: {
-            promoId: rel.promoId,
+            promoId: { in: ownerRelations.map((rel) => rel.promoId) },
             role: AdminPromoRole.OWNER,
-            adminId: { not: userToDelete.id },
           },
+          _count: { adminId: true },
         });
-        if (otherOwners === 0) {
-          throw new ConflictException(
-            `Impossible de supprimer cet admin : il est le seul propriétaire de la promo "${rel.promo.name}". Assignez un autre propriétaire d'abord.`,
-          );
+        const ownersByPromo = new Map(
+          ownerCounts.map((c) => [c.promoId, c._count.adminId]),
+        );
+
+        for (const rel of ownerRelations) {
+          if ((ownersByPromo.get(rel.promoId) ?? 0) <= 1) {
+            throw new ConflictException(
+              `Impossible de supprimer cet admin : il est le seul propriétaire de la promo "${rel.promo.name}". Assignez un autre propriétaire d'abord.`,
+            );
+          }
         }
       }
     }
@@ -381,17 +390,28 @@ export class UsersService {
     return result;
   }
 
-  async bulkEmail(dto: BulkEmailDto, senderId: number) {
+  async bulkEmail(dto: BulkEmailDto, sender: Requester) {
     const users = await this.prisma.user.findMany({
       where: { id: { in: dto.userIds } },
     });
 
-    if (users.length === 0) return { sent: 0, failed: 0 };
+    // Restrict recipients to the promos the sender administers (AC-06).
+    let recipients = users;
+    if (sender.role !== Role.SUPER_ADMIN) {
+      const allowed = new Set(
+        await this.promoAccess.administeredPromoIds(sender.id),
+      );
+      recipients = users.filter(
+        (u) => u.promoId !== null && allowed.has(u.promoId),
+      );
+    }
+
+    if (recipients.length === 0) return { sent: 0, failed: 0 };
 
     const html = this.buildEmailHtml(dto.body);
     const totalResults: PromiseSettledResult<void>[] = [];
 
-    for (const chunk of this.chunksOf(users, 10)) {
+    for (const chunk of this.chunksOf(recipients, 10)) {
       const chunkResults = await Promise.allSettled(
         chunk.map((u) => this.mailService.send(u.email, dto.subject, html)),
       );
@@ -400,7 +420,7 @@ export class UsersService {
         if (result.status === 'fulfilled') {
           void this.communicationService
             .create({
-              senderId: senderId,
+              senderId: sender.id,
               recipientId: chunk[i].id,
               type: CommunicationType.EMAIL,
               subject: dto.subject,

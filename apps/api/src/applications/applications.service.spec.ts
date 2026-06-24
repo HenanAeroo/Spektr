@@ -1,7 +1,9 @@
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ApplicationsService } from './applications.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { PromoAccessService } from '../promos/promo-access.service';
 import { Outcome, Role } from '../../prisma/generated/prisma/client';
 
 const mockPrisma = {
@@ -14,11 +16,18 @@ const mockPrisma = {
   },
   user: {
     findMany: jest.fn(),
+    findUnique: jest.fn(),
   },
 };
 
 const mockNotificationsService = {
   createAndEmit: jest.fn(),
+};
+
+const mockPromoAccess = {
+  administeredPromoIds: jest.fn().mockResolvedValue([]),
+  administersPromo: jest.fn().mockResolvedValue(true),
+  assertAdministersPromo: jest.fn().mockResolvedValue(undefined),
 };
 
 describe('ApplicationsService', () => {
@@ -30,6 +39,7 @@ describe('ApplicationsService', () => {
         ApplicationsService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: PromoAccessService, useValue: mockPromoAccess },
       ],
     }).compile();
 
@@ -95,6 +105,42 @@ describe('ApplicationsService', () => {
     });
   });
 
+  describe('findForUser', () => {
+    it('asserts promo access then returns the target user applications', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ promoId: 3 });
+      mockPrisma.application.findMany.mockResolvedValue([]);
+
+      const requester = { id: 1, role: Role.ADMIN };
+      await service.findForUser(7, requester);
+
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: 7 },
+        select: { promoId: true },
+      });
+      expect(mockPromoAccess.assertAdministersPromo).toHaveBeenCalledWith(
+        requester,
+        3,
+      );
+      expect(mockPrisma.application.findMany).toHaveBeenCalledWith({
+        where: { userId: 7 },
+        orderBy: { created_at: 'asc' },
+      });
+    });
+
+    it('throws ForbiddenException when the requester is out of promo scope', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ promoId: 99 });
+      mockPromoAccess.assertAdministersPromo.mockRejectedValueOnce(
+        new ForbiddenException('Hors de votre périmètre de promo'),
+      );
+
+      await expect(
+        service.findForUser(7, { id: 1, role: Role.ADMIN }),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockPrisma.application.findMany).not.toHaveBeenCalled();
+    });
+  });
+
   describe('update', () => {
     it('does not notify admins if outcome is neutral', async () => {
       mockPrisma.application.updateMany.mockResolvedValue({ count: 1 });
@@ -113,7 +159,8 @@ describe('ApplicationsService', () => {
       await service.update(1, { outcome: Outcome.ENTRETIEN } as any, 5);
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
-        where: { role: Role.ADMIN },
+        where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] } },
+        select: { id: true },
       });
       expect(mockNotificationsService.createAndEmit).toHaveBeenCalledTimes(2);
     });
@@ -126,9 +173,20 @@ describe('ApplicationsService', () => {
       await service.update(1, { outcome: Outcome.DECROCHEE } as any, 5);
 
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
-        where: { role: Role.ADMIN },
+        where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] } },
+        select: { id: true },
       });
       expect(mockNotificationsService.createAndEmit).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws NotFoundException when no row matches (wrong/foreign id)', async () => {
+      mockPrisma.application.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        service.update(999, { outcome: 'EN_COURS' } as any, 5),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(mockNotificationsService.createAndEmit).not.toHaveBeenCalled();
     });
   });
 
@@ -136,11 +194,18 @@ describe('ApplicationsService', () => {
     it('calls deleteMany with id and userId', async () => {
       mockPrisma.application.deleteMany.mockResolvedValue({ count: 1 });
 
-      await service.remove(3, 7);
+      const result = await service.remove(3, 7);
 
       expect(mockPrisma.application.deleteMany).toHaveBeenCalledWith({
         where: { id: 3, userId: 7 },
       });
+      expect(result).toEqual({ id: 3 });
+    });
+
+    it('throws NotFoundException when no row matches (wrong/foreign id)', async () => {
+      mockPrisma.application.deleteMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.remove(999, 7)).rejects.toThrow(NotFoundException);
     });
   });
 });

@@ -26,13 +26,16 @@ export class ObjectivesController {
   constructor(private readonly objectivesService: ObjectivesService) {}
 
   @Post()
-  create(@Body() createObjectiveDto: CreateObjectiveDto) {
-    return this.objectivesService.create(createObjectiveDto);
+  create(
+    @Body() createObjectiveDto: CreateObjectiveDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.objectivesService.create(createObjectiveDto, user);
   }
 
   @Get()
-  findAll() {
-    return this.objectivesService.findAll();
+  findAll(@CurrentUser() user: User) {
+    return this.objectivesService.findAll(user);
   }
 
   @Get('my')
@@ -44,36 +47,37 @@ export class ObjectivesController {
   @Post(':id/toggle')
   @Roles(Role.STUDENT, Role.ADMIN)
   toggle(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
-    return this.objectivesService.toggleCompletion(id, user.id);
+    return this.objectivesService.toggleCompletion(id, user);
   }
 
   @Get('completions')
   @Roles(Role.ADMIN)
-  findAllCompletions() {
-    return this.objectivesService.findAllCompletions();
+  findAllCompletions(@CurrentUser() user: User) {
+    return this.objectivesService.findAllCompletions(user);
   }
 
   @Get('recent-activity')
   @Roles(Role.ADMIN)
-  findRecentActivity() {
-    return this.objectivesService.findRecentActivity();
+  findRecentActivity(@CurrentUser() user: User) {
+    return this.objectivesService.findRecentActivity(user);
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.objectivesService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
+    return this.objectivesService.findOne(id, user);
   }
 
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateObjectiveDto: UpdateObjectiveDto,
+    @CurrentUser() user: User,
   ) {
-    return this.objectivesService.update(id, updateObjectiveDto);
+    return this.objectivesService.update(id, updateObjectiveDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.objectivesService.remove(id);
+  remove(@Param('id', ParseIntPipe) id: number, @CurrentUser() user: User) {
+    return this.objectivesService.remove(id, user);
   }
 }

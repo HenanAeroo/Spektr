@@ -1,10 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ForbiddenException } from '@nestjs/common';
 import { DocumentsController } from './documents.controller';
 import { DocumentsService } from './documents.service';
 
 const mockDocumentsService = {
   upload: jest.fn(),
   findAll: jest.fn(),
+  findForUser: jest.fn(),
   getDownloadUrl: jest.fn(),
   remove: jest.fn(),
   review: jest.fn(),
@@ -70,31 +72,75 @@ describe('DocumentsController', () => {
     });
   });
 
+  describe('findByUser', () => {
+    it('delegates to documentsService.findForUser with target userId and the requesting user', async () => {
+      mockDocumentsService.findForUser.mockResolvedValue([]);
+
+      await controller.findByUser(5, admin);
+
+      expect(mockDocumentsService.findForUser).toHaveBeenCalledWith(5, admin);
+    });
+
+    it('propagates ForbiddenException when the admin is out of promo scope', async () => {
+      mockDocumentsService.findForUser.mockRejectedValue(
+        new ForbiddenException('Hors de votre périmètre de promo'),
+      );
+
+      await expect(controller.findByUser(5, admin)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+      expect(mockDocumentsService.findForUser).toHaveBeenCalledWith(5, admin);
+    });
+  });
+
   describe('getDownloadUrl', () => {
-    it('passes userId as undefined for an admin', async () => {
+    it('delegates to documentsService.getDownloadUrl with the numeric id and the requesting user (admin)', async () => {
       mockDocumentsService.getDownloadUrl.mockResolvedValue({
         url: 'http://...',
       });
 
-      await controller.getDownloadUrl('5', admin);
+      await controller.getDownloadUrl(5, admin);
 
       expect(mockDocumentsService.getDownloadUrl).toHaveBeenCalledWith(
         5,
-        undefined,
+        admin,
       );
     });
 
-    it('passes userId for a student', async () => {
+    it('delegates to documentsService.getDownloadUrl with the numeric id and the requesting user (student)', async () => {
       mockDocumentsService.getDownloadUrl.mockResolvedValue({
         url: 'http://...',
       });
 
-      await controller.getDownloadUrl('5', student);
+      await controller.getDownloadUrl(5, student);
 
       expect(mockDocumentsService.getDownloadUrl).toHaveBeenCalledWith(
         5,
-        student.id,
+        student,
       );
+    });
+  });
+
+  describe('getPendingReviews', () => {
+    it('delegates to documentsService.getPendingReviews with the requesting user', async () => {
+      mockDocumentsService.getPendingReviews.mockResolvedValue([]);
+
+      await controller.getPendingReviews(admin);
+
+      expect(mockDocumentsService.getPendingReviews).toHaveBeenCalledWith(
+        admin,
+      );
+    });
+  });
+
+  describe('review', () => {
+    it('delegates to documentsService.review with id, dto and the requesting user', async () => {
+      const dto = { status: 'VALIDATED' } as any;
+      mockDocumentsService.review.mockResolvedValue({ id: 7 });
+
+      await controller.review(7, dto, admin);
+
+      expect(mockDocumentsService.review).toHaveBeenCalledWith(7, dto, admin);
     });
   });
 
@@ -102,7 +148,7 @@ describe('DocumentsController', () => {
     it('delegates to documentsService.remove with id and user.id', async () => {
       mockDocumentsService.remove.mockResolvedValue({ id: 3 });
 
-      await controller.remove('3', student);
+      await controller.remove(3, student);
 
       expect(mockDocumentsService.remove).toHaveBeenCalledWith(3, student.id);
     });

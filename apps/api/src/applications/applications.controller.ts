@@ -78,8 +78,11 @@ export class ApplicationsController {
   @Get('user/:userId')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  findByUser(@Param('userId', ParseIntPipe) userId: number) {
-    return this.applicationsService.findMyApplications(userId);
+  findByUser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @CurrentUser() user: UserModel,
+  ) {
+    return this.applicationsService.findForUser(userId, user);
   }
 
   @Get(':id')

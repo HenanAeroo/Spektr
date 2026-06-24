@@ -3,15 +3,20 @@ import { DocumentsService } from './documents.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { MinioService } from '../minio/minio.service';
 import { NotificationsService } from '../notifications/notifications.service';
-import { NotFoundException } from '@nestjs/common';
-import { NotifType } from '../../prisma/generated/prisma/client';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { NotifType, Role } from '../../prisma/generated/prisma/client';
+import { PromoAccessService } from '../promos/promo-access.service';
 
 const mockPrisma = {
   document: {
     create: jest.fn(),
     findMany: jest.fn(),
     findFirst: jest.fn(),
+    findUnique: jest.fn(),
     delete: jest.fn(),
+  },
+  user: {
+    findUnique: jest.fn(),
   },
 };
 
@@ -25,6 +30,12 @@ const mockNotificationsService = {
   createAndEmit: jest.fn(),
 };
 
+const mockPromoAccess = {
+  administeredPromoIds: jest.fn().mockResolvedValue([]),
+  administersPromo: jest.fn().mockResolvedValue(true),
+  assertAdministersPromo: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('DocumentsService', () => {
   let service: DocumentsService;
 
@@ -35,6 +46,7 @@ describe('DocumentsService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: MinioService, useValue: mockMinioService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: PromoAccessService, useValue: mockPromoAccess },
       ],
     }).compile();
 
@@ -82,22 +94,29 @@ describe('DocumentsService', () => {
 
   describe('getDownloadUrl', () => {
     it('throws NotFoundException if document is not found', async () => {
-      mockPrisma.document.findFirst.mockResolvedValue(null);
+      mockPrisma.document.findUnique.mockResolvedValue(null);
 
-      await expect(service.getDownloadUrl(99, 1)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.getDownloadUrl(99, { id: 1, role: Role.STUDENT }),
+      ).rejects.toThrow(NotFoundException);
     });
 
-    it('calls getPresignedUrl with storageKey and TTL 3600 and returns { url }', async () => {
-      mockPrisma.document.findFirst.mockResolvedValue({
+    it('lets the owner download: calls getPresignedUrl with storageKey and TTL 3600 and returns { url }', async () => {
+      mockPrisma.document.findUnique.mockResolvedValue({
         id: 1,
+        userId: 5,
         storageKey: 'key/file.pdf',
+        user: { promoId: 7 },
       });
       mockMinioService.getPresignedUrl.mockResolvedValue('https://minio/url');
 
-      const result = await service.getDownloadUrl(1, 5);
+      const result = await service.getDownloadUrl(1, {
+        id: 5,
+        role: Role.STUDENT,
+      });
 
+      // Owner downloads without any promo check.
+      expect(mockPromoAccess.assertAdministersPromo).not.toHaveBeenCalled();
       expect(mockMinioService.getPresignedUrl).toHaveBeenCalledWith(
         'key/file.pdf',
         3600,
@@ -105,30 +124,49 @@ describe('DocumentsService', () => {
       expect(result).toEqual({ url: 'https://minio/url' });
     });
 
-    it('filters by userId if userId is provided', async () => {
-      mockPrisma.document.findFirst.mockResolvedValue({
-        storageKey: 'k',
+    it('lets an admin of the owner promo download a foreign document', async () => {
+      mockPrisma.document.findUnique.mockResolvedValue({
+        id: 1,
+        userId: 5,
+        storageKey: 'key/file.pdf',
+        user: { promoId: 7 },
       });
-      mockMinioService.getPresignedUrl.mockResolvedValue('url');
+      mockPromoAccess.assertAdministersPromo.mockResolvedValueOnce(undefined);
+      mockMinioService.getPresignedUrl.mockResolvedValue('https://minio/url');
 
-      await service.getDownloadUrl(1, 5);
-
-      expect(mockPrisma.document.findFirst).toHaveBeenCalledWith({
-        where: { id: 1, userId: 5 },
+      const result = await service.getDownloadUrl(1, {
+        id: 99,
+        role: Role.ADMIN,
       });
+
+      // Non-owner requester is checked against the owner's promo.
+      expect(mockPromoAccess.assertAdministersPromo).toHaveBeenCalledWith(
+        { id: 99, role: Role.ADMIN },
+        7,
+      );
+      expect(result).toEqual({ url: 'https://minio/url' });
     });
 
-    it('does not filter by userId if userId is undefined', async () => {
-      mockPrisma.document.findFirst.mockResolvedValue({
-        storageKey: 'k',
+    it('throws ForbiddenException when a requester from another promo tries to download a foreign document', async () => {
+      mockPrisma.document.findUnique.mockResolvedValue({
+        id: 1,
+        userId: 5,
+        storageKey: 'key/file.pdf',
+        user: { promoId: 7 },
       });
-      mockMinioService.getPresignedUrl.mockResolvedValue('url');
+      mockPromoAccess.assertAdministersPromo.mockRejectedValueOnce(
+        new ForbiddenException(),
+      );
 
-      await service.getDownloadUrl(1, undefined);
+      await expect(
+        service.getDownloadUrl(1, { id: 99, role: Role.ADMIN }),
+      ).rejects.toThrow(ForbiddenException);
 
-      expect(mockPrisma.document.findFirst).toHaveBeenCalledWith({
-        where: { id: 1 },
-      });
+      expect(mockPromoAccess.assertAdministersPromo).toHaveBeenCalledWith(
+        { id: 99, role: Role.ADMIN },
+        7,
+      );
+      expect(mockMinioService.getPresignedUrl).not.toHaveBeenCalled();
     });
   });
 

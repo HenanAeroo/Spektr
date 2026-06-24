@@ -4,6 +4,7 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CommunicationsService } from '../communications/communications.service';
+import { PromoAccessService } from '../promos/promo-access.service';
 import { Role } from '../../prisma/generated/prisma/client';
 
 const mockUsersService = {
@@ -24,6 +25,12 @@ const mockCommunicationsService = {
   create: jest.fn().mockResolvedValue({}),
 };
 
+const mockPromoAccess = {
+  administeredPromoIds: jest.fn().mockResolvedValue([]),
+  administersPromo: jest.fn().mockResolvedValue(true),
+  assertAdministersPromo: jest.fn().mockResolvedValue(undefined),
+};
+
 describe('UsersController', () => {
   let controller: UsersController;
 
@@ -34,6 +41,7 @@ describe('UsersController', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
         { provide: CommunicationsService, useValue: mockCommunicationsService },
+        { provide: PromoAccessService, useValue: mockPromoAccess },
       ],
     }).compile();
 
@@ -109,8 +117,8 @@ describe('UsersController', () => {
       expect(mockUsersService.findOne).toHaveBeenCalledWith({ id: 2 });
     });
 
-    it('non-admin requesting a different id throws ForbiddenException', () => {
-      expect(() => controller.findOne(5, studentUser)).toThrow(
+    it('non-admin requesting a different id throws ForbiddenException', async () => {
+      await expect(controller.findOne(5, studentUser)).rejects.toThrow(
         ForbiddenException,
       );
 
@@ -169,18 +177,23 @@ describe('UsersController', () => {
 
       await controller.bulkEmail(dto, adminUser);
 
-      expect(mockUsersService.bulkEmail).toHaveBeenCalledWith(dto, adminUser.id);
+      expect(mockUsersService.bulkEmail).toHaveBeenCalledWith(dto, adminUser);
     });
   });
 
   describe('sendFeedback', () => {
     it('calls notificationsService.sendFeedbackEmail and returns { sent: true }', async () => {
+      mockUsersService.findOne.mockResolvedValue({ id: 5, promoId: 1 });
       mockNotificationsService.sendFeedbackEmail.mockResolvedValue(undefined);
 
-      const result = await controller.sendFeedback(5, {
-        score: 4,
-        comment: 'Bien',
-      }, adminUser);
+      const result = await controller.sendFeedback(
+        5,
+        {
+          score: 4,
+          comment: 'Bien',
+        },
+        adminUser,
+      );
 
       expect(mockNotificationsService.sendFeedbackEmail).toHaveBeenCalledWith(
         5,

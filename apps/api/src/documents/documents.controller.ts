@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   Patch,
+  ParseIntPipe,
   Post,
   UseGuards,
   UseInterceptors,
@@ -91,32 +92,44 @@ export class DocumentsController {
   @Get('user/:userId')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  findByUser(@Param('userId') userId: string) {
-    return this.documentsService.findAll(+userId);
+  findByUser(
+    @Param('userId', ParseIntPipe) userId: number,
+    @CurrentUser() user: UserModel,
+  ) {
+    return this.documentsService.findForUser(userId, user);
   }
 
   @Get(':id/url')
-  getDownloadUrl(@Param('id') id: string, @CurrentUser() user: UserModel) {
-    const userId = user.role === Role.ADMIN ? undefined : user.id;
-    return this.documentsService.getDownloadUrl(parseInt(id), userId);
+  getDownloadUrl(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserModel,
+  ) {
+    return this.documentsService.getDownloadUrl(id, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: UserModel) {
-    return this.documentsService.remove(parseInt(id), user.id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserModel,
+  ) {
+    return this.documentsService.remove(id, user.id);
   }
 
   @Get('admin/pending-reviews')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  getPendingReviews() {
-    return this.documentsService.getPendingReviews();
+  getPendingReviews(@CurrentUser() user: UserModel) {
+    return this.documentsService.getPendingReviews(user);
   }
 
   @Patch(':id/review')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  review(@Param('id') id: string, @Body() dto: ReviewDocumentDto) {
-    return this.documentsService.review(+id, dto);
+  review(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ReviewDocumentDto,
+    @CurrentUser() user: UserModel,
+  ) {
+    return this.documentsService.review(id, dto, user);
   }
 }

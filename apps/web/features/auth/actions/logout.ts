@@ -5,6 +5,7 @@ export async function logout(): Promise<void> {
   await apiFetch("/auth/logout", {
     method: "POST",
     token: getToken() ?? undefined,
+    skipAuth: true,
   });
 
   removeToken();

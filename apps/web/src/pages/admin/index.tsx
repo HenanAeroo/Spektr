@@ -48,7 +48,7 @@ const AdminPage = () => {
         return <Dashboard navigate={navigate} users={users} promos={promos} />;
       case "students":
         return (
-          <StudentsList users={users} promos={promos} navigate={navigate} />
+          <StudentsList promos={promos} navigate={navigate} />
         );
       case "student-detail":
         return uid ? (
@@ -58,7 +58,7 @@ const AdminPage = () => {
             navigate={navigate}
           />
         ) : (
-          <StudentsList users={users} promos={promos} navigate={navigate} />
+          <StudentsList promos={promos} navigate={navigate} />
         );
       case "promos":
         return (

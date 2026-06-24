@@ -7,6 +7,7 @@ export async function login(data: LoginFormData): Promise<void> {
   const { accessToken } = await apiFetch<AuthResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify(data),
+    skipAuth: true,
   });
 
   setToken(accessToken);

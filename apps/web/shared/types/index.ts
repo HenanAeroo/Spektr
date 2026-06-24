@@ -12,6 +12,8 @@ export type Role = "STUDENT" | "ADMIN" | "SUPER_ADMIN";
 export type JwtPayload = {
   sub: number;
   role: Role;
+  email?: string;
+  first_name?: string;
   exp?: number;
   iat?: number;
 };

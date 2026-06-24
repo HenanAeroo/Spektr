@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { apiFetch } from "./api";
 
+vi.mock("@/features/auth/actions/refresh", () => ({
+  refresh: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe("apiFetch", () => {
   afterEach(() => {
     vi.restoreAllMocks(); // reset fetch
@@ -45,5 +49,35 @@ describe("apiFetch", () => {
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe(
       "Bearer mon-token",
     );
+  });
+
+  it("renvoie undefined sur une réponse 204 sans corps", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        status: 204,
+        json: () => Promise.reject(new Error("no body")),
+      }),
+    );
+
+    await expect(apiFetch("/test")).resolves.toBeUndefined();
+  });
+
+  it("rafraîchit puis rejoue la requête sur un 401", async () => {
+    const fetch401ThenOk = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 401, json: () => ({}) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ id: 7 }),
+      });
+    vi.stubGlobal("fetch", fetch401ThenOk);
+
+    const data = await apiFetch("/test");
+
+    expect(fetch401ThenOk).toHaveBeenCalledTimes(2);
+    expect(data).toEqual({ id: 7 });
   });
 });

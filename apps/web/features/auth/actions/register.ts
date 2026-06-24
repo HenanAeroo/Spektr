@@ -5,5 +5,6 @@ export async function register(data: RegisterFormData): Promise<void> {
   await apiFetch("/auth/register", {
     method: "POST",
     body: JSON.stringify(data),
+    skipAuth: true,
   });
 }

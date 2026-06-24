@@ -281,7 +281,7 @@ const ApplicationsPage = () => {
                       <div className="font-montserrat font-semibold text-[13px] text-spektr-dark">
                         {app.entreprise}
                       </div>
-                      {app.lien && (
+                      {app.lien && /^https?:\/\//i.test(app.lien) && (
                         <a
                           href={app.lien}
                           target="_blank"

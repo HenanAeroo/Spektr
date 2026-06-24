@@ -9,6 +9,7 @@ export async function refresh() {
 
   pendingRefresh = apiFetch<AuthResponse>("/auth/refresh", {
     method: "POST",
+    skipAuth: true,
   })
     .then(({ accessToken }) => setToken(accessToken))
     .finally(() => {

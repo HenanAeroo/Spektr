@@ -22,6 +22,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { reviewDocument } from "@/features/documents/actions/reviewDocument";
 import { DocumentType } from "@/features/documents/types";
+import DOMPurify from "dompurify";
 
 export function StudentDetail({
   userId,
@@ -820,7 +821,25 @@ export function StudentDetail({
                   {selectedComm?.body ? (
                     <div
                       className="font-source-sans text-[13px] text-white leading-relaxed [&_p]:mb-3 [&_p:last-child]:mb-0 [&_br]:block"
-                      dangerouslySetInnerHTML={{ __html: selectedComm.body }}
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(selectedComm.body, {
+                          ALLOWED_TAGS: [
+                            "p",
+                            "strong",
+                            "em",
+                            "u",
+                            "s",
+                            "h1",
+                            "h2",
+                            "h3",
+                            "ul",
+                            "ol",
+                            "li",
+                            "br",
+                          ],
+                          ALLOWED_ATTR: [],
+                        }),
+                      }}
                     />
                   ) : (
                     <div className="text-white/40 text-[13px] italic">

@@ -1,6 +1,10 @@
 import { apiFetch } from "@/shared/lib/api";
 import { useSearch } from "@tanstack/react-router";
 import { useState } from "react";
+import {
+  isStrongPassword,
+  PASSWORD_POLICY_MESSAGE,
+} from "@/shared/lib/password";
 
 const ResetPasswordPage = () => {
   const token = (useSearch({ strict: false }) as { token?: string }).token ?? "";
@@ -17,8 +21,8 @@ const ResetPasswordPage = () => {
       setError("Les mots de passe ne correspondent pas");
       return;
     }
-    if (password.length < 8) {
-      setError("8 caractères minimum");
+    if (!isStrongPassword(password)) {
+      setError(PASSWORD_POLICY_MESSAGE);
       return;
     }
 
@@ -26,6 +30,7 @@ const ResetPasswordPage = () => {
       await apiFetch("/auth/reset-password", {
         method: "POST",
         body: JSON.stringify({ token, password }),
+        skipAuth: true,
       });
       setSuccess(true);
     } catch (err) {
@@ -84,7 +89,7 @@ const ResetPasswordPage = () => {
                   autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="12 caractères minimum"
                   required
                   className="w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus:border-spektr-teal"
                 />

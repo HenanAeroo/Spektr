@@ -9,7 +9,8 @@ const VerifyEmail = () => {
 
   const result = useQuery({
     queryKey: ["verify-email", token],
-    queryFn: () => apiFetch("/auth/verify-email?token=" + token),
+    queryFn: () =>
+      apiFetch("/auth/verify-email?token=" + token, { skipAuth: true }),
     enabled: !!token,
     retry: false,
   });

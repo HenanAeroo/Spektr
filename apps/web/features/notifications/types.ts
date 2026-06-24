@@ -2,7 +2,8 @@ export type NotifType =
   | "DOCUMENT_ADDED"
   | "APPLICATION_STATUS"
   | "OBJECTIVE_CREATED"
-  | "DOCUMENT_REVIEW";
+  | "DOCUMENT_REVIEW"
+  | "INACTIVITY_ALERT";
 
 export type Notification = {
   id: number;
@@ -17,4 +18,5 @@ export const NOTIF_LABELS: Record<NotifType, string> = {
   APPLICATION_STATUS: "Statut de candidature mis à jour",
   OBJECTIVE_CREATED: "Nouvel objectif créé",
   DOCUMENT_REVIEW: "Avis sur votre document",
+  INACTIVITY_ALERT: "Alerte d'inactivité",
 };

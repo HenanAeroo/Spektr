@@ -11,6 +11,7 @@ const ForgotPasswordPage = () => {
       await apiFetch("/auth/forgot-password", {
         method: "POST",
         body: JSON.stringify({ email }),
+        skipAuth: true,
       });
     } catch {
       // Intentionally silent — don't reveal whether email exists

@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
+import { passwordSchema, PASSWORD_POLICY_MESSAGE } from "@/shared/lib/password";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +36,7 @@ const registerSchema = z.object({
       },
       { message: "Les adresses email temporaires ne sont pas acceptées" },
     ),
-  password: z.string().min(8),
+  password: passwordSchema,
   first_name: z.string().min(1),
   last_name: z.string().min(1),
 });
@@ -253,13 +254,14 @@ const RegisterForm = () => {
                 {...form.register("password")}
                 id="password"
                 type="password"
-                placeholder="8 caractères minimum"
+                placeholder="12 caractères minimum"
                 className={inputCls}
                 autoComplete="new-password"
               />
               {form.formState.errors.password && (
                 <p className="text-spektr-red text-xs mt-1">
-                  8 caractères minimum
+                  {form.formState.errors.password.message ??
+                    PASSWORD_POLICY_MESSAGE}
                 </p>
               )}
             </div>

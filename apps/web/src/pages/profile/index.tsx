@@ -4,6 +4,10 @@ import { useAuthContext } from "@/shared/components/auth-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { changePassword } from "@/features/profile/actions/changePassword";
 import { useMutation } from "@tanstack/react-query";
+import {
+  isStrongPassword,
+  PASSWORD_POLICY_MESSAGE,
+} from "@/shared/lib/password";
 
 const inputCls =
   "w-full px-3 py-[10px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] bg-white text-spektr-dark focus:outline-none focus:border-spektr-teal box-border";
@@ -61,7 +65,7 @@ export default function ProfilePage() {
     pwdPending ||
     !oldPassword ||
     !newPassword ||
-    newPassword.length < 8 ||
+    !isStrongPassword(newPassword) ||
     newPassword !== confirmPassword;
 
   if (loading) {
@@ -252,11 +256,12 @@ export default function ProfilePage() {
                       className={inputCls}
                       autoComplete="new-password"
                     />
-                    {newPassword.length > 0 && newPassword.length < 8 && (
-                      <p className="font-source-sans text-xs text-amber-600 mt-1">
-                        Minimum 8 caractères
-                      </p>
-                    )}
+                    {newPassword.length > 0 &&
+                      !isStrongPassword(newPassword) && (
+                        <p className="font-source-sans text-xs text-amber-600 mt-1">
+                          {PASSWORD_POLICY_MESSAGE}
+                        </p>
+                      )}
                   </div>
                   <div>
                     <label className={labelCls}>

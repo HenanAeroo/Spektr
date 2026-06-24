@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUrl,
 } from 'class-validator';
 import { Outcome, Statut } from '../../../prisma/generated/prisma/client';
 
@@ -13,7 +14,7 @@ export class CreateApplicationDto {
   @IsNotEmpty()
   entreprise!: string;
 
-  @IsString()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   @IsOptional()
   lien?: string;
 

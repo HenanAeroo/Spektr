@@ -32,9 +32,12 @@ const mockPrisma = {
   refreshToken: {
     create: jest.fn(),
     findUnique: jest.fn(),
+    update: jest.fn(),
     delete: jest.fn(),
     deleteMany: jest.fn(),
   },
+
+  $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
 };
 
 const mockUsersService = {
@@ -215,37 +218,44 @@ describe('AuthService', () => {
       );
     });
 
-    it('deletes the token BEFORE throwing if expired (anti-replay)', async () => {
-      // intentional delete-before-check: if two concurrent requests arrive with the same token
-      // (theft + legitimate use), the second will fail because the token is already deleted.
+    it('rejects an expired token without mutating it (C7)', async () => {
+      // Expiry is validated before any write, so an expired token is rejected
+      // without a delete/update (no delete-then-throw self-DoS edge).
       mockPrisma.refreshToken.findUnique.mockResolvedValue({
         token: 'hashed',
         expires_at: new Date(Date.now() - 1000),
         user: { id: 1, role: 'STUDENT' },
       });
-      mockPrisma.refreshToken.delete.mockResolvedValue({});
 
       await expect(service.refresh('raw-token')).rejects.toThrow(
         UnauthorizedException,
       );
 
-      // Guarantees that delete was called BEFORE the exception was thrown
-      expect(mockPrisma.refreshToken.delete).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.refreshToken.update).not.toHaveBeenCalled();
+      expect(mockPrisma.refreshToken.delete).not.toHaveBeenCalled();
     });
 
-    it('returns accessToken and refreshToken if token is valid', async () => {
+    it('rotates the token into a grace window and issues fresh tokens (M9)', async () => {
       mockPrisma.refreshToken.findUnique.mockResolvedValue({
         token: 'hashed',
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         user: { id: 1, role: 'STUDENT' },
       });
-      mockPrisma.refreshToken.delete.mockResolvedValue({});
+      mockPrisma.refreshToken.update.mockResolvedValue({});
       mockPrisma.user.findUnique.mockResolvedValue({ id: 1, role: 'STUDENT' });
       mockPrisma.refreshToken.create.mockResolvedValue({});
 
       const result = await service.refresh('raw-token');
 
-      expect(mockPrisma.refreshToken.delete).toHaveBeenCalledTimes(1);
+      // Presented token is shrunk to the grace window rather than hard-deleted.
+      expect(mockPrisma.refreshToken.update).toHaveBeenCalledTimes(1);
+      const lookupArg = mockPrisma.refreshToken.findUnique.mock.calls[0][0];
+      const updateArg = mockPrisma.refreshToken.update.mock.calls[0][0];
+      // Rotates the exact (hashed) token that was looked up.
+      expect(updateArg.where.token).toBe(lookupArg.where.token);
+      expect(updateArg.data.expires_at.getTime()).toBeLessThan(
+        Date.now() + 60_000,
+      );
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
     });

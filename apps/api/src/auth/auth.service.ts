@@ -18,6 +18,10 @@ import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
+  // Grace window during which a just-rotated refresh token is still accepted,
+  // so concurrent tabs sharing the same cookie aren't logged out (M9).
+  private static readonly REFRESH_GRACE_MS = 30_000;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -112,16 +116,22 @@ export class AuthService {
       },
     });
 
-    const token = randomBytes(32).toString('hex');
+    const rawToken = randomBytes(32).toString('hex');
     const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
+    // Store the verification token hashed at rest (AC-09) — same treatment as
+    // the reset-password token — so a leaked DB can't be used to verify or hijack
+    // pending accounts. The raw token only ever lives in the emailed link.
     const user = await this.prisma.user.update({
       where: { id: newUser.id },
-      data: { verificationToken: token, verificationExpiry: expiry },
+      data: {
+        verificationToken: this.hashTokenForStorage(rawToken),
+        verificationExpiry: expiry,
+      },
     });
 
     const frontUrl = this.config.get<string>('FRONT_URL');
-    const verifyUrl = `${frontUrl}/verify-email?token=${token}`;
+    const verifyUrl = `${frontUrl}/verify-email?token=${rawToken}`;
     const firstName = user.first_name ?? 'là';
 
     const html = `
@@ -201,14 +211,24 @@ export class AuthService {
       include: { user: true },
     });
 
-    if (!record)
+    // Validate existence and expiry BEFORE any write (C7): an unknown or expired
+    // token is rejected without mutating the DB, removing the delete-then-throw
+    // self-DoS edge.
+    if (!record || record.expires_at < new Date()) {
       throw new UnauthorizedException('Refresh token invalide ou expiré');
+    }
 
-    // Delete token first to prevent reuse, then check expiry
-    await this.prisma.refreshToken.delete({ where: { token: hashed } });
-
-    if (record.expires_at < new Date())
-      throw new UnauthorizedException('Refresh token invalide ou expiré');
+    // Rotate with a short grace window (M9): instead of hard-deleting the
+    // presented token, shrink its lifetime to a brief grace period so a
+    // concurrent refresh from another tab racing on the same cookie still
+    // succeeds. The daily purge (AuthTasks) removes it once the grace lapses.
+    const graceExpiry = new Date(Date.now() + AuthService.REFRESH_GRACE_MS);
+    if (record.expires_at > graceExpiry) {
+      await this.prisma.refreshToken.update({
+        where: { token: hashed },
+        data: { expires_at: graceExpiry },
+      });
+    }
 
     return this.issueTokens(record.user.id);
   }
@@ -221,7 +241,7 @@ export class AuthService {
     const email = profile.emails?.[0]?.value;
     const providerId = profile.id;
 
-    if (!email) throw new Error('Email Google manquant');
+    if (!email) throw new BadRequestException('Email Google manquant');
 
     const existing = await this.prisma.authProvider.findUnique({
       where: {
@@ -264,8 +284,11 @@ export class AuthService {
   }
 
   async verifyEmail(token: string) {
+    const hashedToken = this.hashTokenForStorage(token);
+
     const user = await this.prisma.user.findFirst({
-      where: { verificationToken: token },
+      where: { verificationToken: hashedToken },
+      omit: { verificationToken: false, verificationExpiry: false },
     });
 
     if (!user) {
@@ -384,6 +407,7 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: { resetPasswordToken: hashedToken },
       include: { authProviders: { select: { provider: true } } },
+      omit: { resetPasswordToken: false, resetPasswordExpiry: false },
     });
 
     if (!user) {
@@ -402,19 +426,23 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    await this.prisma.authProvider.update({
-      where: {
-        userId_provider: { userId: user.id, provider: Provider.local },
-      },
-      data: {
-        password: hashedPassword,
-      },
-    });
-
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { resetPasswordToken: null, resetPasswordExpiry: null },
-    });
+    // Atomic: set the new password and invalidate the single-use reset token
+    // together (be-07 / db-14). A partial failure must never leave the token
+    // usable after the password has already changed.
+    await this.prisma.$transaction([
+      this.prisma.authProvider.update({
+        where: {
+          userId_provider: { userId: user.id, provider: Provider.local },
+        },
+        data: {
+          password: hashedPassword,
+        },
+      }),
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { resetPasswordToken: null, resetPasswordExpiry: null },
+      }),
+    ]);
 
     return 'Mot de passe réinitialisé';
   }

@@ -12,7 +12,21 @@ export class PrismaService
     const adapter = new PrismaPg({
       connectionString: process.env.DATABASE_URL,
     });
-    super({ adapter });
+    super({
+      adapter,
+      // Never serialize secret/account-state token columns to any consumer by
+      // default (AC-09 / db-12). The few queries that legitimately need them
+      // (email verification, password reset) re-include per-query via
+      // `omit: { …: false }`.
+      omit: {
+        user: {
+          verificationToken: true,
+          verificationExpiry: true,
+          resetPasswordToken: true,
+          resetPasswordExpiry: true,
+        },
+      },
+    });
   }
 
   async onModuleInit() {

@@ -69,7 +69,7 @@ describe('AuthController', () => {
       const res = mockRes();
       const user = { sub: 1, role: 'STUDENT' };
 
-      await controller.login(user as any, res);
+      const result = await controller.login(user as any, res as any);
 
       expect(mockAuthService.localLogin).toHaveBeenCalledWith(user);
       expect(res.cookie).toHaveBeenCalledWith(
@@ -77,7 +77,7 @@ describe('AuthController', () => {
         'rt',
         expect.any(Object),
       );
-      expect(res.json).toHaveBeenCalledWith({ accessToken: 'at' });
+      expect(result).toEqual({ accessToken: 'at' });
     });
   });
 
@@ -90,7 +90,7 @@ describe('AuthController', () => {
       const req = { cookies: { refreshToken: 'raw-rt' } };
       const res = mockRes();
 
-      await controller.refresh(req, res);
+      const result = await controller.refresh(req as any, res as any);
 
       expect(mockAuthService.refresh).toHaveBeenCalledWith('raw-rt');
       expect(res.cookie).toHaveBeenCalledWith(
@@ -98,13 +98,14 @@ describe('AuthController', () => {
         'new-rt',
         expect.any(Object),
       );
+      expect(result).toEqual({ accessToken: 'new-at' });
     });
 
     it('throws UnauthorizedException if cookie is missing', async () => {
       const req = { cookies: {} };
       const res = mockRes();
 
-      await expect(controller.refresh(req, res)).rejects.toThrow(
+      await expect(controller.refresh(req as any, res as any)).rejects.toThrow(
         UnauthorizedException,
       );
       expect(mockAuthService.refresh).not.toHaveBeenCalled();
@@ -117,13 +118,14 @@ describe('AuthController', () => {
       const res = mockRes();
       const user = { sub: 1, role: 'STUDENT' };
 
-      await controller.logout(user as any, res);
+      const result = await controller.logout(user as any, res as any);
 
       expect(mockAuthService.logout).toHaveBeenCalledWith(1);
       expect(res.clearCookie).toHaveBeenCalledWith(
         'refreshToken',
         expect.any(Object),
       );
+      expect(result).toEqual({ message: 'Déconnecté' });
     });
   });
 

@@ -10,5 +10,12 @@
   },
   "devDependencies": {
     "turbo": "^2.8.21"
+  },
+  "pnpm": {
+    "overrides": {
+      "liquidjs": ">=10.26.0",
+      "path-to-regexp": ">=8.4.0",
+      "picomatch": ">=4.0.4"
+    }
   }
 }

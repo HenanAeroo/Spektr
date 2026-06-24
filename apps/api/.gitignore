@@ -3,6 +3,11 @@
 /node_modules
 /build
 
+# Build artifacts (compiled config + incremental build cache) — never commit
+prisma.config.js
+prisma.config.js.map
+*.tsbuildinfo
+
 # Logs
 logs
 *.log

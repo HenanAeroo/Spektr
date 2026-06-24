@@ -44,7 +44,7 @@ export class NotificationsService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) return notif;
     if (user.email) {
-      const { subject, html } = this.buildObjectiveEmail(
+      const { subject, html } = this.buildNotificationEmail(
         type,
         payload,
         user.first_name,
@@ -139,7 +139,7 @@ export class NotificationsService {
     }
   }
 
-  private buildObjectiveEmail(
+  private buildNotificationEmail(
     type: NotifType,
     payload: Record<string, unknown>,
     firstName: string | null,
@@ -258,12 +258,18 @@ export class NotificationsService {
 
     if (type === NotifType.DOCUMENT_REVIEW) {
       const docName = escapeHtml(
-        typeof payload.documentName === 'string' ? payload.documentName : 'document',
+        typeof payload.documentName === 'string'
+          ? payload.documentName
+          : 'document',
       );
       const status = payload.status as string;
       const docType = payload.docType as string;
       const docTypeLabel =
-        docType === 'CV' ? 'CV' : docType === 'LM' ? 'lettre de motivation' : 'document';
+        docType === 'CV'
+          ? 'CV'
+          : docType === 'LM'
+            ? 'lettre de motivation'
+            : 'document';
       const isValidated = status === 'VALIDATED';
 
       const color = isValidated ? '#16a34a' : '#ea580c';

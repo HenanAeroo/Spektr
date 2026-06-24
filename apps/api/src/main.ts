@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import { PrismaExceptionFilter } from './shared/filters/prisma-exception.filter';
 
 async function bootstrap() {
   const frontUrl = process.env.FRONT_URL;
@@ -17,6 +18,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.useGlobalFilters(new PrismaExceptionFilter());
   app.use(cookieParser());
   app.enableCors({
     origin: frontUrl,

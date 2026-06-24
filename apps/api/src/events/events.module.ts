@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { EventsGateway } from './events.gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { WsJwtGuard } from './guards/ws-jwt.guard';
 
 @Module({
   imports: [
@@ -15,7 +14,7 @@ import { WsJwtGuard } from './guards/ws-jwt.guard';
       }),
     }),
   ],
-  providers: [EventsGateway, WsJwtGuard],
+  providers: [EventsGateway],
   exports: [EventsGateway],
 })
 export class EventsModule {}

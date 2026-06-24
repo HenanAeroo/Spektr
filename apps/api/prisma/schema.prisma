@@ -38,6 +38,11 @@ model User {
 
   promoId              Int?
   promo                Promo? @relation(fields: [promoId], references: [id], onDelete: SetNull)
+
+  @@index([promoId])
+  @@index([verificationToken])
+  @@index([resetPasswordToken])
+  @@index([last_seen_at])
 }
 
 enum Provider {
@@ -69,6 +74,9 @@ model RefreshToken {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
+
+  @@index([userId])
+  @@index([expires_at])
 }
 
 enum Role {
@@ -105,6 +113,8 @@ model Application {
 
   userId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum Outcome {
@@ -134,6 +144,8 @@ model Folder {
   created_at DateTime @default(now())
 
   documents Document[]
+
+  @@index([userId])
 }
 
 model Document {
@@ -153,6 +165,10 @@ model Document {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
+
+  @@index([userId])
+  @@index([folderId])
+  @@index([status, docType])
 }
 
 enum NotifType {
@@ -186,6 +202,8 @@ model Notification {
   user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now())
+
+  @@index([userId, created_at])
 }
 
 model Promo {
@@ -224,6 +242,8 @@ model Objective {
   completions ObjectiveCompletion[]
 
   created_at  DateTime @default(now())
+
+  @@index([promoId])
 }
 
 model ObjectiveCompletion {
@@ -240,6 +260,7 @@ model ObjectiveCompletion {
   modified_at DateTime @updatedAt
 
   @@unique([objectiveId, userId])
+  @@index([userId])
 }
 
 enum CommunicationType {
@@ -261,4 +282,7 @@ model Communication {
   recipient   User @relation("ReceivedCommunications", fields: [recipientId], references: [id], onDelete: Cascade)
 
   created_at  DateTime @default(now())
+
+  @@index([senderId])
+  @@index([recipientId])
 }

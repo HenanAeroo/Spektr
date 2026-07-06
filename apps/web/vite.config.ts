@@ -7,11 +7,18 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 // Build a Content-Security-Policy from the configured API origin so no dev
 // values (localhost) ever leak into a production bundle (MISC-03). The ws/wss
 // origin is derived from the API URL for the socket.io real-time channel.
-function buildCsp(apiUrl: string, includeFrameAncestors: boolean): string {
+function buildCsp(
+  apiUrl: string,
+  includeFrameAncestors: boolean,
+  isDev = false,
+): string {
   const wsOrigin = apiUrl.replace(/^http/, "ws");
+  // Dev requires 'unsafe-inline' so Vite's React Fast Refresh preamble
+  // (an inline <script type="module">) isn't blocked by the CSP.
+  const scriptSrc = isDev ? "'self' 'unsafe-inline'" : "'self'";
   const directives: [string, string][] = [
     ["default-src", "'self'"],
-    ["script-src", "'self'"],
+    ["script-src", scriptSrc],
     ["style-src", "'self' 'unsafe-inline' fonts.googleapis.com"],
     ["font-src", "'self' fonts.gstatic.com"],
     ["img-src", "'self' data:"],
@@ -57,7 +64,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       headers: {
-        "Content-Security-Policy": buildCsp(apiUrl, true),
+        "Content-Security-Policy": buildCsp(apiUrl, true, true),
       },
     },
   };

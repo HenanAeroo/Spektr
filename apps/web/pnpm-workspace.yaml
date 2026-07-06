@@ -1,3 +1,10 @@
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+# Allow pnpm to rebuild node_modules without an interactive prompt.
+# Needed because Turbo runs `pnpm run dev` with no TTY: when pnpm's
+# verify-deps-before-run decides node_modules must be rebuilt (e.g. after a
+# pnpm-version change), the modules-dir purge would otherwise abort.
+confirmModulesPurge: false
+allowBuilds:
+  msw: true

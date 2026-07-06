@@ -7,3 +7,6 @@ allowBuilds:
   msw: true
   prisma: true
   unrs-resolver: true
+# Let pnpm rebuild node_modules non-interactively (Turbo runs scripts without a
+# TTY, so the modules-dir purge confirmation would otherwise abort the run).
+confirmModulesPurge: false

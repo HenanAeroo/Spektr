@@ -6,6 +6,7 @@ type PaginatedUsers = {
   data: User[];
   total: number;
   hasNextPage: boolean;
+  page: number;
 };
 
 export async function fetchUsers(page: number, promoId?: number) {

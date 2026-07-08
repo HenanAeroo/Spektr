@@ -87,6 +87,7 @@ export class UsersService {
       data: users,
       total,
       hasNextPage: page * limit < total,
+      page,
     };
   }
 

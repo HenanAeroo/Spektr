@@ -1,5 +1,10 @@
 import { fetchAllCompletions } from "@/features/objectives/actions/fetchAllCompletions";
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { inputCls, labelCls } from "../constants";
 import { Card } from "./Card";
@@ -46,9 +51,9 @@ export function StudentsList({
     queryFn: ({ pageParam }) =>
       fetchUsers(pageParam, selectedPromo ?? undefined),
     initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) => {
+    getNextPageParam: (lastPage) => {
       if (lastPage.hasNextPage) {
-        return allPages.length + 1;
+        return lastPage.page + 1;
       } else {
         return undefined;
       }
@@ -96,9 +101,15 @@ export function StudentsList({
       if (result.errors.length > 0) {
         const preview = result.errors
           .slice(0, 5)
-          .map((e) => `Ligne ${e.row}${e.email ? ` (${e.email})` : ""} : ${e.message}`)
+          .map(
+            (e) =>
+              `Ligne ${e.row}${e.email ? ` (${e.email})` : ""} : ${e.message}`,
+          )
           .join("\n");
-        const suffix = result.errors.length > 5 ? `\n… et ${result.errors.length - 5} autre(s)` : "";
+        const suffix =
+          result.errors.length > 5
+            ? `\n… et ${result.errors.length - 5} autre(s)`
+            : "";
         toast.warning(`Détail des erreurs :\n${preview}${suffix}`, {
           duration: 8000,
           style: { whiteSpace: "pre-line" },
@@ -108,7 +119,7 @@ export function StudentsList({
     onError: () => toast.error("Erreur lors de l'import CSV"),
   });
 
-  const sentinelRef = useRef(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const sendDisabled =
     selected.length === 0 ||

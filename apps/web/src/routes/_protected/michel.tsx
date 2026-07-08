@@ -1,7 +1,10 @@
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { getUser } from "@/shared/lib/auth";
-import AdminPage from "@/src/pages/admin";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import { z } from "zod";
+
+const AdminPage = lazy(() => import("@/src/pages/admin"));
 
 const searchSchema = z.object({
   p: z.string().optional(),
@@ -16,5 +19,16 @@ export const Route = createFileRoute("/_protected/michel")({
       throw redirect({ to: "/" });
     }
   },
-  component: AdminPage,
+  component: () => (
+    <Suspense
+      fallback={
+        <div className="py-7 px-8">
+          <Skeleton className="h-8 w-48 mb-6" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      }
+    >
+      <AdminPage />
+    </Suspense>
+  ),
 });

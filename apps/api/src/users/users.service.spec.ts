@@ -102,7 +102,12 @@ describe('UsersService', () => {
         where: {},
       });
       expect(mockPrisma.user.count).toHaveBeenCalled();
-      expect(result).toEqual({ data: users, total: 10, hasNextPage: true });
+      expect(result).toEqual({
+        data: users,
+        total: 10,
+        hasNextPage: true,
+        page: 2,
+      });
     });
 
     it('hasNextPage is false when page * limit >= total', async () => {

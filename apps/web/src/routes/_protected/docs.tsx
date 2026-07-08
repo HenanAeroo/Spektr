@@ -1,6 +1,20 @@
-import DocumentsPage from "@/src/pages/documents";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
+
+const DocumentsPage = lazy(() => import("@/src/pages/documents"));
 
 export const Route = createFileRoute("/_protected/docs")({
-  component: DocumentsPage,
+  component: () => (
+    <Suspense
+      fallback={
+        <div className="py-7 px-8">
+          <Skeleton className="h-8 w-48 mb-6" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      }
+    >
+      <DocumentsPage />
+    </Suspense>
+  ),
 });

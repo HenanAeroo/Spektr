@@ -8,7 +8,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useAuthContext } from "@/shared/components/auth-provider";
 import { apiFetch } from "@/shared/lib/api";
 import { getToken } from "@/shared/lib/auth";
-import { User } from "@/shared/types";
+import { User } from "@spektr/shared";
 
 // Using useState because it is a dedicated context for the authentication
 export function useAuth() {

@@ -1,6 +1,6 @@
 import { apiFetch } from "@/shared/lib/api";
 import { setToken } from "@/shared/lib/auth";
-import { AuthResponse } from "@/shared/types";
+import { AuthResponse } from "@spektr/shared";
 
 let pendingRefresh: Promise<void> | null = null;
 

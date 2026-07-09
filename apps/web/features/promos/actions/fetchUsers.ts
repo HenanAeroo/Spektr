@@ -1,6 +1,6 @@
 import { apiFetch } from "@/shared/lib/api";
 import { getToken } from "@/shared/lib/auth";
-import { User } from "@/shared/types";
+import { User } from "@spektr/shared";
 
 type PaginatedUsers = {
   data: User[];

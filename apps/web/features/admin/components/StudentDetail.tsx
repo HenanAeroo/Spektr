@@ -13,7 +13,7 @@ import { Card } from "./Card";
 import { StatusBadge } from "./StatusBadge";
 import { fetchCommunications } from "@/features/users/actions/fetchCommunications";
 import { Mail, MessageCircleMore } from "lucide-react";
-import { Communications } from "@/shared/types";
+import { Communications } from "@spektr/shared";
 import {
   Dialog,
   DialogContent,

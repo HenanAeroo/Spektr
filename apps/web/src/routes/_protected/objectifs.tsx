@@ -1,10 +1,8 @@
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { createFileRoute, lazyRouteComponent } from "@tanstack/react-router";
-import { Suspense } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 
-const ObjectivesPage = lazyRouteComponent(
-  () => import("@/src/pages/objectives"),
-);
+const ObjectivesPage = lazy(() => import("@/src/pages/objectives"));
 
 export const Route = createFileRoute("/_protected/objectifs")({
   component: () => (

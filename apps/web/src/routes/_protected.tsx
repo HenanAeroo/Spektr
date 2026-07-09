@@ -7,8 +7,10 @@ import {
   Outlet,
   redirect,
   useNavigate,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
+import TopLoader from "@/shared/components/layout/top-loader";
 
 export const Route = createFileRoute("/_protected")({
   beforeLoad: async () => {
@@ -24,13 +26,14 @@ export const Route = createFileRoute("/_protected")({
   component: () => {
     const { isInitialized } = useAuthContext();
     const navigate = useNavigate();
-    const token = getToken();
 
     useEffect(() => {
       if (isInitialized && !getToken()) {
         navigate({ to: "/login" });
       }
     }, [isInitialized, navigate]);
+
+    const isLoading = useRouterState({ select: (s) => s.status === "pending" });
 
     if (!isInitialized) {
       return (
@@ -41,12 +44,15 @@ export const Route = createFileRoute("/_protected")({
     }
 
     return (
-      <div className="flex h-screen bg-spektr-bg">
-        <Sidebar />
-        <main className="flex-1 overflow-auto ml-[220px]">
-          <Outlet />
-        </main>
-      </div>
+      <>
+        <TopLoader isLoading={isLoading} />
+        <div className="flex h-screen bg-spektr-bg">
+          <Sidebar />
+          <main className="flex-1 overflow-auto ml-[220px]">
+            <Outlet />
+          </main>
+        </div>
+      </>
     );
   },
 });

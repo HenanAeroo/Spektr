@@ -242,7 +242,11 @@ const Sidebar = () => {
               {fullName}
             </div>
             <div className="text-[10px] text-white/40">
-              {user?.role === "SUPER_ADMIN" ? "Super Admin" : isAdmin ? "Chargé RE" : "Étudiant"}
+              {user?.role === "SUPER_ADMIN"
+                ? "Super Admin"
+                : isAdmin
+                  ? "Chargé RE"
+                  : "Étudiant"}
             </div>
           </div>
           <LogOut size={14} color="rgba(255,255,255,0.3)" aria-hidden="true" />

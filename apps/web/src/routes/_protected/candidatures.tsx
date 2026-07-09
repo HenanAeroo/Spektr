@@ -1,5 +1,6 @@
+import { fetchMyApplications } from "@/features/applications/actions/fetchMyApplications";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, ErrorComponent } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 
 const ApplicationsPage = lazy(() => import("@/src/pages/applications"));
@@ -17,4 +18,11 @@ export const Route = createFileRoute("/_protected/candidatures")({
       <ApplicationsPage />
     </Suspense>
   ),
+  loader: async () => {
+    try {
+      return await fetchMyApplications();
+    } catch {
+      return [];
+    }
+  },
 });

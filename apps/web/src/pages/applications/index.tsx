@@ -19,6 +19,7 @@ import {
   STATUTS,
 } from "@/features/applications/constants";
 import { ApplicationSheet } from "@/features/applications/components/ApplicationSheet";
+import { getRouteApi } from "@tanstack/react-router";
 
 function StatusBadge({ statut }: { statut: Statut }) {
   const c = STATUT_COLORS[statut];
@@ -31,6 +32,8 @@ function StatusBadge({ statut }: { statut: Statut }) {
   );
 }
 
+const routeApi = getRouteApi("/_protected/candidatures");
+
 const ApplicationsPage = () => {
   const queryClient = useQueryClient();
   const [filterStatut, setFilterStatut] = useState<Statut | "tous">("tous");
@@ -39,6 +42,8 @@ const ApplicationsPage = () => {
   const [editApp, setEditApp] = useState<Application | null>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+
+  const loaderData = routeApi.useLoaderData();
 
   const { mutate: importFromCsv, isPending: isImporting } = useMutation({
     mutationFn: (file: File) => importCsv(file),
@@ -63,6 +68,8 @@ const ApplicationsPage = () => {
     queryKey: ["applications"],
     queryFn: fetchMyApplications,
     staleTime: 2 * 60 * 1000,
+    initialData: loaderData,
+    initialDataUpdatedAt: Date.now(),
   });
 
   const { mutate: createApp } = useMutation({
@@ -229,9 +236,7 @@ const ApplicationsPage = () => {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="py-10 text-center text-gray-400">Chargement…</div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="py-60px px-10 text-center">
             <div className="text-[40px] mb-3">📭</div>
             <p className="font-montserrat font-semibold text-[15px] text-gray-500">
@@ -401,7 +406,9 @@ const ApplicationsPage = () => {
 
       <ConfirmDialog
         open={pendingDeleteId !== null}
-        onOpenChange={(val) => { if (!val) setPendingDeleteId(null); }}
+        onOpenChange={(val) => {
+          if (!val) setPendingDeleteId(null);
+        }}
         title="Confirmer la suppression"
         description="Cette action est irréversible."
         onConfirm={handleDelete}

@@ -27,9 +27,9 @@ export type User = {
   promoId: number | null;
 };
 
-type CommunicationType = "EMAIL" | "FEEDBACK";
+export type CommunicationType = "EMAIL" | "FEEDBACK";
 
-type CommunicationUser = {
+export type CommunicationUser = {
   id: number;
   first_name: string | null;
   last_name: string | null;

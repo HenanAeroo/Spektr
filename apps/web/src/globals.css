@@ -8,6 +8,7 @@
 :root {
   --spektr-teal: #23b2a4;
   --spektr-teal-hover: #1d9d91;
+  --spektr-teal-accessible: #0d7a6f;
   --spektr-teal-light: rgba(35, 178, 164, 0.1);
   --spektr-dark: #1d1d1e;
   --spektr-bg: #f5f5f5;
@@ -120,6 +121,7 @@ select {
   --font-source-sans: "Source Sans 3", sans-serif;
   --color-spektr-teal: var(--spektr-teal);
   --color-spektr-teal-hover: var(--spektr-teal-hover);
+  --color-spektr-teal-accessible: var(--spektr-teal-accessible);
   --color-spektr-teal-light: var(--spektr-teal-light);
   --color-spektr-dark: var(--spektr-dark);
   --color-spektr-bg: var(--spektr-bg);

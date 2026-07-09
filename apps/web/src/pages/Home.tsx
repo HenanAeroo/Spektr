@@ -14,12 +14,12 @@ const STATUT_LABELS: Record<string, string> = {
 };
 
 const STATUT_COLORS: Record<string, { bg: string; text: string }> = {
-  A_CONTACTER: { bg: "bg-gray-100", text: "text-gray-500" },
+  A_CONTACTER: { bg: "bg-gray-100", text: "text-gray-700" },
   ENVOYE: { bg: "bg-blue-50", text: "text-blue-500" },
   RELANCE: { bg: "bg-amber-50", text: "text-amber-600" },
   EN_DISCUSSION: { bg: "bg-violet-50", text: "text-violet-500" },
   REPONSE_POSITIVE: { bg: "bg-green-100", text: "text-green-600" },
-  REFUS: { bg: "bg-red-100", text: "text-red-600" },
+  REFUS: { bg: "bg-red-100", text: "text-red-800" },
 };
 
 export default function HomePage() {
@@ -66,7 +66,7 @@ export default function HomePage() {
         <h1 className="font-montserrat font-extrabold text-[26px] text-spektr-dark tracking-[-0.5px]">
           {greeting}, {firstName} 👋
         </h1>
-        <p className="font-source-sans text-sm text-gray-500 mt-1">
+        <p className="font-source-sans text-sm text-gray-600 mt-1">
           Voici un aperçu de votre recherche d'alternance.
         </p>
       </div>
@@ -104,7 +104,7 @@ export default function HomePage() {
             <div className="font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] mt-1">
               {stat.label}
             </div>
-            <div className="font-source-sans text-xs text-gray-400 mt-0.5">
+            <div className="font-source-sans text-xs text-gray-600 mt-0.5">
               {stat.delta}
             </div>
           </div>
@@ -120,13 +120,13 @@ export default function HomePage() {
             </span>
             <Link
               to="/candidatures"
-              className="text-xs text-spektr-teal font-semibold no-underline"
+              className="text-xs text-spektr-teal-accessible font-semibold no-underline"
             >
               Voir toutes →
             </Link>
           </div>
           {recentApps.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-sm">
+            <div className="text-center py-8 text-gray-600 text-sm">
               <div className="text-[32px] mb-2">📭</div>
               <p>Aucune candidature pour l'instant</p>
               <Link
@@ -157,7 +157,7 @@ export default function HomePage() {
                       <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
                         {app.entreprise}
                       </div>
-                      <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
+                      <div className="font-source-sans text-[11px] text-gray-600 mt-0.5">
                         {app.date_candidature
                           ? new Date(app.date_candidature).toLocaleDateString(
                               "fr-FR",
@@ -187,13 +187,13 @@ export default function HomePage() {
               </span>
               <Link
                 to="/objectifs"
-                className="text-xs text-spektr-teal font-semibold no-underline"
+                className="text-xs text-spektr-teal-accessible font-semibold no-underline"
               >
                 Voir →
               </Link>
             </div>
             {objectives.length === 0 ? (
-              <p className="text-[13px] text-gray-400 text-center py-4">
+              <p className="text-[13px] text-gray-600 text-center py-4">
                 Aucun objectif pour l'instant
               </p>
             ) : (
@@ -206,7 +206,7 @@ export default function HomePage() {
                         {obj.title}
                       </div>
                       {obj.deadline && (
-                        <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
+                        <div className="font-source-sans text-[11px] text-gray-600 mt-0.5">
                           Deadline :{" "}
                           {new Date(obj.deadline).toLocaleDateString("fr-FR")}
                         </div>
@@ -220,7 +220,7 @@ export default function HomePage() {
 
           {/* Quick actions */}
           <div className="bg-spektr-teal/[0.06] rounded-[10px] border border-spektr-teal/20 p-5">
-            <div className="font-montserrat font-bold text-[13px] text-spektr-teal mb-3">
+            <div className="font-montserrat font-bold text-[13px] text-spektr-dark mb-3">
               Actions rapides
             </div>
             <div className="flex flex-col gap-2">

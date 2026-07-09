@@ -142,14 +142,14 @@ const Sidebar = () => {
         <div className="font-montserrat text-2xl font-extrabold text-white tracking-tight">
           Spek<span className="text-spektr-teal">tr</span>
         </div>
-        <div className="font-montserrat text-[9px] text-white/35 font-semibold tracking-[2px] uppercase mt-0.5">
+        <div className="font-montserrat text-[9px] text-white/60 font-semibold tracking-[2px] uppercase mt-0.5">
           YNOV CAMPUS
         </div>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto pt-[18px] pb-2">
-        <div className="font-montserrat text-[9px] text-white/30 font-bold tracking-[2px] uppercase px-5 pb-2.5">
+        <div className="font-montserrat text-[9px] text-white/60 font-bold tracking-[2px] uppercase px-5 pb-2.5">
           NAVIGATION
         </div>
 
@@ -176,7 +176,7 @@ const Sidebar = () => {
       {/* Notification bell (students only) */}
       {!isAdmin && (
         <div className="px-3 py-2 border-t border-white/[0.07] flex items-center justify-between">
-          <span className="font-montserrat text-[10px] text-white/30 font-bold tracking-[2px] uppercase">
+          <span className="font-montserrat text-[10px] text-white/60 font-bold tracking-[2px] uppercase">
             NOTIFS
           </span>
           <NotificationBell />
@@ -234,14 +234,14 @@ const Sidebar = () => {
           className="w-full px-5 py-4 flex items-center gap-2.5 cursor-pointer bg-transparent border-none text-left hover:bg-white/[0.04]"
           onClick={() => setShowUserMenu((v) => !v)}
         >
-          <div className="w-9 h-9 rounded-full bg-spektr-teal flex items-center justify-center text-white text-xs font-bold flex-shrink-0 font-montserrat">
+          <div className="w-9 h-9 rounded-full bg-spektr-teal flex items-center justify-center text-black text-xs font-bold flex-shrink-0 font-montserrat">
             {initials}
           </div>
           <div className="flex-1 overflow-hidden">
             <div className="text-xs font-bold text-white truncate font-montserrat">
               {fullName}
             </div>
-            <div className="text-[10px] text-white/40">
+            <div className="text-[10px] text-white/60">
               {user?.role === "SUPER_ADMIN"
                 ? "Super Admin"
                 : isAdmin

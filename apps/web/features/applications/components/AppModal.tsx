@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
 import { Calendar } from "@/shared/components/ui/calendar";
+import { CreateApplicationData } from "../actions/createApplication";
 
 const schema = z.object({
   entreprise: z.string().min(1, "L'entreprise est requise"),
@@ -47,7 +48,7 @@ type FormValues = z.infer<typeof schema>;
 export type ModalProps = {
   app: Partial<Application> & { id?: number };
   onClose: () => void;
-  onSave: (data: Partial<Application>) => void;
+  onSave: (data: CreateApplicationData) => void;
   mode: "create" | "edit";
 };
 

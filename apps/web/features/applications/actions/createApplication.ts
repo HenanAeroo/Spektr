@@ -11,7 +11,9 @@ export type CreateApplicationData = {
   contact_email?: string;
   contact_tel?: string;
   date_candidature?: string;
-  date_relance?: string;
+  date_relance_contact?: string;
+  date_relance_tel?: string;
+  date_reponse_entreprise?: string;
   outcome?: Outcome;
 };
 

@@ -119,6 +119,7 @@ const ApplicationsPage = () => {
     },
     onError: (error, { id, data }, context) => {
       queryClient.setQueryData(["applications"], context?.snapshot);
+      toast.error(error.message);
     },
     onSettled: () => {
       queryClient.invalidateQueries({

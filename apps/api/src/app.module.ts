@@ -20,7 +20,6 @@ import { ObjectivesModule } from './objectives/objectives.module';
 import { ActivityInterceptor } from './shared/interceptors/activity.interceptor';
 import { CommunicationsModule } from './communications/communications.module';
 import { PromoAccessModule } from './promos/promo-access.module';
-import { TransformInterceptor } from './shared/interceptors/transform.interceptor';
 
 @Module({
   imports: [
@@ -61,7 +60,6 @@ import { TransformInterceptor } from './shared/interceptors/transform.intercepto
       provide: APP_INTERCEPTOR,
       useClass: ActivityInterceptor,
     },
-    { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
   ],
 })
 export class AppModule {}

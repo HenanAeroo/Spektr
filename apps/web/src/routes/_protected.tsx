@@ -35,6 +35,7 @@ export const Route = createFileRoute("/_protected")({
     }, [isInitialized, navigate]);
 
     const isLoading = useRouterState({ select: (s) => s.status === "pending" });
+    const pathname = useRouterState({ select: (s) => s.location.pathname });
 
     if (!isInitialized) {
       return (
@@ -50,7 +51,7 @@ export const Route = createFileRoute("/_protected")({
         <div className="flex h-screen bg-spektr-bg">
           <Sidebar />
           <main className="flex-1 overflow-auto ml-[220px]">
-            <ErrorBoundary>
+            <ErrorBoundary key={pathname}>
               <Outlet />
             </ErrorBoundary>
           </main>

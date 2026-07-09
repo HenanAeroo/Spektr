@@ -1,5 +1,8 @@
 import { fetchMyApplications } from "@/features/applications/actions/fetchMyApplications";
-import { createApplication } from "@/features/applications/actions/createApplication";
+import {
+  createApplication,
+  CreateApplicationData,
+} from "@/features/applications/actions/createApplication";
 import { deleteApplication } from "@/features/applications/actions/deleteApplication";
 import {
   updateApplication,
@@ -64,7 +67,7 @@ const ApplicationsPage = () => {
     },
   });
 
-  const { data: applications = [], isLoading } = useQuery({
+  const { data: applications = [] } = useQuery<Application[]>({
     queryKey: ["applications"],
     queryFn: fetchMyApplications,
     staleTime: 2 * 60 * 1000,
@@ -73,7 +76,7 @@ const ApplicationsPage = () => {
   });
 
   const { mutate: createApp } = useMutation({
-    mutationFn: (data: any) => createApplication(data),
+    mutationFn: (data: CreateApplicationData) => createApplication(data),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });

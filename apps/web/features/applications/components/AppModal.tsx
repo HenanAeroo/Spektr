@@ -132,6 +132,7 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
           </span>
           <button
             onClick={onClose}
+            aria-label="Fermer"
             className="bg-transparent border-none cursor-pointer text-xl text-gray-400"
           >
             ✕

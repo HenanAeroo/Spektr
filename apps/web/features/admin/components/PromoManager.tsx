@@ -271,7 +271,7 @@ export function PromoManager({
                           userId: u.id,
                         });
                       }}
-                      className="px-2 py-[5px] border border-spektr-border rounded-md text-xs font-source-sans cursor-pointer focus:outline-none text-spektr-dark bg-white"
+                      className="px-2 py-[5px] border border-spektr-border rounded-md text-xs font-source-sans cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 text-spektr-dark bg-white"
                     >
                       <option value="">Sans promo</option>
                       {promos.map((p: any) => (
@@ -383,6 +383,7 @@ export function PromoManager({
               </div>
               <button
                 onClick={() => setAssignAdminPromoId(null)}
+                aria-label="Fermer"
                 className="bg-transparent border-none cursor-pointer text-xl text-gray-500"
               >
                 ✕
@@ -447,7 +448,7 @@ export function PromoManager({
                   onChange={(e) =>
                     setAdminRole(e.target.value as AdminPromoRole)
                   }
-                  className="w-full px-3 py-2 border border-spektr-border rounded-lg text-[13px] font-source-sans focus:outline-none"
+                  className="w-full px-3 py-2 border border-spektr-border rounded-lg text-[13px] font-source-sans focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1"
                 >
                   <option value="OWNER">Propriétaire</option>
                   <option value="COLLABORATOR">Collaborateur</option>

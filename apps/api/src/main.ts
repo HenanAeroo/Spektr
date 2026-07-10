@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { LogLevel, ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { PrismaExceptionFilter } from './shared/filters/prisma-exception.filter';
@@ -9,7 +9,15 @@ async function bootstrap() {
   const frontUrl = process.env.FRONT_URL;
   if (!frontUrl) throw new Error('FRONT_URL environment variable is not set');
 
-  const app = await NestFactory.create(AppModule);
+  let logLevels: LogLevel[];
+
+  if (process.env.NODE_ENV === 'production') {
+    logLevels = ['warn', 'error'];
+  } else {
+    logLevels = ['log', 'debug', 'verbose', 'warn', 'error'];
+  }
+
+  const app = await NestFactory.create(AppModule, { logger: logLevels });
   app.use(helmet());
   app.useGlobalPipes(
     new ValidationPipe({
@@ -21,7 +29,7 @@ async function bootstrap() {
   app.useGlobalFilters(new PrismaExceptionFilter());
   app.use(cookieParser());
   app.enableCors({
-    origin: frontUrl,
+    origin: process.env.FRONT_URL,
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 3000);

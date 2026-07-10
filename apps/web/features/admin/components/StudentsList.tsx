@@ -159,6 +159,52 @@ export function StudentsList({
     }
   }
 
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showContact) return;
+
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const elementBefore = document.activeElement as HTMLElement;
+
+    const FOCUSABLE_SELECTOR =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const focusables = Array.from(
+      modal.querySelectorAll(FOCUSABLE_SELECTOR),
+    ) as HTMLElement[];
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    first?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowContact(false);
+        return;
+      }
+
+      if (e.key === "Tab") {
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      elementBefore?.focus();
+    };
+  }, [showContact]);
+
   return (
     <div>
       <div className="flex items-start justify-between mb-6">
@@ -204,7 +250,7 @@ export function StudentsList({
       <Card className="p-0">
         <div className="px-5 py-3.5 border-b border-spektr-border flex gap-3 items-center">
           <div className="relative flex-1 max-w-[320px]">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
               🔍
             </span>
             <input
@@ -253,19 +299,19 @@ export function StudentsList({
                       <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
                         {u.first_name} {u.last_name}
                       </div>
-                      <div className="font-source-sans text-[11px] text-gray-400 truncate">
+                      <div className="font-source-sans text-[11px] text-gray-500 truncate">
                         {u.email}
                       </div>
                     </div>
                   </div>
                   {promo && (
-                    <span className="inline-block px-2 py-0.5 rounded-full bg-spektr-teal/10 text-spektr-teal text-[11px] font-semibold mb-3">
+                    <span className="inline-block px-2 py-0.5 rounded-full bg-spektr-teal/10 text-spektr-teal-accessible text-[11px] font-semibold mb-3">
                       {promo.name}
                     </span>
                   )}
                   {promoObjectives.length > 0 && (
                     <div>
-                      <div className="flex justify-between text-[11px] text-gray-400 mb-1">
+                      <div className="flex justify-between text-[11px] text-gray-500 mb-1">
                         <span>Objectifs</span>
                         <span>
                           {doneCount}/{promoObjectives.length} — {pct}%
@@ -298,6 +344,7 @@ export function StudentsList({
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            ref={modalRef}
             className="bg-white rounded-2xl w-[640px] max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]"
           >
             <div className="flex justify-between items-center px-7 py-[22px] border-b border-spektr-border">
@@ -308,14 +355,14 @@ export function StudentsList({
                 >
                   Contacter des étudiants
                 </div>
-                <div className="font-source-sans text-xs text-gray-400 mt-0.5">
+                <div className="font-source-sans text-xs text-gray-500 mt-0.5">
                   Le message s'ouvrira dans votre client email
                 </div>
               </div>
               <button
                 aria-label="Fermer"
                 onClick={() => setShowContact(false)}
-                className="bg-transparent border-none cursor-pointer text-xl text-gray-400"
+                className="bg-transparent border-none cursor-pointer text-xl text-gray-500"
               >
                 ✕
               </button>
@@ -325,7 +372,9 @@ export function StudentsList({
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-montserrat font-bold text-[13px]">
                     Destinataires{" "}
-                    <span className="text-spektr-teal">{selected.length}</span>{" "}
+                    <span className="text-spektr-teal-accessible">
+                      {selected.length}
+                    </span>{" "}
                     sélectionné{selected.length > 1 ? "s" : ""}
                   </span>
                   <div className="flex gap-2.5">
@@ -389,7 +438,7 @@ export function StudentsList({
                         <span className="font-source-sans text-[13px]">
                           {u.first_name} {u.last_name}
                         </span>
-                        <span className="font-source-sans text-[11px] text-gray-400">
+                        <span className="font-source-sans text-[11px] text-gray-500">
                           {u.email}
                         </span>
                       </label>

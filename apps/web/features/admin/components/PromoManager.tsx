@@ -4,10 +4,13 @@ import {
   CreatePromoData,
 } from "@/features/promos/actions/createPromo";
 import { deletePromo } from "@/features/promos/actions/deletePromo";
-import { assignAdmin, AdminPromoRole } from "@/features/promos/actions/assignAdmin";
+import {
+  assignAdmin,
+  AdminPromoRole,
+} from "@/features/promos/actions/assignAdmin";
 import { removeAdmin } from "@/features/promos/actions/removeAdmin";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { inputCls } from "../constants";
 import { Card } from "./Card";
@@ -28,7 +31,9 @@ export function PromoManager({
 
   const [newName, setNewName] = useState("");
   const [selectedPromoId, setSelectedPromoId] = useState<number | null>(null);
-  const [assignAdminPromoId, setAssignAdminPromoId] = useState<number | null>(null);
+  const [assignAdminPromoId, setAssignAdminPromoId] = useState<number | null>(
+    null,
+  );
   const [adminRole, setAdminRole] = useState<AdminPromoRole>("OWNER");
 
   const { mutate: handleCreate } = useMutation({
@@ -76,6 +81,52 @@ export function PromoManager({
   );
   const adminUsers = users.filter((u) => u.role === "ADMIN");
 
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (assignAdminPromoId === null) return;
+
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const elementBefore = document.activeElement as HTMLElement;
+
+    const FOCUSABLE_SELECTOR =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const focusables = Array.from(
+      modal.querySelectorAll(FOCUSABLE_SELECTOR),
+    ) as HTMLElement[];
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    first?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setAssignAdminPromoId(null);
+        return;
+      }
+
+      if (e.key === "Tab") {
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      elementBefore?.focus();
+    };
+  }, [assignAdminPromoId]);
+
   return (
     <div>
       <div className="mb-6">
@@ -83,7 +134,9 @@ export function PromoManager({
           Gestion des promotions
         </h1>
         <p className="font-source-sans text-[13px] text-gray-500 mt-0.5">
-          {isSuperAdmin ? "Créez des promos et assignez des admins et étudiants" : "Assignez vos étudiants aux promotions"}
+          {isSuperAdmin
+            ? "Créez des promos et assignez des admins et étudiants"
+            : "Assignez vos étudiants aux promotions"}
         </p>
       </div>
 
@@ -122,7 +175,7 @@ export function PromoManager({
           )}
 
           {promos.length === 0 ? (
-            <p className="font-source-sans text-[13px] text-gray-400">
+            <p className="font-source-sans text-[13px] text-gray-500">
               Aucune promo créée
             </p>
           ) : (
@@ -148,7 +201,9 @@ export function PromoManager({
                     <span
                       className={[
                         "font-source-sans text-[11px]",
-                        selectedPromoId === p.id ? "text-spektr-dark" : "text-gray-400",
+                        selectedPromoId === p.id
+                          ? "text-spektr-dark"
+                          : "text-gray-500",
                       ].join(" ")}
                     >
                       {count} étudiant{count !== 1 ? "s" : ""}
@@ -165,7 +220,10 @@ export function PromoManager({
                           + Admin
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(p.id);
+                          }}
                           className="bg-[#fee2e2] border-none rounded-md px-2.5 py-[5px] cursor-pointer text-[11px] font-semibold text-[#dc2626]"
                         >
                           Supprimer
@@ -184,7 +242,7 @@ export function PromoManager({
             Assigner des étudiants
           </h2>
           {users.filter((u) => u.role === "STUDENT").length === 0 ? (
-            <p className="font-source-sans text-[13px] text-gray-400">
+            <p className="font-source-sans text-[13px] text-gray-500">
               Aucun étudiant enregistré
             </p>
           ) : (
@@ -200,7 +258,7 @@ export function PromoManager({
                       <div className="font-montserrat font-semibold text-xs">
                         {u.first_name} {u.last_name}
                       </div>
-                      <div className="font-source-sans text-[11px] text-gray-400">
+                      <div className="font-source-sans text-[11px] text-gray-500">
                         {u.email}
                       </div>
                     </div>
@@ -252,15 +310,22 @@ export function PromoManager({
                       <span className="font-montserrat font-semibold text-xs flex-1">
                         {ap.admin?.first_name} {ap.admin?.last_name}
                         <span className="ml-1 text-[10px] text-blue-500 font-normal">
-                          ({ap.role === "OWNER" ? "Propriétaire" : "Collaborateur"})
+                          (
+                          {ap.role === "OWNER"
+                            ? "Propriétaire"
+                            : "Collaborateur"}
+                          )
                         </span>
                       </span>
-                      <span className="font-source-sans text-[10px] text-gray-400">
+                      <span className="font-source-sans text-[10px] text-gray-500">
                         {ap.admin?.email}
                       </span>
                       <button
                         onClick={() =>
-                          handleRemoveAdmin({ promoId: selectedPromoId, adminId: ap.adminId })
+                          handleRemoveAdmin({
+                            promoId: selectedPromoId,
+                            adminId: ap.adminId,
+                          })
                         }
                         className="bg-transparent border-none cursor-pointer text-[11px] text-red-400 font-semibold"
                       >
@@ -274,7 +339,7 @@ export function PromoManager({
 
             {/* Students in promo */}
             {promoStudents.length === 0 ? (
-              <p className="font-source-sans text-gray-400">
+              <p className="font-source-sans text-gray-500">
                 Aucun étudiant pour cette promo
               </p>
             ) : (
@@ -308,6 +373,7 @@ export function PromoManager({
           className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center"
         >
           <div
+            ref={modalRef}
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-2xl w-[420px] shadow-[0_24px_80px_rgba(0,0,0,0.2)]"
           >
@@ -317,7 +383,7 @@ export function PromoManager({
               </div>
               <button
                 onClick={() => setAssignAdminPromoId(null)}
-                className="bg-transparent border-none cursor-pointer text-xl text-gray-400"
+                className="bg-transparent border-none cursor-pointer text-xl text-gray-500"
               >
                 ✕
               </button>
@@ -328,7 +394,7 @@ export function PromoManager({
                   Admin
                 </label>
                 {adminUsers.length === 0 ? (
-                  <p className="font-source-sans text-[13px] text-gray-400">
+                  <p className="font-source-sans text-[13px] text-gray-500">
                     Aucun admin disponible
                   </p>
                 ) : (
@@ -342,7 +408,10 @@ export function PromoManager({
                           key={u.id}
                           disabled={alreadyAssigned}
                           onClick={() =>
-                            handleAssignAdmin({ promoId: assignAdminPromoId, adminId: u.id })
+                            handleAssignAdmin({
+                              promoId: assignAdminPromoId,
+                              adminId: u.id,
+                            })
                           }
                           className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-left w-full border-none cursor-pointer ${
                             alreadyAssigned
@@ -354,10 +423,12 @@ export function PromoManager({
                             <div className="font-montserrat font-semibold text-xs">
                               {u.first_name} {u.last_name}
                               {alreadyAssigned && (
-                                <span className="ml-1 text-[10px] text-gray-400">(déjà assigné)</span>
+                                <span className="ml-1 text-[10px] text-gray-500">
+                                  (déjà assigné)
+                                </span>
                               )}
                             </div>
-                            <div className="font-source-sans text-[11px] text-gray-400">
+                            <div className="font-source-sans text-[11px] text-gray-500">
                               {u.email}
                             </div>
                           </div>
@@ -373,7 +444,9 @@ export function PromoManager({
                 </label>
                 <select
                   value={adminRole}
-                  onChange={(e) => setAdminRole(e.target.value as AdminPromoRole)}
+                  onChange={(e) =>
+                    setAdminRole(e.target.value as AdminPromoRole)
+                  }
                   className="w-full px-3 py-2 border border-spektr-border rounded-lg text-[13px] font-source-sans focus:outline-none"
                 >
                   <option value="OWNER">Propriétaire</option>

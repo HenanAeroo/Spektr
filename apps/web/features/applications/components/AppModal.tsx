@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Application, Statut } from "@/features/applications/types";
@@ -74,9 +74,56 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
 
   const errors = form.formState.errors;
 
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const modal = modalRef.current;
+    if (!modal) return;
+
+    const elementBefore = document.activeElement as HTMLElement;
+
+    const FOCUSABLE_SELECTOR =
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const focusables = Array.from(
+      modal.querySelectorAll(FOCUSABLE_SELECTOR),
+    ) as HTMLElement[];
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    first?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (e.key === "Tab") {
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      elementBefore?.focus();
+    };
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black/45 z-1000 flex items-center justify-center">
-      <div className="bg-white rounded-2xl w-140 max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]">
+      <div
+        ref={modalRef}
+        className="bg-white rounded-2xl w-140 max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]"
+      >
         <div className="flex justify-between items-center px-7 py-5.5 border-b border-spektr-border">
           <span className="font-montserrat font-extrabold text-[17px] text-spektr-dark">
             {mode === "create"

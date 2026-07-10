@@ -133,6 +133,12 @@ const Sidebar = () => {
 
   return (
     <aside className="w-[220px] min-w-[220px] h-screen bg-spektr-dark flex flex-col flex-shrink-0 fixed left-0 top-0 z-[100]">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-60 focus:z-[200] focus:px-4 focus:py-2 focus:bg-white focus:text-spektr-dark focus:rounded-md focus:font-semibold focus:shadow-lg"
+      >
+        Aller au contenu principal
+      </a>
       {/* Logo */}
       <div className="px-5 pt-7 pb-5 border-b border-white/[0.07]">
         <div className="font-montserrat text-2xl font-extrabold text-white tracking-tight">

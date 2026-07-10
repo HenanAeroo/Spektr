@@ -50,7 +50,7 @@ export const Route = createFileRoute("/_protected")({
         <TopLoader isLoading={isLoading} />
         <div className="flex h-screen bg-spektr-bg">
           <Sidebar />
-          <main className="flex-1 overflow-auto ml-[220px]">
+          <main id="main-content" className="flex-1 overflow-auto ml-[220px]">
             <ErrorBoundary key={pathname}>
               <Outlet />
             </ErrorBoundary>

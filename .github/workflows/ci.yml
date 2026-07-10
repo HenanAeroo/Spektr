@@ -7,24 +7,43 @@ on:
     branches: [master]
 
 jobs:
-  test-api:
+  ci:
     runs-on: ubuntu-latest
     steps:
+      # Step 1 — Get the code
       - uses: actions/checkout@v4
+
+      # Step 2 — Install pnpm
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # Step 3 — Install node.js
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install
-      - run: pnpm --filter api exec npx prisma generate
-      - run: pnpm test:api
-  test-web:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install
-      - run: pnpm test:web
+          node-version: 20
+          cache: "pnpm"
+
+      # Step 4 — Install all deps
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Step 5 — Lint frontend
+      - name: Lint web
+        run: pnpm lint
+        working-directory: apps/web
+
+      # Step 6 — Typecheck frontend
+      - name: Typecheck web
+        run: pnpm typecheck
+        working-directory: apps/web
+
+      # Step 7 — Lint backend
+      - name: Lint api
+        run: pnpm lint
+        working-directory: apps/api
+
+      # Step 8 — Tests backend
+      - name: Test api
+        run: pnpm test
+        working-directory: apps/api

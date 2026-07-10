@@ -15,13 +15,11 @@ jobs:
 
       # Step 2 — Install pnpm
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       # Step 3 — Install node.js
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "pnpm"
 
       # Step 4 — Install all deps

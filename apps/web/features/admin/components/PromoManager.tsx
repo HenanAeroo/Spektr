@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { inputCls } from "../constants";
 import { Card } from "./Card";
 import { getUser } from "@/shared/lib/auth";
+import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
 
 export function PromoManager({
   users,
@@ -83,49 +84,9 @@ export function PromoManager({
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (assignAdminPromoId === null) return;
-
-    const modal = modalRef.current;
-    if (!modal) return;
-
-    const elementBefore = document.activeElement as HTMLElement;
-
-    const FOCUSABLE_SELECTOR =
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    const focusables = Array.from(
-      modal.querySelectorAll(FOCUSABLE_SELECTOR),
-    ) as HTMLElement[];
-
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-
-    first?.focus();
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setAssignAdminPromoId(null);
-        return;
-      }
-
-      if (e.key === "Tab") {
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      elementBefore?.focus();
-    };
-  }, [assignAdminPromoId]);
+  useFocusTrap(modalRef, assignAdminPromoId !== null, () =>
+    setAssignAdminPromoId(null),
+  );
 
   return (
     <div>
@@ -379,7 +340,10 @@ export function PromoManager({
             className="bg-white rounded-2xl w-[420px] shadow-[0_24px_80px_rgba(0,0,0,0.2)]"
           >
             <div className="flex justify-between items-center px-6 py-5 border-b border-spektr-border">
-              <div id="assign-admin-title" className="font-montserrat font-extrabold text-[16px]">
+              <div
+                id="assign-admin-title"
+                className="font-montserrat font-extrabold text-[16px]"
+              >
                 Assigner un admin
               </div>
               <button

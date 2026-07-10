@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/components/ui/select";
+import { useFocusTrap } from "@/shared/hooks/useFocusTrap";
 
 const DEFAULT_SUBJECT = "Suivi — Votre recherche d'alternance";
 const DEFAULT_MESSAGE =
@@ -161,49 +162,7 @@ export function StudentsList({
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!showContact) return;
-
-    const modal = modalRef.current;
-    if (!modal) return;
-
-    const elementBefore = document.activeElement as HTMLElement;
-
-    const FOCUSABLE_SELECTOR =
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-    const focusables = Array.from(
-      modal.querySelectorAll(FOCUSABLE_SELECTOR),
-    ) as HTMLElement[];
-
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-
-    first?.focus();
-
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setShowContact(false);
-        return;
-      }
-
-      if (e.key === "Tab") {
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      elementBefore?.focus();
-    };
-  }, [showContact]);
+  useFocusTrap(modalRef, showContact, () => setShowContact(false));
 
   return (
     <div>

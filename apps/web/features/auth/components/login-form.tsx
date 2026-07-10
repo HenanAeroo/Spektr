@@ -39,7 +39,7 @@ const LoginForm = () => {
           type="email"
           aria-describedby="email-error"
           placeholder="prenom.nom@ynov.com"
-          className="w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus:border-spektr-teal"
+          className="w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 focus:border-spektr-teal"
         />
         {form.formState.errors.email && (
           <p className="text-spektr-red text-xs mt-1" id="email-error">
@@ -70,7 +70,7 @@ const LoginForm = () => {
             type={showPwd ? "text" : "password"}
             aria-describedby="password-error"
             placeholder="••••••••"
-            className="w-full px-3.5 py-2.75 pr-10 rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus:border-spektr-teal"
+            className="w-full px-3.5 py-2.75 pr-10 rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 focus:border-spektr-teal"
             autoComplete="current-password"
           />
           <button

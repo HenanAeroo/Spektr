@@ -10,7 +10,7 @@ import {
 } from "@/shared/lib/password";
 
 const inputCls =
-  "w-full px-3 py-[10px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] bg-white text-spektr-dark focus:outline-none focus:border-spektr-teal box-border";
+  "w-full px-3 py-[10px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] bg-white text-spektr-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 focus:border-spektr-teal box-border";
 
 const labelCls =
   "font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] block mb-1";

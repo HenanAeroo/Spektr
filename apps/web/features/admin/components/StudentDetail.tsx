@@ -52,7 +52,9 @@ export function StudentDetail({
       docType: DocumentType;
     }) => reviewDocument(id, status, docType),
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["documents", "user", userId] }),
+      queryClient.invalidateQueries({
+        queryKey: ["documents", "user", userId],
+      }),
   });
 
   const {
@@ -307,7 +309,7 @@ export function StudentDetail({
                     value={feedbackText}
                     onChange={(e) => setFeedbackText(e.target.value)}
                     placeholder="Ajouter un commentaire..."
-                    className="w-full h-[70px] border border-spektr-border rounded-lg p-2.5 text-xs font-source-sans resize-none focus:outline-none focus:border-spektr-teal box-border text-spektr-dark"
+                    className="w-full h-[70px] border border-spektr-border rounded-lg p-2.5 text-xs font-source-sans resize-none focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 focus:border-spektr-teal box-border text-spektr-dark"
                   />
                   <button
                     onClick={() => feedbackScore !== null && submitFeedback()}
@@ -588,7 +590,8 @@ export function StudentDetail({
               {documents.map((doc) => {
                 const sizeKb = Math.round(doc.size / 1024);
                 const ext = doc.name.split(".").pop()?.toUpperCase() ?? "FILE";
-                const isReviewable = doc.docType === "CV" || doc.docType === "LM";
+                const isReviewable =
+                  doc.docType === "CV" || doc.docType === "LM";
                 return (
                   <div
                     key={doc.id}
@@ -638,7 +641,9 @@ export function StudentDetail({
                               type="checkbox"
                               className="sr-only"
                               checked={doc.status === "VALIDATED"}
-                              disabled={reviewPending || doc.status === "VALIDATED"}
+                              disabled={
+                                reviewPending || doc.status === "VALIDATED"
+                              }
                               onChange={() =>
                                 submitReview({
                                   id: doc.id,
@@ -670,7 +675,9 @@ export function StudentDetail({
                               type="checkbox"
                               className="sr-only"
                               checked={doc.status === "TO_CORRECT"}
-                              disabled={reviewPending || doc.status === "TO_CORRECT"}
+                              disabled={
+                                reviewPending || doc.status === "TO_CORRECT"
+                              }
                               onChange={() =>
                                 submitReview({
                                   id: doc.id,
@@ -701,9 +708,8 @@ export function StudentDetail({
                       )}
                       <button
                         onClick={async () => {
-                          const { getDocumentUrl } = await import(
-                            "@/features/documents/actions/getDocumentUrl"
-                          );
+                          const { getDocumentUrl } =
+                            await import("@/features/documents/actions/getDocumentUrl");
                           const { url } = await getDocumentUrl(doc.id);
                           window.open(url, "_blank");
                         }}

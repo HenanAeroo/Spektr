@@ -55,7 +55,7 @@ const EmailEditor = ({
     editorProps: {
       attributes: {
         class:
-          "min-h-[120px] px-3 py-2 focus:outline-none text-[13px] leading-relaxed",
+          "min-h-[120px] px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 text-[13px] leading-relaxed",
       },
     },
     onUpdate: ({ editor }) => {

@@ -7,7 +7,8 @@ import {
 } from "@/shared/lib/password";
 
 const ResetPasswordPage = () => {
-  const token = (useSearch({ strict: false }) as { token?: string }).token ?? "";
+  const token =
+    (useSearch({ strict: false }) as { token?: string }).token ?? "";
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +92,7 @@ const ResetPasswordPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="12 caractères minimum"
                   required
-                  className="w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus:border-spektr-teal"
+                  className="w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 focus:border-spektr-teal"
                 />
               </div>
 
@@ -110,7 +111,7 @@ const ResetPasswordPage = () => {
                   onChange={(e) => setConfirm(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus:border-spektr-teal"
+                  className="w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 focus:border-spektr-teal"
                 />
               </div>
 

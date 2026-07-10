@@ -144,7 +144,9 @@ const DocumentsPage = () => {
     e.target.value = "";
     if (!file) return;
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError("Format non supporté. Utilisez PDF, Word ou image (JPG, PNG, WebP).");
+      setError(
+        "Format non supporté. Utilisez PDF, Word ou image (JPG, PNG, WebP).",
+      );
       return;
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
@@ -336,7 +338,7 @@ const DocumentsPage = () => {
                 placeholder="Mon CV"
                 autoFocus
                 maxLength={50}
-                className="w-full px-3 py-[9px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] focus:outline-none focus:border-spektr-teal box-border mb-2 text-spektr-dark bg-white"
+                className="w-full px-3 py-[9px] border-[1.5px] border-spektr-border rounded-lg font-source-sans text-[13px] focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 focus:border-spektr-teal box-border mb-2 text-spektr-dark bg-white"
               />
               <div className="flex gap-1.5">
                 <button
@@ -487,7 +489,12 @@ const DocumentsPage = () => {
         onConfirm={handleDelete}
       />
 
-      <Dialog open={showImportDialog} onOpenChange={(open) => { if (!open) handleImportDialogClose(); }}>
+      <Dialog
+        open={showImportDialog}
+        onOpenChange={(open) => {
+          if (!open) handleImportDialogClose();
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="font-montserrat text-[16px] text-spektr-dark">
@@ -503,10 +510,30 @@ const DocumentsPage = () => {
             <div className="grid grid-cols-3 gap-2.5">
               {(
                 [
-                  { value: "CV", label: "CV", icon: "📄", desc: "Curriculum vitæ" },
-                  { value: "LM", label: "Lettre de motivation", icon: "✉️", desc: "Lettre de motivation" },
-                  { value: "OTHER", label: "Autre", icon: "📁", desc: "Autre document" },
-                ] as { value: DocumentType; label: string; icon: string; desc: string }[]
+                  {
+                    value: "CV",
+                    label: "CV",
+                    icon: "📄",
+                    desc: "Curriculum vitæ",
+                  },
+                  {
+                    value: "LM",
+                    label: "Lettre de motivation",
+                    icon: "✉️",
+                    desc: "Lettre de motivation",
+                  },
+                  {
+                    value: "OTHER",
+                    label: "Autre",
+                    icon: "📁",
+                    desc: "Autre document",
+                  },
+                ] as {
+                  value: DocumentType;
+                  label: string;
+                  icon: string;
+                  desc: string;
+                }[]
               ).map(({ value, icon, label }) => (
                 <button
                   key={value}
@@ -522,7 +549,9 @@ const DocumentsPage = () => {
                   <span
                     className={[
                       "font-montserrat font-bold text-[11px] text-center leading-tight",
-                      uploadDocType === value ? "text-spektr-teal" : "text-spektr-dark",
+                      uploadDocType === value
+                        ? "text-spektr-teal"
+                        : "text-spektr-dark",
                     ].join(" ")}
                   >
                     {label}

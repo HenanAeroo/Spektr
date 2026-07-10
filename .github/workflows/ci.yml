@@ -36,6 +36,11 @@ jobs:
         run: pnpm typecheck
         working-directory: apps/web
 
+      # Step 5b — Generate Prisma client (gitignored, needed for type-aware lint)
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: apps/api
+
       # Step 7 — Lint backend
       - name: Lint api
         run: pnpm lint

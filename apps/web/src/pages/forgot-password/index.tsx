@@ -27,7 +27,7 @@ const ForgotPasswordPage = () => {
           <div className="font-montserrat font-extrabold text-[32px] text-spektr-dark tracking-[-1px]">
             Spek<span className="text-spektr-teal">tr</span>
           </div>
-          <div className="font-montserrat font-semibold text-[9px] text-[#999] tracking-[3px] uppercase mt-1">
+          <div className="font-montserrat font-semibold text-[11px] text-[#767676] tracking-[3px] uppercase mt-1">
             YNOV CAMPUS RENNES
           </div>
         </div>
@@ -42,7 +42,7 @@ const ForgotPasswordPage = () => {
             </p>
             <a
               href="/login"
-              className="font-source-sans text-sm text-spektr-teal font-bold"
+              className="font-source-sans text-sm text-spektr-teal-accessible font-bold"
             >
               Retour à la connexion
             </a>
@@ -52,7 +52,7 @@ const ForgotPasswordPage = () => {
             <h2 className="font-montserrat font-extrabold text-[22px] text-spektr-dark mb-1.5">
               Mot de passe oublié
             </h2>
-            <p className="font-source-sans text-sm text-spektr-teal mb-6">
+            <p className="font-source-sans text-sm text-spektr-teal-accessible mb-6">
               Entrez votre email pour recevoir un lien de réinitialisation.
             </p>
 
@@ -83,10 +83,10 @@ const ForgotPasswordPage = () => {
               </button>
             </form>
 
-            <p className="text-center font-source-sans text-sm text-[#888]">
+            <p className="text-center font-source-sans text-sm text-[#767676]">
               <a
                 href="/login"
-                className="text-spektr-teal font-bold"
+                className="text-spektr-teal-accessible font-bold"
               >
                 Retour à la connexion
               </a>

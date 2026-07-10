@@ -104,7 +104,7 @@ export function StudentDetail({
 
   if (!user) {
     return (
-      <div className="text-center py-[60px] text-gray-400">
+      <div className="text-center py-[60px] text-gray-500">
         <div className="text-[40px] mb-3">🔍</div>
         <p className="font-montserrat font-semibold text-sm">
           Étudiant introuvable
@@ -200,7 +200,7 @@ export function StudentDetail({
                   { label: "Promotion", value: promo?.name ?? "—" },
                 ].map((f) => (
                   <div key={f.label}>
-                    <div className="font-montserrat font-semibold text-[11px] text-gray-400 uppercase tracking-[0.5px] mb-0.5">
+                    <div className="font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] mb-0.5">
                       {f.label}
                     </div>
                     <div className="font-source-sans text-[13px] font-semibold text-spektr-dark">
@@ -221,10 +221,10 @@ export function StudentDetail({
                 <div className="font-montserrat font-bold text-sm text-spektr-dark">
                   {user.first_name} {user.last_name}
                 </div>
-                <div className="font-source-sans text-[11px] text-gray-400">
+                <div className="font-source-sans text-[11px] text-gray-500">
                   {promo?.name ?? "Sans promo"}
                 </div>
-                <div className="font-source-sans text-[11px] text-spektr-teal">
+                <div className="font-source-sans text-[11px] text-spektr-teal-accessible">
                   {user.email}
                 </div>
               </div>
@@ -242,7 +242,7 @@ export function StudentDetail({
                   <div className="font-montserrat font-extrabold text-[20px] text-spektr-dark">
                     {applications.length}
                   </div>
-                  <div className="font-source-sans text-[10px] text-gray-400 mt-0.5">
+                  <div className="font-source-sans text-[10px] text-gray-500 mt-0.5">
                     Total
                   </div>
                 </div>
@@ -312,7 +312,7 @@ export function StudentDetail({
                   <button
                     onClick={() => feedbackScore !== null && submitFeedback()}
                     disabled={feedbackScore === null || feedbackPending}
-                    className={`w-full py-2 rounded-lg border-none font-montserrat font-bold text-xs mt-2 ${feedbackScore !== null && !feedbackPending ? "bg-spektr-teal text-white cursor-pointer" : "bg-spektr-border text-gray-400 cursor-default"}`}
+                    className={`w-full py-2 rounded-lg border-none font-montserrat font-bold text-xs mt-2 ${feedbackScore !== null && !feedbackPending ? "bg-spektr-teal text-white cursor-pointer" : "bg-spektr-border text-gray-500 cursor-default"}`}
                   >
                     {feedbackPending ? "Envoi…" : "✉ Envoyer le feedback"}
                   </button>
@@ -329,7 +329,7 @@ export function StudentDetail({
             Objectifs de {user.first_name} {user.last_name}
           </div>
           {objLoading ? (
-            <div className="text-center py-8 text-gray-400">Chargement…</div>
+            <div className="text-center py-8 text-gray-500">Chargement…</div>
           ) : (
             (() => {
               const studentObjectives = objectivesWithCompletions.filter(
@@ -363,7 +363,7 @@ export function StudentDetail({
                         }}
                       />
                     </div>
-                    <span className="font-montserrat font-bold text-[13px] text-spektr-teal whitespace-nowrap">
+                    <span className="font-montserrat font-bold text-[13px] text-spektr-teal-accessible whitespace-nowrap">
                       {doneCount} / {studentObjectives.length}
                     </span>
                   </div>
@@ -402,7 +402,7 @@ export function StudentDetail({
                               {obj.title}
                             </div>
                             {deadline && (
-                              <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
+                              <div className="font-source-sans text-[11px] text-gray-500 mt-0.5">
                                 📅{" "}
                                 {deadline.toLocaleDateString("fr-FR", {
                                   day: "numeric",
@@ -413,7 +413,7 @@ export function StudentDetail({
                             )}
                           </div>
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold whitespace-nowrap ${done ? "bg-green-100 text-green-600" : isExpired ? "bg-red-100 text-red-600" : "bg-spektr-bg text-gray-400"}`}
+                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold whitespace-nowrap ${done ? "bg-green-100 text-green-600" : isExpired ? "bg-red-100 text-red-600" : "bg-spektr-bg text-gray-500"}`}
                           >
                             {done ? "Fait" : isExpired ? "Expiré" : "En cours"}
                           </span>
@@ -476,7 +476,7 @@ export function StudentDetail({
               Toutes les candidatures
             </div>
             {appsLoading ? (
-              <div className="text-center py-8 text-gray-400">Chargement…</div>
+              <div className="text-center py-8 text-gray-500">Chargement…</div>
             ) : applications.length === 0 ? (
               <div className="text-center py-10">
                 <div className="text-[32px] mb-2">📋</div>
@@ -524,7 +524,7 @@ export function StudentDetail({
                           </div>
                           <div className="flex flex-wrap gap-x-4 gap-y-1">
                             {dateCandidature && (
-                              <span className="font-source-sans text-[13px] text-gray-400">
+                              <span className="font-source-sans text-[13px] text-gray-500">
                                 📅 Candidature : {dateCandidature}
                               </span>
                             )}
@@ -534,7 +534,7 @@ export function StudentDetail({
                               </span>
                             )}
                             {app.contact_nom && (
-                              <span className="font-source-sans text-[13px] text-gray-400">
+                              <span className="font-source-sans text-[13px] text-gray-500">
                                 👤 {app.contact_nom}
                                 {app.contact_email && ` · ${app.contact_email}`}
                                 {app.contact_tel && ` · ${app.contact_tel}`}
@@ -552,7 +552,7 @@ export function StudentDetail({
                             href={app.lien}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-spektr-teal whitespace-nowrap flex-shrink-0 no-underline"
+                            className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-spektr-teal-accessible whitespace-nowrap flex-shrink-0 no-underline"
                           >
                             Voir l'offre →
                           </a>
@@ -570,12 +570,12 @@ export function StudentDetail({
         <Card>
           <div className="font-montserrat font-bold text-sm mb-4">
             Documents de {user.first_name} {user.last_name}
-            <span className="font-source-sans font-normal text-xs text-gray-400 ml-2">
+            <span className="font-source-sans font-normal text-xs text-gray-500 ml-2">
               {documents.length} fichier{documents.length !== 1 ? "s" : ""}
             </span>
           </div>
           {docsLoading ? (
-            <div className="text-center py-8 text-gray-400">Chargement…</div>
+            <div className="text-center py-8 text-gray-500">Chargement…</div>
           ) : documents.length === 0 ? (
             <div className="text-center py-10">
               <div className="text-[32px] mb-2">📂</div>
@@ -594,7 +594,7 @@ export function StudentDetail({
                     key={doc.id}
                     className="flex items-center gap-3 px-3.5 py-3 bg-[#fafafa] rounded-lg border border-spektr-border"
                   >
-                    <div className="w-[38px] h-[38px] rounded-lg bg-spektr-teal/10 flex items-center justify-center text-[10px] font-bold text-spektr-teal flex-shrink-0">
+                    <div className="w-[38px] h-[38px] rounded-lg bg-spektr-teal/10 flex items-center justify-center text-[10px] font-bold text-spektr-teal-accessible flex-shrink-0">
                       {ext}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -603,7 +603,7 @@ export function StudentDetail({
                           {doc.name}
                         </span>
                         {isReviewable && (
-                          <span className="px-1.5 py-0.5 rounded bg-spektr-teal/10 text-spektr-teal text-[10px] font-bold flex-shrink-0">
+                          <span className="px-1.5 py-0.5 rounded bg-spektr-teal/10 text-spektr-teal-accessible text-[10px] font-bold flex-shrink-0">
                             {doc.docType}
                           </span>
                         )}
@@ -618,12 +618,12 @@ export function StudentDetail({
                           </span>
                         )}
                         {doc.status === "PENDING" && isReviewable && (
-                          <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 text-[10px] font-bold flex-shrink-0">
+                          <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 text-[10px] font-bold flex-shrink-0">
                             En attente
                           </span>
                         )}
                       </div>
-                      <div className="font-source-sans text-[11px] text-gray-400 mt-px">
+                      <div className="font-source-sans text-[11px] text-gray-500 mt-px">
                         {sizeKb} Ko ·{" "}
                         {doc.created_at
                           ? new Date(doc.created_at).toLocaleDateString("fr-FR")
@@ -707,7 +707,7 @@ export function StudentDetail({
                           const { url } = await getDocumentUrl(doc.id);
                           window.open(url, "_blank");
                         }}
-                        className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-spektr-teal whitespace-nowrap"
+                        className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-spektr-teal-accessible whitespace-nowrap"
                       >
                         ⬇ Télécharger
                       </button>
@@ -726,7 +726,7 @@ export function StudentDetail({
             Communications avec {user.first_name} {user.last_name}
           </div>
           {commsLoading ? (
-            <div className="text-center py-8 text-gray-400">Chargement…</div>
+            <div className="text-center py-8 text-gray-500">Chargement…</div>
           ) : communications.length === 0 ? (
             <div className="text-center py-10">
               <div className="text-[32px] mb-2">📂</div>
@@ -743,7 +743,7 @@ export function StudentDetail({
                     onClick={() => setSelectedComm(comm)}
                     className="flex items-center gap-3 px-3.5 py-2.5 bg-[#fafafa] rounded-lg border border-spektr-border cursor-pointer hover:bg-spektr-border/30 transition-colors"
                   >
-                    <div className="flex-shrink-0 text-spektr-teal">
+                    <div className="flex-shrink-0 text-spektr-teal-accessible">
                       {comm.type === "EMAIL" ? (
                         <Mail size={18} />
                       ) : (
@@ -756,13 +756,13 @@ export function StudentDetail({
                           ? (comm.subject ?? "(sans objet)")
                           : `Feedback ${comm.score !== null ? smileys[comm.score] : "?"}`}
                       </div>
-                      <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
+                      <div className="font-source-sans text-[11px] text-gray-500 mt-0.5">
                         {comm.sender.first_name} {comm.sender.last_name} ·{" "}
                         {new Date(comm.created_at).toLocaleDateString("fr-FR")}
                       </div>
                     </div>
                     {comm.body && (
-                      <div className="font-source-sans text-[12px] text-gray-400 truncate max-w-[200px]">
+                      <div className="font-source-sans text-[12px] text-gray-500 truncate max-w-[200px]">
                         {comm.body.replace(/<[^>]*>/g, " ").trim()}
                       </div>
                     )}

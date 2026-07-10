@@ -43,7 +43,7 @@ function ReviewCard({
           >
             {statusInfo?.label ?? doc.status}
           </span>
-          <span className="font-source-sans text-[11px] text-gray-400">
+          <span className="font-source-sans text-[11px] text-gray-500">
             {sizeKb} Ko ·{" "}
             {new Date(doc.created_at).toLocaleDateString("fr-FR", {
               day: "numeric",
@@ -155,14 +155,14 @@ export function DocumentsReview({
       </div>
 
       {isLoading ? (
-        <div className="text-center py-16 text-gray-400">Chargement…</div>
+        <div className="text-center py-16 text-gray-500">Chargement…</div>
       ) : docs.length === 0 ? (
         <div className="text-center py-20">
           <div className="text-[48px] mb-3">✅</div>
           <p className="font-montserrat font-bold text-[15px] text-gray-500">
             Aucun document en attente de revue
           </p>
-          <p className="font-source-sans text-[13px] text-gray-400 mt-1">
+          <p className="font-source-sans text-[13px] text-gray-500 mt-1">
             Tous les CV et LM ont été traités.
           </p>
         </div>
@@ -174,12 +174,12 @@ export function DocumentsReview({
               <span className="font-montserrat font-bold text-[13px] text-spektr-dark">
                 CV
               </span>
-              <span className="bg-spektr-teal/10 text-spektr-teal font-montserrat font-bold text-[11px] px-2 py-0.5 rounded-full">
+              <span className="bg-spektr-teal/10 text-spektr-teal-accessible font-montserrat font-bold text-[11px] px-2 py-0.5 rounded-full">
                 {cvDocs.length}
               </span>
             </div>
             {cvDocs.length === 0 ? (
-              <div className="text-center py-10 bg-white rounded-[10px] border border-spektr-border text-gray-400 font-source-sans text-[13px]">
+              <div className="text-center py-10 bg-white rounded-[10px] border border-spektr-border text-gray-500 font-source-sans text-[13px]">
                 Aucun CV en attente
               </div>
             ) : (
@@ -203,12 +203,12 @@ export function DocumentsReview({
               <span className="font-montserrat font-bold text-[13px] text-spektr-dark">
                 Lettres de motivation
               </span>
-              <span className="bg-spektr-teal/10 text-spektr-teal font-montserrat font-bold text-[11px] px-2 py-0.5 rounded-full">
+              <span className="bg-spektr-teal/10 text-spektr-teal-accessible font-montserrat font-bold text-[11px] px-2 py-0.5 rounded-full">
                 {lmDocs.length}
               </span>
             </div>
             {lmDocs.length === 0 ? (
-              <div className="text-center py-10 bg-white rounded-[10px] border border-spektr-border text-gray-400 font-source-sans text-[13px]">
+              <div className="text-center py-10 bg-white rounded-[10px] border border-spektr-border text-gray-500 font-source-sans text-[13px]">
                 Aucune LM en attente
               </div>
             ) : (

@@ -6,7 +6,7 @@ const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
 
   return (
-    <div className="min-h-screen bg-spektr-bg flex items-center justify-center p-6">
+    <main className="min-h-screen bg-spektr-bg flex items-center justify-center p-6">
       <div
         className={[
           "bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.10)] py-10 px-9 w-full",
@@ -18,21 +18,22 @@ const LoginPage = () => {
           <div className="font-montserrat font-extrabold text-[32px] text-spektr-dark tracking-[-1px]">
             Spek<span className="text-spektr-teal">tr</span>
           </div>
-          <div className="font-montserrat font-semibold text-[9px] text-[#999] tracking-[3px] uppercase mt-1">
+          <div className="font-montserrat font-semibold text-[11px] text-[#767676] tracking-[3px] uppercase mt-1">
             YNOV CAMPUS RENNES
           </div>
         </div>
 
         {isLogin ? (
           <>
+            <h1 className="sr-only">Spektr — Connexion</h1>
             <h2 className="font-montserrat font-extrabold text-[22px] text-spektr-dark mb-1.5">
               Connexion
             </h2>
-            <p className="font-source-sans text-sm text-spektr-teal mb-6">
+            <p className="font-source-sans text-sm text-spektr-teal-accessible mb-6">
               Bienvenue ! Connectez-vous à votre espace.
             </p>
             <LoginForm />
-            <p className="text-center font-source-sans text-sm text-[#888] mt-5">
+            <p className="text-center font-source-sans text-sm text-[#767676] mt-5">
               Pas encore de compte ?{" "}
               <button
                 onClick={() => setIsLogin(false)}
@@ -44,8 +45,9 @@ const LoginPage = () => {
           </>
         ) : (
           <>
+            <h1 className="sr-only">Spektr — Inscription</h1>
             <RegisterForm />
-            <p className="text-center font-source-sans text-sm text-[#888] mt-4">
+            <p className="text-center font-source-sans text-sm text-[#767676] mt-4">
               Déjà un compte ?{" "}
               <button
                 onClick={() => setIsLogin(true)}
@@ -57,7 +59,7 @@ const LoginPage = () => {
           </>
         )}
       </div>
-    </div>
+    </main>
   );
 };
 

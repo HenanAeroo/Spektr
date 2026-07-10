@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/),
@@ -36,11 +37,14 @@ const LoginForm = () => {
           {...form.register("email")}
           id="email"
           type="email"
+          aria-describedby="email-error"
           placeholder="prenom.nom@ynov.com"
           className="w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus:border-spektr-teal"
         />
         {form.formState.errors.email && (
-          <p className="text-spektr-red text-xs mt-1">Email invalide</p>
+          <p className="text-spektr-red text-xs mt-1" id="email-error">
+            Email invalide
+          </p>
         )}
       </div>
 
@@ -54,7 +58,7 @@ const LoginForm = () => {
           </label>
           <a
             href="/forgot-password"
-            className="font-source-sans text-[12px] text-spektr-teal"
+            className="font-source-sans text-[12px] text-spektr-teal-accessible"
           >
             Mot de passe oublié ?
           </a>
@@ -64,24 +68,35 @@ const LoginForm = () => {
             {...form.register("password")}
             id="password"
             type={showPwd ? "text" : "password"}
+            aria-describedby="password-error"
             placeholder="••••••••"
             className="w-full px-3.5 py-2.75 pr-10 rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border transition-colors focus:outline-none focus:border-spektr-teal"
             autoComplete="current-password"
           />
-          <span
+          <button
+            type="button"
             onClick={() => setShowPwd(!showPwd)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-base text-[#999]"
+            aria-label={
+              showPwd ? "Masquer le mot de passe" : "Afficher le mot de passe"
+            }
+            aria-pressed={showPwd}
+            className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-base text-[#767676]"
           >
-            {showPwd ? "🙈" : "👁️"}
-          </span>
+            {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
         </div>
         {form.formState.errors.password && (
-          <p className="text-spektr-red text-xs mt-1">8 caractères minimum</p>
+          <p id="password-error" className="text-spektr-red text-xs mt-1">
+            8 caractères minimum
+          </p>
         )}
       </div>
 
       {error && (
-        <div className="bg-[#fee2e2] text-[#dc2626] rounded-lg px-3.5 py-2.5 text-[13px] mb-4">
+        <div
+          role="alert"
+          className="bg-[#fee2e2] text-[#dc2626] rounded-lg px-3.5 py-2.5 text-[13px] mb-4"
+        >
           {error}
         </div>
       )}
@@ -101,7 +116,7 @@ const LoginForm = () => {
 
       <div className="flex items-center gap-2.5 mb-4">
         <div className="flex-1 h-px bg-spektr-border" />
-        <span className="font-source-sans text-xs text-[#aaa]">ou</span>
+        <span className="font-source-sans text-xs text-[#767676]">ou</span>
         <div className="flex-1 h-px bg-spektr-border" />
       </div>
 

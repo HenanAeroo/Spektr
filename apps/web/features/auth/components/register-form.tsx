@@ -166,7 +166,7 @@ const RegisterForm = () => {
                   "w-7 h-7 rounded-full flex items-center justify-center font-montserrat font-bold text-[13px]",
                   step >= s
                     ? "bg-spektr-teal text-white"
-                    : "bg-[#f0f0f0] text-[#aaa]",
+                    : "bg-[#f0f0f0] text-[#767676]",
                 ].join(" ")}
               >
                 {step > s ? "✓" : s}
@@ -190,7 +190,7 @@ const RegisterForm = () => {
               ? "Votre formation"
               : "Créer un mot de passe"}
         </h2>
-        <p className="font-source-sans text-[13px] text-[#888] mb-[22px]">
+        <p className="font-source-sans text-[13px] text-[#767676] mb-[22px]">
           {step === 1
             ? "Étape 1 sur 3 — Vos coordonnées"
             : step === 2
@@ -290,7 +290,7 @@ const RegisterForm = () => {
                 <button
                   type="button"
                   onClick={openDialog}
-                  className="text-spektr-teal font-semibold underline-offset-2 hover:underline focus:outline-none focus:underline"
+                  className="text-spektr-teal-accessible font-semibold underline-offset-2 hover:underline focus:outline-none focus:underline"
                 >
                   Conditions Générales d'Utilisation
                 </button>
@@ -322,7 +322,7 @@ const RegisterForm = () => {
           <button
             type="button"
             onClick={() => setStep((s) => s - 1)}
-            className="w-full py-2.5 rounded-lg border-[1.5px] border-spektr-border bg-white font-montserrat font-semibold text-sm cursor-pointer text-[#888]"
+            className="w-full py-2.5 rounded-lg border-[1.5px] border-spektr-border bg-white font-montserrat font-semibold text-sm cursor-pointer text-[#767676]"
           >
             ← Retour
           </button>
@@ -365,7 +365,7 @@ const RegisterForm = () => {
           {!hasScrolled && (
             <p
               aria-live="polite"
-              className="text-center font-source-sans text-[11px] text-gray-400 py-1"
+              className="text-center font-source-sans text-[11px] text-gray-500 py-1"
             >
               Faites défiler jusqu'à la fin pour pouvoir accepter
             </p>

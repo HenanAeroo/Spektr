@@ -132,24 +132,23 @@ const Sidebar = () => {
   };
 
   return (
-    <div
-      role="navigation"
-      aria-label="Menu principal"
-      className="w-[220px] min-w-[220px] h-screen bg-spektr-dark flex flex-col flex-shrink-0 fixed left-0 top-0 z-[100]"
-    >
+    <aside className="w-[220px] min-w-[220px] h-screen bg-spektr-dark flex flex-col flex-shrink-0 fixed left-0 top-0 z-[100]">
       {/* Logo */}
       <div className="px-5 pt-7 pb-5 border-b border-white/[0.07]">
         <div className="font-montserrat text-2xl font-extrabold text-white tracking-tight">
           Spek<span className="text-spektr-teal">tr</span>
         </div>
-        <div className="font-montserrat text-[9px] text-white/60 font-semibold tracking-[2px] uppercase mt-0.5">
+        <div className="font-montserrat text-[11px] text-white/60 font-semibold tracking-[2px] uppercase mt-0.5">
           YNOV CAMPUS
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto pt-[18px] pb-2">
-        <div className="font-montserrat text-[9px] text-white/60 font-bold tracking-[2px] uppercase px-5 pb-2.5">
+      <nav
+        aria-label="Menu principal"
+        className="flex-1 overflow-y-auto pt-[18px] pb-2"
+      >
+        <div className="font-montserrat text-[11px] text-white/60 font-bold tracking-[2px] uppercase px-5 pb-2.5">
           NAVIGATION
         </div>
 
@@ -176,7 +175,7 @@ const Sidebar = () => {
       {/* Notification bell (students only) */}
       {!isAdmin && (
         <div className="px-3 py-2 border-t border-white/[0.07] flex items-center justify-between">
-          <span className="font-montserrat text-[10px] text-white/60 font-bold tracking-[2px] uppercase">
+          <span className="font-montserrat text-[11px] text-white/60 font-bold tracking-[2px] uppercase">
             NOTIFS
           </span>
           <NotificationBell />
@@ -252,7 +251,7 @@ const Sidebar = () => {
           <LogOut size={14} color="rgba(255,255,255,0.3)" aria-hidden="true" />
         </button>
       </div>
-    </div>
+    </aside>
   );
 };
 

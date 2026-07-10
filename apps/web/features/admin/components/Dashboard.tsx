@@ -67,7 +67,7 @@ export function Dashboard({
             <div className="font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] mt-1">
               {m.label}
             </div>
-            <div className="font-source-sans text-xs text-gray-400 mt-0.5">
+            <div className="font-source-sans text-xs text-gray-500 mt-0.5">
               {m.delta}
             </div>
           </Card>
@@ -77,16 +77,18 @@ export function Dashboard({
       <div className="grid grid-cols-[1fr_320px] gap-4">
         <Card>
           <div className="flex justify-between items-center mb-4">
-            <span className="font-montserrat font-bold text-sm">Dernières activités</span>
+            <span className="font-montserrat font-bold text-sm">
+              Dernières activités
+            </span>
             <button
               onClick={() => navigate("students")}
-              className="text-xs text-spektr-teal font-semibold bg-transparent border-none cursor-pointer"
+              className="text-xs text-spektr-teal-accessible font-semibold bg-transparent border-none cursor-pointer"
             >
               Voir les étudiants →
             </button>
           </div>
           {recentActivity.length === 0 ? (
-            <p className="font-source-sans text-[13px] text-gray-400 text-center py-6">
+            <p className="font-source-sans text-[13px] text-gray-500 text-center py-6">
               Aucune activité récente
             </p>
           ) : (
@@ -95,7 +97,9 @@ export function Dashboard({
                 const initials =
                   `${activity.user.first_name?.[0] ?? ""}${activity.user.last_name?.[0] ?? ""}`.toUpperCase() ||
                   "?";
-                const promo = promos.find((p: any) => p.id === activity.user.promoId);
+                const promo = promos.find(
+                  (p: any) => p.id === activity.user.promoId,
+                );
                 const date = new Date(activity.modified_at);
                 const relativeTime = (() => {
                   const diff = Date.now() - date.getTime();
@@ -106,10 +110,13 @@ export function Dashboard({
                   return `il y a ${Math.floor(hours / 24)}j`;
                 })();
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={activity.id}
-                    className="flex items-center gap-3 px-2.5 py-2.5 border-b border-spektr-bg rounded-lg cursor-pointer transition-colors hover:bg-[#f9fafb]"
-                    onClick={() => navigate(`student-detail:${activity.user.id}`)}
+                    className="flex items-center gap-3 px-2.5 py-2.5 w-full text-left border-b border-spektr-bg rounded-lg transition-colors hover:bg-[#f9fafb]"
+                    onClick={() =>
+                      navigate(`student-detail:${activity.user.id}`)
+                    }
                   >
                     <div className="w-[34px] h-[34px] rounded-full bg-green-100 text-green-600 flex items-center justify-center font-montserrat font-bold text-xs flex-shrink-0">
                       {initials}
@@ -118,17 +125,19 @@ export function Dashboard({
                       <div className="font-montserrat font-semibold text-[13px] text-spektr-dark truncate">
                         {activity.user.first_name} {activity.user.last_name}
                       </div>
-                      <div className="font-source-sans text-[11px] text-gray-400 truncate">
+                      <div className="font-source-sans text-[11px] text-gray-500 truncate">
                         ✅ {activity.objective.title}
                         {promo && (
-                          <span className="ml-1.5 text-spektr-teal">· {promo.name}</span>
+                          <span className="ml-1.5 text-spektr-teal-accessible">
+                            · {promo.name}
+                          </span>
                         )}
                       </div>
                     </div>
-                    <span className="font-source-sans text-[10px] text-gray-400 whitespace-nowrap flex-shrink-0">
+                    <span className="font-source-sans text-[10px] text-gray-500 whitespace-nowrap flex-shrink-0">
                       {relativeTime}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -141,7 +150,7 @@ export function Dashboard({
               Répartition par promo
             </div>
             {promos.length === 0 ? (
-              <p className="font-source-sans text-[13px] text-gray-400">
+              <p className="font-source-sans text-[13px] text-gray-500">
                 Aucune promo
               </p>
             ) : (
@@ -158,7 +167,7 @@ export function Dashboard({
                         <span className="font-montserrat font-semibold text-xs">
                           {p.name}
                         </span>
-                        <span className="font-source-sans text-[11px] text-gray-400">
+                        <span className="font-source-sans text-[11px] text-gray-500">
                           {count} étudiant{count !== 1 ? "s" : ""}
                         </span>
                       </div>
@@ -175,7 +184,7 @@ export function Dashboard({
               Objectifs
             </div>
             {objectives.length === 0 ? (
-              <p className="font-source-sans text-[13px] text-gray-400">
+              <p className="font-source-sans text-[13px] text-gray-500">
                 Aucun objectif défini
               </p>
             ) : (

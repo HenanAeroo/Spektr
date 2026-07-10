@@ -46,7 +46,7 @@ const ResetPasswordPage = () => {
           <div className="font-montserrat font-extrabold text-[32px] text-spektr-dark tracking-[-1px]">
             Spek<span className="text-spektr-teal">tr</span>
           </div>
-          <div className="font-montserrat font-semibold text-[9px] text-[#999] tracking-[3px] uppercase mt-1">
+          <div className="font-montserrat font-semibold text-[11px] text-[#767676] tracking-[3px] uppercase mt-1">
             YNOV CAMPUS RENNES
           </div>
         </div>
@@ -61,7 +61,7 @@ const ResetPasswordPage = () => {
             </p>
             <a
               href="/login"
-              className="font-source-sans text-sm text-spektr-teal font-bold"
+              className="font-source-sans text-sm text-spektr-teal-accessible font-bold"
             >
               Se connecter
             </a>
@@ -71,7 +71,7 @@ const ResetPasswordPage = () => {
             <h2 className="font-montserrat font-extrabold text-[22px] text-spektr-dark mb-1.5">
               Nouveau mot de passe
             </h2>
-            <p className="font-source-sans text-sm text-spektr-teal mb-6">
+            <p className="font-source-sans text-sm text-spektr-teal-accessible mb-6">
               Choisissez un nouveau mot de passe.
             </p>
 

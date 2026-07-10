@@ -276,7 +276,7 @@ const DocumentsPage = () => {
               >
                 <span>📂</span>
                 <span className="flex-1 text-left">Tous les fichiers</span>
-                <span className="text-[11px] text-gray-400">
+                <span className="text-[11px] text-gray-500">
                   {documents.length}
                 </span>
               </button>
@@ -305,7 +305,7 @@ const DocumentsPage = () => {
                     >
                       <span>📁</span>
                       <span className="flex-1 text-left">{folder.name}</span>
-                      <span className="text-[11px] text-gray-400">{count}</span>
+                      <span className="text-[11px] text-gray-500">{count}</span>
                     </button>
                     <button
                       onClick={() =>
@@ -370,12 +370,12 @@ const DocumentsPage = () => {
           <div className="px-5 py-3.5 border-b border-spektr-border flex items-center justify-between">
             <span className="font-montserrat font-bold text-[13px]">
               {selectedFolder ? selectedFolder.name : "Tous les fichiers"}{" "}
-              <span className="font-normal text-gray-400">
+              <span className="font-normal text-gray-500">
                 ({visibleDocs.length})
               </span>
             </span>
             {selectedFolder && (
-              <span className="font-source-sans text-xs text-gray-400">
+              <span className="font-source-sans text-xs text-gray-500">
                 📁 {selectedFolder.name}
               </span>
             )}
@@ -384,14 +384,14 @@ const DocumentsPage = () => {
           {uploading && (
             <div className="px-5 py-3 bg-spektr-teal/[0.05] border-b border-spektr-border flex items-center gap-2.5">
               <div className="w-4 h-4 rounded-full border-2 border-spektr-teal border-t-transparent animate-spin" />
-              <span className="font-source-sans text-[13px] text-spektr-teal font-semibold">
+              <span className="font-source-sans text-[13px] text-spektr-teal-accessible font-semibold">
                 Import en cours…
               </span>
             </div>
           )}
 
           {docsLoading ? (
-            <div className="py-10 text-center text-gray-400">Chargement…</div>
+            <div className="py-10 text-center text-gray-500">Chargement…</div>
           ) : visibleDocs.length === 0 ? (
             <div className="py-[60px] px-10 text-center">
               <div className="text-[40px] mb-3">📭</div>
@@ -400,7 +400,7 @@ const DocumentsPage = () => {
                   ? `Aucun fichier dans "${selectedFolder.name}"`
                   : "Aucun fichier importé"}
               </p>
-              <p className="font-source-sans text-[13px] text-gray-400 mt-1">
+              <p className="font-source-sans text-[13px] text-gray-500 mt-1">
                 {selectedFolder
                   ? "Importez un fichier en le sélectionnant ci-dessus"
                   : "Cliquez sur « Importer un fichier » pour commencer"}
@@ -427,7 +427,7 @@ const DocumentsPage = () => {
                         {doc.name}
                       </span>
                       {doc.docType !== "OTHER" && (
-                        <span className="px-1.5 py-0.5 rounded bg-spektr-teal/10 text-spektr-teal text-[10px] font-bold flex-shrink-0">
+                        <span className="px-1.5 py-0.5 rounded bg-spektr-teal/10 text-spektr-teal-accessible text-[10px] font-bold flex-shrink-0">
                           {doc.docType}
                         </span>
                       )}
@@ -442,12 +442,12 @@ const DocumentsPage = () => {
                         </span>
                       )}
                     </div>
-                    <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
+                    <div className="font-source-sans text-[11px] text-gray-500 mt-0.5">
                       {formatSize(doc.size)} ·{" "}
                       {new Date(doc.created_at).toLocaleDateString("fr-FR")}
                       {doc.folderId &&
                         folders.find((f) => f.id === doc.folderId) && (
-                          <span className="ml-1.5 text-spektr-teal">
+                          <span className="ml-1.5 text-spektr-teal-accessible">
                             · 📁{" "}
                             {folders.find((f) => f.id === doc.folderId)!.name}
                           </span>
@@ -457,7 +457,7 @@ const DocumentsPage = () => {
                   <div className="flex gap-1.5">
                     <button
                       onClick={() => handleDownload(doc)}
-                      className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-spektr-teal"
+                      className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-1.5 cursor-pointer text-[11px] font-semibold text-spektr-teal-accessible"
                     >
                       ⬇ Télécharger
                     </button>
@@ -497,7 +497,7 @@ const DocumentsPage = () => {
 
           {/* Type selection */}
           <div>
-            <p className="font-montserrat font-semibold text-[11px] text-gray-400 uppercase tracking-[0.5px] mb-2.5">
+            <p className="font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] mb-2.5">
               Type de document
             </p>
             <div className="grid grid-cols-3 gap-2.5">
@@ -534,7 +534,7 @@ const DocumentsPage = () => {
 
           {/* File zone */}
           <div>
-            <p className="font-montserrat font-semibold text-[11px] text-gray-400 uppercase tracking-[0.5px] mb-2.5">
+            <p className="font-montserrat font-semibold text-[11px] text-gray-500 uppercase tracking-[0.5px] mb-2.5">
               Fichier
             </p>
             <label
@@ -557,7 +557,7 @@ const DocumentsPage = () => {
                   <span className="font-montserrat font-semibold text-[13px] text-spektr-dark text-center break-all">
                     {pendingFile.name}
                   </span>
-                  <span className="font-source-sans text-[11px] text-gray-400">
+                  <span className="font-source-sans text-[11px] text-gray-500">
                     {formatSize(pendingFile.size)} · Cliquer pour changer
                   </span>
                 </>
@@ -567,7 +567,7 @@ const DocumentsPage = () => {
                   <span className="font-montserrat font-semibold text-[13px] text-gray-500">
                     Cliquer pour sélectionner
                   </span>
-                  <span className="font-source-sans text-[11px] text-gray-400">
+                  <span className="font-source-sans text-[11px] text-gray-500">
                     PDF, Word, image · Max 10 Mo
                   </span>
                 </>

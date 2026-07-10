@@ -14,7 +14,7 @@ export function ProgressBar({
         />
       </div>
       <span
-        className={`text-[11px] font-semibold min-w-8 ${color === "bg-green-600" ? "text-green-600" : "text-spektr-teal"}`}
+        className={`text-[11px] font-semibold min-w-8 ${color === "bg-green-600" ? "text-green-600" : "text-spektr-teal-accessible"}`}
       >
         {pct}%
       </span>

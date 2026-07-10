@@ -131,7 +131,7 @@ function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="bg-transparent border-none cursor-pointer font-source-sans text-xs text-spektr-teal font-semibold"
+                className="bg-transparent border-none cursor-pointer font-source-sans text-xs text-spektr-teal-accessible font-semibold"
               >
                 Tout marquer lu
               </button>
@@ -191,13 +191,13 @@ function NotificationBell() {
                         : NOTIF_LABELS[n.type] ?? n.type}
                       {n.type === "OBJECTIVE_CREATED" &&
                         typeof n.payload?.title === "string" && (
-                          <span className="text-spektr-teal font-bold">
+                          <span className="text-spektr-teal-accessible font-bold">
                             {" "}
                             : {n.payload.title}
                           </span>
                         )}
                     </div>
-                    <div className="font-source-sans text-[11px] text-gray-400 mt-0.5">
+                    <div className="font-source-sans text-[11px] text-gray-500 mt-0.5">
                       {timeAgo(n.created_at)}
                     </div>
                   </div>

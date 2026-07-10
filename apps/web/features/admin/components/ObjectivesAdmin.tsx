@@ -140,7 +140,7 @@ export function ObjectivesAdmin({ promos }: { promos: any[] }) {
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className={`${inputCls} text-left cursor-pointer flex items-center gap-2 ${deadline ? "text-spektr-dark" : "text-gray-400"}`}
+                    className={`${inputCls} text-left cursor-pointer flex items-center gap-2 ${deadline ? "text-spektr-dark" : "text-gray-500"}`}
                   >
                     <span className="text-sm">📅</span>
                     {deadline
@@ -227,7 +227,7 @@ export function ObjectivesAdmin({ promos }: { promos: any[] }) {
             <p className="font-montserrat font-semibold text-sm text-gray-500">
               Aucun objectif défini
             </p>
-            <p className="font-source-sans text-[13px] text-gray-400 mt-1">
+            <p className="font-source-sans text-[13px] text-gray-500 mt-1">
               Cliquez sur "+ Créer un objectif" pour commencer
             </p>
           </div>
@@ -239,10 +239,10 @@ export function ObjectivesAdmin({ promos }: { promos: any[] }) {
             return (
               <div key={gPromoId}>
                 <div className="font-montserrat font-bold text-sm text-spektr-dark mb-2.5 flex items-center gap-2">
-                  <span className="bg-spektr-teal/10 text-spektr-teal px-2.5 py-0.5 rounded-full text-xs">
+                  <span className="bg-spektr-teal/10 text-spektr-teal-accessible px-2.5 py-0.5 rounded-full text-xs">
                     {promo?.name ?? `Promo ${gPromoId}`}
                   </span>
-                  <span className="font-normal text-gray-400 text-xs">
+                  <span className="font-normal text-gray-500 text-xs">
                     {objs.length} objectif{objs.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -263,7 +263,7 @@ export function ObjectivesAdmin({ promos }: { promos: any[] }) {
                             </p>
                           )}
                           {obj.deadline && (
-                            <div className="font-source-sans text-xs text-gray-400 mt-1.5">
+                            <div className="font-source-sans text-xs text-gray-500 mt-1.5">
                               📅{" "}
                               {new Date(obj.deadline).toLocaleDateString(
                                 "fr-FR",

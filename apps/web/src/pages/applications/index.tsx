@@ -215,7 +215,7 @@ const ApplicationsPage = () => {
         {/* Toolbar */}
         <div className="px-5 py-3.5 border-b border-spektr-border flex items-center gap-3">
           <div className="relative flex-1 max-w-[320px]">
-            <span className="absolute left-11px top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+            <span className="absolute left-11px top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
               🔍
             </span>
             <input
@@ -272,7 +272,7 @@ const ApplicationsPage = () => {
                   ].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-[0.5px] border-b border-spektr-border"
+                      className="px-4 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-[0.5px] border-b border-spektr-border"
                     >
                       {h}
                     </th>
@@ -295,7 +295,7 @@ const ApplicationsPage = () => {
                           href={app.lien}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-source-sans text-[11px] text-spektr-teal no-underline"
+                          className="font-source-sans text-[11px] text-spektr-teal-accessible no-underline"
                         >
                           Voir l'offre →
                         </a>
@@ -343,7 +343,7 @@ const ApplicationsPage = () => {
                     <td className="px-4 py-3.5 font-source-sans text-xs text-gray-500">
                       {app.contact_nom || "—"}
                       {app.contact_email && (
-                        <div className="text-[11px] text-gray-400">
+                        <div className="text-[11px] text-gray-500">
                           {app.contact_email}
                         </div>
                       )}
@@ -360,7 +360,7 @@ const ApplicationsPage = () => {
                             e.stopPropagation();
                             setEditApp(app);
                           }}
-                          className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-5px cursor-pointer text-[11px] font-semibold text-spektr-teal"
+                          className="bg-spektr-teal/10 border-none rounded-md px-2.5 py-5px cursor-pointer text-[11px] font-semibold text-spektr-teal-accessible"
                         >
                           Modifier
                         </button>

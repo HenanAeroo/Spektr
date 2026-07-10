@@ -147,7 +147,7 @@ export function StudentsList({
     if (selectedPromo !== null) {
       setSelected(allUsers.map((u) => u.id));
     }
-  }, [selectedPromo]);
+  }, [selectedPromo, allUsers]);
 
   function handlePromoSelect(value: string) {
     if (value === "all") {

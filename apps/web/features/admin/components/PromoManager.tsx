@@ -369,6 +369,7 @@ export function PromoManager({
         <div
           role="dialog"
           aria-modal="true"
+          aria-labelledby="assign-admin-title"
           onClick={() => setAssignAdminPromoId(null)}
           className="fixed inset-0 bg-black/45 z-[1000] flex items-center justify-center"
         >
@@ -378,7 +379,7 @@ export function PromoManager({
             className="bg-white rounded-2xl w-[420px] shadow-[0_24px_80px_rgba(0,0,0,0.2)]"
           >
             <div className="flex justify-between items-center px-6 py-5 border-b border-spektr-border">
-              <div className="font-montserrat font-extrabold text-[16px]">
+              <div id="assign-admin-title" className="font-montserrat font-extrabold text-[16px]">
                 Assigner un admin
               </div>
               <button

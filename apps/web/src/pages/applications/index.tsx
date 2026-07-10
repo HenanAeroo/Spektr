@@ -195,6 +195,7 @@ const ApplicationsPage = () => {
           return (
             <button
               key={s}
+              aria-pressed={isActive}
               onClick={() => setFilterStatut(filterStatut === s ? "tous" : s)}
               className={[
                 `border-[1.5px] rounded-[10px] px-3 py-2.5 cursor-pointer font-montserrat text-left ${c.border}`,
@@ -227,6 +228,7 @@ const ApplicationsPage = () => {
           </div>
           <div className="flex gap-1.5">
             <button
+              aria-pressed={filterStatut === "tous"}
               onClick={() => setFilterStatut("tous")}
               className={[
                 "px-3.5 py-1.5 rounded-full border-[1.5px] text-xs font-semibold cursor-pointer font-montserrat",
@@ -283,8 +285,15 @@ const ApplicationsPage = () => {
                 {filtered.map((app) => (
                   <tr
                     key={app.id}
-                    className="border-b border-spektr-border transition-colors hover:bg-[#fafafa]"
+                    tabIndex={0}
+                    className="border-b border-spektr-border transition-colors hover:bg-[#fafafa] cursor-pointer focus-visible:outline-2 focus-visible:outline-spektr-teal focus-visible:outline-offset-[-2px]"
                     onClick={() => setEditApp(app)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setEditApp(app);
+                      }
+                    }}
                   >
                     <td className="px-4 py-3.5">
                       <div className="font-montserrat font-semibold text-[13px] text-spektr-dark">

@@ -353,10 +353,10 @@ const RegisterForm = () => {
             <article className="flex flex-col gap-4 pb-2">
               {CGU_SECTIONS.map((section) => (
                 <section key={section.title}>
-                  <h3 className="font-montserrat font-bold text-[13px] text-white mb-1">
+                  <h3 className="font-montserrat font-bold text-[13px] text-spektr-dark mb-1">
                     {section.title}
                   </h3>
-                  <p className="font-source-sans text-[13px] text-white leading-relaxed">
+                  <p className="font-source-sans text-[13px] text-gray-700 leading-relaxed">
                     {section.body}
                   </p>
                 </section>

@@ -116,16 +116,21 @@ export function AppModal({ app, onClose, onSave, mode }: ModalProps) {
       document.removeEventListener("keydown", handleKeyDown);
       elementBefore?.focus();
     };
-  }, []);
+  }, [onClose]);
 
   return (
-    <div className="fixed inset-0 bg-black/45 z-1000 flex items-center justify-center">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="appmodal-title"
+      className="fixed inset-0 bg-black/45 z-1000 flex items-center justify-center"
+    >
       <div
         ref={modalRef}
         className="bg-white rounded-2xl w-140 max-h-[90vh] overflow-auto shadow-[0_24px_80px_rgba(0,0,0,0.2)]"
       >
         <div className="flex justify-between items-center px-7 py-5.5 border-b border-spektr-border">
-          <span className="font-montserrat font-extrabold text-[17px] text-spektr-dark">
+          <span id="appmodal-title" className="font-montserrat font-extrabold text-[17px] text-spektr-dark">
             {mode === "create"
               ? "Nouvelle candidature"
               : "Modifier la candidature"}

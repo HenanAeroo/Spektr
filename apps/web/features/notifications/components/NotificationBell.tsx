@@ -79,8 +79,17 @@ function NotificationBell() {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClick);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -151,6 +160,18 @@ function NotificationBell() {
               notifications.map((n) => (
                 <div
                   key={n.id}
+                  role={n.read ? undefined : "button"}
+                  tabIndex={n.read ? undefined : 0}
+                  onKeyDown={
+                    n.read
+                      ? undefined
+                      : (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            markRead(n.id);
+                          }
+                        }
+                  }
                   className={[
                     "flex items-start gap-3 px-4 py-3 border-b border-[#f8f8f8] transition-colors",
                     n.read

@@ -44,7 +44,7 @@ const registerSchema = z.object({
 type RegisterSchema = z.infer<typeof registerSchema>;
 
 const inputCls =
-  "w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border focus:outline-none focus:border-spektr-teal";
+  "w-full px-3.5 py-[11px] rounded-lg border-[1.5px] border-spektr-border font-source-sans text-sm text-spektr-dark bg-white box-border focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 focus:border-spektr-teal";
 
 const labelCls =
   "font-montserrat font-semibold text-xs text-spektr-dark block mb-[5px]";
@@ -267,7 +267,10 @@ const RegisterForm = () => {
             </div>
 
             {error && (
-              <div className="bg-[#fee2e2] text-[#dc2626] rounded-lg px-3.5 py-2.5 text-[13px]">
+              <div
+                role="alert"
+                className="bg-[#fee2e2] text-[#dc2626] rounded-lg px-3.5 py-2.5 text-[13px]"
+              >
                 {error}
               </div>
             )}
@@ -290,7 +293,7 @@ const RegisterForm = () => {
                 <button
                   type="button"
                   onClick={openDialog}
-                  className="text-spektr-teal-accessible font-semibold underline-offset-2 hover:underline focus:outline-none focus:underline"
+                  className="text-spektr-teal-accessible font-semibold underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-spektr-teal focus-visible:ring-offset-1 focus:underline"
                 >
                   Conditions Générales d'Utilisation
                 </button>

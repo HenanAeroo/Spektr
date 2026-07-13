@@ -51,15 +51,11 @@ export class DocumentsService {
       },
     });
 
-    try {
-      await this.notificationsService.createAndEmit(
-        userId,
-        NotifType.DOCUMENT_ADDED,
-        { documentName: file.originalname },
-      );
-    } catch {
-      // notification failure must not fail the upload
-    }
+    void this.notificationsService
+      .createAndEmit(userId, NotifType.DOCUMENT_ADDED, {
+        documentName: file.originalname,
+      })
+      .catch(() => {});
 
     return doc;
   }
@@ -133,19 +129,13 @@ export class DocumentsService {
       },
     });
 
-    try {
-      await this.notificationsService.createAndEmit(
-        doc.userId,
-        NotifType.DOCUMENT_REVIEW,
-        {
-          documentName: doc.name,
-          status: dto.status,
-          docType: doc.docType,
-        },
-      );
-    } catch {
-      // notification failure must not fail the review
-    }
+    void this.notificationsService
+      .createAndEmit(doc.userId, NotifType.DOCUMENT_REVIEW, {
+        documentName: doc.name,
+        status: dto.status,
+        docType: doc.docType,
+      })
+      .catch(() => {});
 
     return doc;
   }

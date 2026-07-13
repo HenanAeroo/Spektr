@@ -49,11 +49,9 @@ export class NotificationsService {
         payload,
         user.first_name,
       );
-      try {
-        await this.mailService.send(user.email, subject, html);
-      } catch (err) {
+      this.mailService.send(user.email, subject, html).catch((err) => {
         this.logger.error(err);
-      }
+      });
     }
 
     this.eventsGateway.server.to(`user:${userId}`).emit('notification', notif);

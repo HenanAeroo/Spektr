@@ -14,12 +14,12 @@ export const schema = Joi.object({
   SMTP_USER: Joi.string().required(),
   SMTP_PASS: Joi.string().required(),
   SMTP_FROM: Joi.string().email().optional(),
-  MINIO_ENDPOINT: Joi.string().required(),
-  MINIO_PORT: Joi.number().required(),
+  R2_ENDPOINT: Joi.string().required(),
+  R2_PORT: Joi.number().required(),
   // Kept as a validated string ('true'/'false') because minio.service compares
   // it with === 'true'; using Joi.boolean() would coerce it and break that check.
-  MINIO_USE_SSL: Joi.string().valid('true', 'false').default('false'),
-  MINIO_ACCESS_KEY: Joi.string().required(),
-  MINIO_SECRET_KEY: Joi.string().required(),
-  MINIO_BUCKET: Joi.string().required(),
+  R2_USE_SSL: Joi.string().valid('true', 'false').default('false'),
+  R2_ACCESS_KEY: Joi.string().required(),
+  R2_SECRET_KEY: Joi.string().required(),
+  R2_BUCKET: Joi.string().required(),
 });

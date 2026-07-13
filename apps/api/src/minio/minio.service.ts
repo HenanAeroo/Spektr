@@ -10,11 +10,11 @@ export class MinioService {
 
   onModuleInit() {
     this.client = new Minio.Client({
-      endPoint: this.config.getOrThrow('MINIO_ENDPOINT'),
-      port: parseInt(this.config.getOrThrow('MINIO_PORT')),
-      useSSL: this.config.get('MINIO_USE_SSL') === 'true',
-      accessKey: this.config.getOrThrow('MINIO_ACCESS_KEY'),
-      secretKey: this.config.getOrThrow('MINIO_SECRET_KEY'),
+      endPoint: this.config.getOrThrow('R2_ENDPOINT'),
+      port: parseInt(this.config.getOrThrow('R2_PORT')),
+      useSSL: this.config.get('R2_USE_SSL') === 'true',
+      accessKey: this.config.getOrThrow('R2_ACCESS_KEY'),
+      secretKey: this.config.getOrThrow('R2_SECRET_KEY'),
     });
   }
 
@@ -25,7 +25,7 @@ export class MinioService {
     mimeType: string,
   ) {
     return this.client.putObject(
-      this.config.getOrThrow('MINIO_BUCKET'),
+      this.config.getOrThrow('R2_BUCKET'),
       objectName,
       buffer,
       size,
@@ -35,7 +35,7 @@ export class MinioService {
 
   getPresignedUrl(objectName: string, expirySeconds: number): Promise<string> {
     return this.client.presignedGetObject(
-      this.config.getOrThrow('MINIO_BUCKET'),
+      this.config.getOrThrow('R2_BUCKET'),
       objectName,
       expirySeconds,
     );
@@ -43,7 +43,7 @@ export class MinioService {
 
   deleteFile(objectName: string): Promise<void> {
     return this.client.removeObject(
-      this.config.getOrThrow('MINIO_BUCKET'),
+      this.config.getOrThrow('R2_BUCKET'),
       objectName,
     );
   }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Application, Statut } from "@/features/applications/types";

@@ -10,7 +10,7 @@ import {
 } from "@/features/promos/actions/assignAdmin";
 import { removeAdmin } from "@/features/promos/actions/removeAdmin";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { inputCls } from "../constants";
 import { Card } from "./Card";

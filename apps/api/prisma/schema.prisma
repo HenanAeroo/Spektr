@@ -191,6 +191,18 @@ enum DocumentType {
   OTHER
 }
 
+/// Audit trail of Document.status changes. Rows are written exclusively by the
+/// PostgreSQL trigger `trg_document_status_change` (see migration
+/// `add_document_status_trigger`), never from application code — the model is
+/// declared here only so Prisma tracks the table and won't drop it as drift.
+model DocumentStatusAudit {
+  id         Int      @id @default(autoincrement())
+  documentId Int      @map("document_id")
+  oldStatus  String?  @map("old_status")
+  newStatus  String   @map("new_status")
+  changedAt  DateTime @default(now()) @map("changed_at") @db.Timestamptz(6)
+}
+
 model Notification {
   id Int @id @default(autoincrement())
 

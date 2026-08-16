@@ -262,6 +262,10 @@ const ApplicationsPage = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
+              <caption className="sr-only">
+                Suivi des candidatures : entreprise, statut, dates, contact et
+                commentaire
+              </caption>
               <thead>
                 <tr className="bg-[#fafafa]">
                   {[
@@ -274,6 +278,7 @@ const ApplicationsPage = () => {
                   ].map((h) => (
                     <th
                       key={h}
+                      scope="col"
                       className="px-4 py-3 text-left text-[11px] font-bold text-gray-500 uppercase tracking-[0.5px] border-b border-spektr-border"
                     >
                       {h}

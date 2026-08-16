@@ -21,6 +21,12 @@ import { Server, Socket } from 'socket.io';
     credentials: true,
   },
 })
+/**
+ * Socket.IO gateway that pushes real-time notifications to connected clients.
+ * CORS is locked to `FRONT_URL`. On connect, the JWT from the handshake is
+ * verified and the socket joins a per-user room (`user:<id>`) so services can
+ * target a single user with `server.to('user:<id>').emit(...)`.
+ */
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly jwtService: JwtService,
@@ -31,6 +37,12 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private readonly logger = new Logger('EventsGateway');
 
+  /**
+   * Authenticates a new socket from its handshake token and subscribes it to the
+   * user's private room. Sockets without a valid token are disconnected.
+   *
+   * @param client - The connecting Socket.IO client.
+   */
   handleConnection(client: Socket) {
     const token = client.handshake.auth.token;
 
@@ -52,10 +64,20 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  /**
+   * Logs a socket disconnection.
+   *
+   * @param client - The disconnecting Socket.IO client.
+   */
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
+  /**
+   * Health-check handler: replies to a `ping` message with `pong`.
+   *
+   * @returns The `pong` event envelope.
+   */
   @SubscribeMessage('ping')
   handlePing() {
     return { event: 'pong', data: 'pong' };

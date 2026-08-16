@@ -33,6 +33,12 @@ import { CommunicationsService } from '../communications/communications.service'
 import { PromoAccessService, Requester } from '../promos/promo-access.service';
 import { isAdmin } from '../auth/roles';
 
+/**
+ * Business logic for user accounts: CRUD, password changes, bulk emailing and
+ * CSV student imports. Every multi-tenant read/write is scoped through
+ * {@link PromoAccessService} so a plain ADMIN only ever touches users in the
+ * promos they administer, while SUPER_ADMIN bypasses those restrictions.
+ */
 @Injectable()
 export class UsersService {
   constructor(
@@ -43,16 +49,42 @@ export class UsersService {
     private readonly promoAccess: PromoAccessService,
   ) {}
 
+  /**
+   * Derives a deterministic HMAC-SHA256 digest of a raw token, keyed with the
+   * app's `JWT_SECRET`. Lets us store reset-password tokens as a hash (never the
+   * raw value) while still supporting a direct lookup by that hash.
+   *
+   * @param token - The raw, unhashed token to digest.
+   * @returns The hex-encoded HMAC digest.
+   */
   private hashToken(token: string): string {
     return createHmac('sha256', this.config.get<string>('JWT_SECRET')!)
       .update(token)
       .digest('hex');
   }
 
+  /**
+   * Persists a new user row from a raw Prisma payload.
+   *
+   * @param data - Prisma `UserCreateInput` describing the user to create.
+   * @returns The newly created {@link User}.
+   */
   create(data: Prisma.UserCreateInput): Promise<User> {
     return this.prisma.user.create({ data });
   }
 
+  /**
+   * Returns a paginated list of users, scoped to the requester's permissions.
+   * SUPER_ADMIN sees everyone (optionally filtered by `promoId`); any other role
+   * only sees users belonging to the promos they administer.
+   *
+   * @param page - 1-based page number.
+   * @param limit - Page size (number of users per page).
+   * @param promoId - Optional promo filter.
+   * @param requesterId - Id of the calling user, used for promo scoping.
+   * @param requesterRole - Role of the calling user.
+   * @returns The page of users plus `total`, `hasNextPage` and the echoed `page`.
+   */
   async findAll(
     page: number,
     limit: number,
@@ -91,12 +123,24 @@ export class UsersService {
     };
   }
 
+  /**
+   * Fetches a single user by any unique field (id, email, …).
+   *
+   * @param userWhereUniqueInput - Prisma unique selector.
+   * @returns The matching {@link User}, or `null` if none exists.
+   */
   findOne(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
   ): Promise<User | null> {
     return this.prisma.user.findUnique({ where: userWhereUniqueInput });
   }
 
+  /**
+   * Applies a partial update to a user.
+   *
+   * @param params - The unique `where` selector and the `data` to merge.
+   * @returns The updated {@link User}.
+   */
   update(params: {
     where: Prisma.UserWhereUniqueInput;
     data: Prisma.UserUpdateInput;
@@ -105,6 +149,19 @@ export class UsersService {
     return this.prisma.user.update({ data, where });
   }
 
+  /**
+   * Deletes a user after enforcing safety rules. Removing an admin requires
+   * SUPER_ADMIN (or self) and is blocked when that admin is the sole OWNER of
+   * any promo, so a promo is never left without an owner (db-10).
+   *
+   * @param where - Unique selector for the user to delete.
+   * @param callerId - Id of the requester, used for the self-deletion check.
+   * @param callerRole - Role of the requester.
+   * @throws BadRequestException When the target user does not exist.
+   * @throws ForbiddenException When a non-super-admin deletes another admin.
+   * @throws ConflictException When the target is the last owner of a promo.
+   * @returns The deleted {@link User}.
+   */
   async remove(
     where: Prisma.UserWhereUniqueInput,
     callerId?: number,
@@ -152,6 +209,18 @@ export class UsersService {
     return this.prisma.user.delete({ where });
   }
 
+  /**
+   * Changes a user's local password after verifying the current one, then
+   * revokes all of their refresh tokens so existing sessions are forced to
+   * re-authenticate.
+   *
+   * @param userId - Id of the user changing their password.
+   * @param oldPassword - Current password, checked against the stored hash.
+   * @param newPassword - Replacement password (bcrypt-hashed with cost 12).
+   * @throws BadRequestException When the account has no local password set.
+   * @throws UnauthorizedException When `oldPassword` does not match.
+   * @returns `{ success: true }` once the password has been rotated.
+   */
   async changePassword(
     userId: number,
     oldPassword: string,
@@ -184,6 +253,19 @@ export class UsersService {
     return { success: true };
   }
 
+  /**
+   * Imports STUDENT accounts from an uploaded CSV. Auto-detects the delimiter,
+   * maps localized headers via {@link STUDENT_COLUMN_MAP}, auto-creates missing
+   * promos (owned by the requester) and emails every new student an activation
+   * link. Rows with a missing email or an already-existing account are skipped
+   * and reported instead of aborting the whole import.
+   *
+   * @param file - The uploaded CSV (Multer file, UTF-8, optional BOM).
+   * @param requesterId - Id of the importing admin (promo ownership + scoping).
+   * @param requesterRole - Role of the importer; SUPER_ADMIN sees every promo.
+   * @throws BadRequestException When the CSV is malformed or exceeds the row cap.
+   * @returns Counts of imported/skipped rows plus per-row error details.
+   */
   async importStudentsFromCsv(
     file: Express.Multer.File,
     requesterId: number,
@@ -362,6 +444,13 @@ export class UsersService {
     return result;
   }
 
+  /**
+   * Renders the HTML body of the student activation email.
+   *
+   * @param firstName - Student first name used in the greeting.
+   * @param resetUrl - One-time link that lets the student set their password.
+   * @returns A self-contained HTML document string.
+   */
   private buildInviteEmail(firstName: string, resetUrl: string): string {
     return `<!DOCTYPE html>
 <html lang="fr">
@@ -389,6 +478,14 @@ export class UsersService {
 </html>`;
   }
 
+  /**
+   * Splits an array of users into fixed-size batches, used to rate-limit bulk
+   * mail so the SMTP provider is not hit with every recipient at once.
+   *
+   * @param array - The users to batch.
+   * @param size - Maximum number of users per batch.
+   * @returns An array of user batches.
+   */
   private chunksOf(array: User[], size: number) {
     const result = [];
     let i = 0;
@@ -399,6 +496,16 @@ export class UsersService {
     return result;
   }
 
+  /**
+   * Sends one email to many users, batching by 10 and recording a Communication
+   * row per successful send. Non-super-admin senders are restricted to
+   * recipients in the promos they administer (AC-06).
+   *
+   * @param dto - Subject, body and the target `userIds`.
+   * @param sender - The requester (id + role), used for scoping and attribution.
+   * @throws InternalServerErrorException When every send fails.
+   * @returns The number of messages `sent` and `failed`.
+   */
   async bulkEmail(dto: BulkEmailDto, sender: Requester) {
     const users = await this.prisma.user.findMany({
       where: { id: { in: dto.userIds } },
@@ -448,6 +555,13 @@ export class UsersService {
     return { sent, failed: failed.length };
   }
 
+  /**
+   * Sanitizes the admin-authored body (allow-listed tags only) and inlines the
+   * CSS with juice so the styling survives across email clients.
+   *
+   * @param body - Raw HTML body authored in the admin email editor.
+   * @returns The full, inlined and sanitized HTML email.
+   */
   private buildEmailHtml(body: string): string {
     const cleanBody = sanitizeHtml(body, {
       allowedTags: [

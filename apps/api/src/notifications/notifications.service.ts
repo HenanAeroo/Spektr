@@ -4,10 +4,20 @@ import { EventsGateway } from '../events/events.gateway';
 import { Prisma, NotifType } from '../../prisma/generated/prisma/client';
 import { MailService } from '../mail/mail.service';
 
+/** Human labels for the 5-point RE feedback scale (index 0 = best). */
 const SMILEY_LABELS = ['Très bien', 'Bien', 'Moyen', 'Préoccupant', 'Critique'];
+/** Emoji shown for each feedback score, aligned by index with the labels. */
 const SMILEY_EMOJIS = ['😊', '🙂', '😐', '🙁', '😟'];
+/** Accent color per feedback score, aligned by index with the labels. */
 const SMILEY_COLORS = ['#16a34a', '#65a30d', '#d97706', '#ea580c', '#dc2626'];
 
+/**
+ * Escapes the five HTML-significant characters so user-supplied text can be
+ * safely interpolated into notification email templates (XSS defense).
+ *
+ * @param str - Raw, untrusted string.
+ * @returns The HTML-escaped string.
+ */
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -17,6 +27,12 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
+/**
+ * Creates in-app notifications, pushes them to the user in real time over the
+ * WebSocket gateway, and mirrors them as templated emails. Also owns the
+ * transactional emails that aren't tied to a Notification row (RE feedback,
+ * password-changed confirmation).
+ */
 @Injectable()
 export class NotificationsService {
   constructor(
@@ -27,6 +43,15 @@ export class NotificationsService {
 
   private readonly logger = new Logger(NotificationsService.name);
 
+  /**
+   * Persists a notification, emails a templated copy (best-effort — failures are
+   * logged, not thrown) and pushes it live to the user's WebSocket room.
+   *
+   * @param userId - Recipient user id.
+   * @param type - The notification type, which selects the email template.
+   * @param payload - Type-specific data merged into the notification + email.
+   * @returns The created notification row.
+   */
   async createAndEmit(
     userId: number,
     type: NotifType,
@@ -59,6 +84,14 @@ export class NotificationsService {
     return notif;
   }
 
+  /**
+   * Emails a student the RE feedback (smiley score + optional comment). No-op
+   * when the student has no email; send failures are logged, not thrown.
+   *
+   * @param studentId - Id of the student receiving the feedback.
+   * @param score - 0-based score index into the SMILEY_* scales (0 = best).
+   * @param comment - Optional free-text comment (HTML-escaped before render).
+   */
   async sendFeedbackEmail(studentId: number, score: number, comment: string) {
     const student = await this.prisma.user.findUnique({
       where: { id: studentId },
@@ -137,6 +170,17 @@ export class NotificationsService {
     }
   }
 
+  /**
+   * Builds the subject + HTML for a notification email, branching on the
+   * notification type (objective created, inactivity alert, document review),
+   * with a generic fallback for unknown types. All interpolated values are
+   * HTML-escaped.
+   *
+   * @param type - The notification type driving template selection.
+   * @param payload - Type-specific fields (title, deadline, status, …).
+   * @param firstName - Recipient first name for the greeting (nullable).
+   * @returns The email `subject` and rendered `html`.
+   */
   private buildNotificationEmail(
     type: NotifType,
     payload: Record<string, unknown>,
@@ -323,6 +367,13 @@ export class NotificationsService {
     };
   }
 
+  /**
+   * Sends the security confirmation email after a password change, including the
+   * timestamp and a "wasn't you?" warning. No-op without an email; failures are
+   * logged, not thrown.
+   *
+   * @param userId - Id of the user whose password changed.
+   */
   async sendPasswordChangedEmail(userId: number) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.email) return;
@@ -394,6 +445,12 @@ export class NotificationsService {
     }
   }
 
+  /**
+   * Lists a user's notifications, newest first.
+   *
+   * @param userId - Owner of the notifications.
+   * @returns The user's notifications ordered by `created_at` descending.
+   */
   async findAllForUser(userId: number) {
     return this.prisma.notification.findMany({
       where: { userId },
@@ -401,6 +458,14 @@ export class NotificationsService {
     });
   }
 
+  /**
+   * Marks a single notification read, scoped to its owner so a user can't touch
+   * someone else's notifications.
+   *
+   * @param id - Notification id.
+   * @param userId - Owner id (part of the where-clause for isolation).
+   * @returns Prisma batch payload with the updated count.
+   */
   async markAsRead(id: number, userId: number) {
     return this.prisma.notification.updateMany({
       where: { id, userId },
@@ -408,6 +473,12 @@ export class NotificationsService {
     });
   }
 
+  /**
+   * Marks all of a user's notifications read.
+   *
+   * @param userId - Owner of the notifications.
+   * @returns Prisma batch payload with the updated count.
+   */
   async markAllRead(userId: number) {
     return this.prisma.notification.updateMany({
       where: { userId },

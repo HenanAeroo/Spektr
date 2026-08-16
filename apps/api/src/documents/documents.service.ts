@@ -13,6 +13,12 @@ import {
 import { ReviewDocumentDto } from './dto/review-document.dto';
 import { PromoAccessService, Requester } from '../promos/promo-access.service';
 
+/**
+ * Manages student documents (CVs, cover letters, misc files): upload to MinIO
+ * object storage with sanitized keys, presigned downloads, admin review with
+ * notifications, and the pending-review queue. Cross-user access is gated by
+ * {@link PromoAccessService}.
+ */
 @Injectable()
 export class DocumentsService {
   constructor(
@@ -22,6 +28,17 @@ export class DocumentsService {
     private readonly promoAccess: PromoAccessService,
   ) {}
 
+  /**
+   * Stores an uploaded file in MinIO under a randomized, per-user storage key,
+   * records the Document row (sanitizing the display name) and fires a
+   * best-effort "document added" notification.
+   *
+   * @param file - The uploaded file (Multer): buffer, size, mimetype, name.
+   * @param folderId - Optional folder to place the document in.
+   * @param userId - Owner of the document.
+   * @param docType - Optional semantic type (e.g. CV, LM).
+   * @returns The created Document row.
+   */
   async upload(
     file: Express.Multer.File,
     folderId: number | undefined,
@@ -60,6 +77,12 @@ export class DocumentsService {
     return doc;
   }
 
+  /**
+   * Lists the caller's own documents.
+   *
+   * @param userId - Owner of the documents.
+   * @returns The user's documents.
+   */
   findAll(userId: number) {
     return this.prisma.document.findMany({ where: { userId } });
   }
@@ -67,6 +90,12 @@ export class DocumentsService {
   /**
    * Admin listing of another user's documents — scoped to promos the requester
    * administers (AC-02). SUPER_ADMIN bypasses.
+   *
+   * @param targetUserId - Student whose documents are being listed.
+   * @param requester - The calling admin (id + role) for promo scoping.
+   * @throws NotFoundException When the target user does not exist.
+   * @throws ForbiddenException When the requester doesn't administer the promo.
+   * @returns The target user's documents.
    */
   async findForUser(targetUserId: number, requester: Requester) {
     const target = await this.prisma.user.findUnique({
@@ -78,6 +107,16 @@ export class DocumentsService {
     return this.prisma.document.findMany({ where: { userId: targetUserId } });
   }
 
+  /**
+   * Returns a short-lived (1h) presigned download URL for a document. The owner
+   * may always download; anyone else must administer the owner's promo (AC-01).
+   *
+   * @param id - Document id.
+   * @param requester - The calling user (id + role).
+   * @throws NotFoundException When the document does not exist.
+   * @throws ForbiddenException When a non-owner doesn't administer the promo.
+   * @returns An object holding the presigned `url`.
+   */
   async getDownloadUrl(id: number, requester: Requester) {
     const doc = await this.prisma.document.findUnique({
       where: { id },
@@ -98,6 +137,13 @@ export class DocumentsService {
     return { url };
   }
 
+  /**
+   * Deletes an owned document from both the database and MinIO storage.
+   *
+   * @param id - Document id to delete.
+   * @param userId - Owner id (scopes the delete).
+   * @throws NotFoundException When no owned document matches `id`.
+   */
   async remove(id: number, userId: number) {
     const doc = await this.prisma.document.findFirst({ where: { id, userId } });
 
@@ -107,6 +153,18 @@ export class DocumentsService {
     await this.minio.deleteFile(doc.storageKey);
   }
 
+  /**
+   * Records an admin review of a document (status, optional type reclassification)
+   * and notifies the owning student. Requires the requester to administer the
+   * student's promo.
+   *
+   * @param id - Document id being reviewed.
+   * @param dto - Review outcome (status) and optional `docType`.
+   * @param requester - The reviewing admin (id + role).
+   * @throws NotFoundException When the document does not exist.
+   * @throws ForbiddenException When the requester doesn't administer the promo.
+   * @returns The updated document with basic owner info.
+   */
   async review(id: number, dto: ReviewDocumentDto, requester: Requester) {
     const existing = await this.prisma.document.findUnique({
       where: { id },
@@ -140,6 +198,13 @@ export class DocumentsService {
     return doc;
   }
 
+  /**
+   * Lists CV/LM documents awaiting review (PENDING or TO_CORRECT), scoped to the
+   * promos the requester administers (AC-03), newest first.
+   *
+   * @param requester - The calling admin (id + role).
+   * @returns The pending documents with basic owner info.
+   */
   getPendingReviews(requester: Requester) {
     // Only surface CV/LM awaiting review for promos the requester administers (AC-03).
     const promoScope =

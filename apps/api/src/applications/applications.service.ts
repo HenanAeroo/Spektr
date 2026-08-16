@@ -31,6 +31,11 @@ import {
   sanitizeCsvCell,
 } from './applications.csv-mapper';
 
+/**
+ * Manages job/internship applications (candidatures): per-student CRUD, the
+ * admin cross-user read scoped by promo, bulk CSV import, and firing admin
+ * notifications when an application reaches a noteworthy outcome.
+ */
 @Injectable()
 export class ApplicationsService {
   private readonly logger = new Logger(ApplicationsService.name);
@@ -41,6 +46,13 @@ export class ApplicationsService {
     private readonly promoAccess: PromoAccessService,
   ) {}
 
+  /**
+   * Creates an application owned by the given user.
+   *
+   * @param createApplicationDto - Validated application fields.
+   * @param userId - Owner of the new application.
+   * @returns The created {@link Application}.
+   */
   create(
     createApplicationDto: CreateApplicationDto,
     userId: number,
@@ -64,6 +76,12 @@ export class ApplicationsService {
     });
   }
 
+  /**
+   * Lists the caller's own applications, oldest first.
+   *
+   * @param userId - Owner of the applications.
+   * @returns The user's applications ordered by `created_at` ascending.
+   */
   findMyApplications(userId: number) {
     return this.prisma.application.findMany({
       where: {
@@ -76,6 +94,12 @@ export class ApplicationsService {
   /**
    * Admin view of another user's applications — scoped to promos the requester
    * administers (AC-10). SUPER_ADMIN bypasses.
+   *
+   * @param targetUserId - Student whose applications are being read.
+   * @param requester - The calling admin (id + role) for promo scoping.
+   * @throws NotFoundException When the target user does not exist.
+   * @throws ForbiddenException When the requester doesn't administer the promo.
+   * @returns The target user's applications.
    */
   async findForUser(targetUserId: number, requester: Requester) {
     const target = await this.prisma.user.findUnique({
@@ -87,6 +111,13 @@ export class ApplicationsService {
     return this.findMyApplications(targetUserId);
   }
 
+  /**
+   * Fetches a single application by id, scoped to its owner.
+   *
+   * @param id - Application id.
+   * @param userId - Owner id (enforces isolation).
+   * @returns The matching application, or `null` if none.
+   */
   findOne(id: number, userId: number) {
     return this.prisma.application.findFirst({
       where: {
@@ -96,6 +127,17 @@ export class ApplicationsService {
     });
   }
 
+  /**
+   * Updates an owned application. When the new outcome is ENTRETIEN or DECROCHEE,
+   * fans out notifications to all admins concurrently (db-11) so a slow send
+   * doesn't block the response.
+   *
+   * @param id - Application id to update.
+   * @param updateApplicationDto - Partial application fields to persist.
+   * @param userId - Owner id (scopes the update).
+   * @throws NotFoundException When no owned application matches `id`.
+   * @returns The updated application.
+   */
   async update(
     id: number,
     updateApplicationDto: UpdateApplicationDto,
@@ -153,6 +195,14 @@ export class ApplicationsService {
     });
   }
 
+  /**
+   * Deletes an owned application.
+   *
+   * @param id - Application id to delete.
+   * @param userId - Owner id (scopes the delete).
+   * @throws NotFoundException When no owned application matches `id`.
+   * @returns `{ id }` of the deleted application.
+   */
   async remove(id: number, userId: number) {
     const { count } = await this.prisma.application.deleteMany({
       where: {
@@ -166,6 +216,18 @@ export class ApplicationsService {
     return { id };
   }
 
+  /**
+   * Bulk-imports applications for one user from a CSV buffer. Strips the BOM,
+   * maps localized headers, sanitizes every cell against formula injection,
+   * coerces status/outcome/date values, and inserts in batches. Malformed rows
+   * are skipped and reported; a systemic DB failure aborts the whole import.
+   *
+   * @param buffer - Raw uploaded CSV bytes (UTF-8, optional BOM).
+   * @param userId - Owner the imported applications are attached to.
+   * @throws BadRequestException When the CSV is invalid or exceeds the row cap.
+   * @throws InternalServerErrorException When the batch insert fails.
+   * @returns Counts of imported/skipped rows plus per-row error details.
+   */
   async importFromCsv(buffer: Buffer, userId: number): Promise<ImportResult> {
     // Strip the UTF-8 BOM (U+FEFF) that Excel-exported CSVs often prepend.
     const raw = buffer.toString('utf-8');
@@ -180,13 +242,14 @@ export class ApplicationsService {
     }
     if (rows.length === 0) return { imported: 0, skipped: 0, errors: [] };
 
-    // Fix #4: cap row count to prevent DoS
+    //CSV max rows = 2000, declared in the mapper
     if (rows.length > MAX_CSV_ROWS) {
       throw new BadRequestException(
         `Le fichier contient ${rows.length} lignes. Maximum autorisé : ${MAX_CSV_ROWS}`,
       );
     }
 
+    // Normalize each column on the same format
     const colMap = new Map<string, ApplicationField>();
     for (const header of Object.keys(rows[0])) {
       const field = COLUMN_MAP[normalizeKey(header)];
@@ -206,6 +269,7 @@ export class ApplicationsService {
         if (raw) data[dbField] = raw;
       }
 
+      // If the column "entreprise" is empty, then skip it
       if (!data.entreprise) {
         result.skipped++;
         result.errors.push({
@@ -215,7 +279,7 @@ export class ApplicationsService {
         continue;
       }
 
-      // Fix #10: warn on unrecognized enum values (don't silently discard)
+      // Errors checks if status or outcome if not recognized
       if (data.statut && mapStatut(data.statut) === undefined) {
         result.errors.push({
           row: rowNum,
@@ -229,13 +293,16 @@ export class ApplicationsService {
         });
       }
 
+      // Validation of each rows with a security applied : checks chars
+      // Injection is not possible
+      // sanitizeCsvCell is in mapper
       validRows.push({
         entreprise: sanitizeCsvCell(data.entreprise),
         lien: data.lien ? sanitizeCsvCell(data.lien) : null,
         commentaire: data.commentaire
           ? sanitizeCsvCell(data.commentaire)
           : null,
-        // Fix #5: use undefined (not null) so Prisma applies @default(A_CONTACTER)
+        //mapStatut checks if the status match with one of declared in mapper
         statut: data.statut ? mapStatut(data.statut) : undefined,
         contact_nom: data.contact_nom
           ? sanitizeCsvCell(data.contact_nom)
@@ -254,7 +321,7 @@ export class ApplicationsService {
         date_reponse_entreprise: data.date_reponse_entreprise
           ? parseDate(data.date_reponse_entreprise)
           : null,
-        // Fix #5: use undefined so @default(RAPPEL) applies when no outcome
+        //mapOutcome checks if the status match with one of declared in mapper
         outcome: data.outcome
           ? (mapOutcome(data.outcome) ?? undefined)
           : undefined,
@@ -262,7 +329,6 @@ export class ApplicationsService {
       });
     }
 
-    // Fix #4: batch inserts instead of N sequential creates
     try {
       for (let i = 0; i < validRows.length; i += CSV_BATCH_SIZE) {
         const batch = validRows.slice(i, i + CSV_BATCH_SIZE);
@@ -270,7 +336,6 @@ export class ApplicationsService {
         result.imported += res.count;
       }
     } catch (err) {
-      // Fix #7: distinguish systemic errors (infra/FK) from row-level errors
       this.logger.error("Erreur systémique lors de l'import CSV", err);
       throw new InternalServerErrorException(
         "Erreur lors de l'import en base de données",

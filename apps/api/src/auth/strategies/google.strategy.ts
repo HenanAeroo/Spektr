@@ -4,6 +4,10 @@ import { PassportStrategy } from '@nestjs/passport';
 import { AuthService } from '../auth.service';
 import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20';
 
+/**
+ * Passport Google OAuth 2.0 strategy. Requests only the email + profile scopes
+ * and delegates account resolution/linking to {@link AuthService}.
+ */
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(
@@ -18,6 +22,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
+  /**
+   * Passport verify callback: turns a Google profile into an app session.
+   *
+   * @param _accesToken - Google access token (unused).
+   * @param _refreshToken - Google refresh token (unused).
+   * @param profile - The authenticated Google profile.
+   * @param done - Passport callback invoked with the issued app tokens.
+   */
   async validate(
     _accesToken: string,
     _refreshToken: string,

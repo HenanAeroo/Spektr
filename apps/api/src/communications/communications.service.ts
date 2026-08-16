@@ -7,9 +7,21 @@ import {
   Prisma,
 } from '../../prisma/generated/prisma/client';
 
+/**
+ * Records the log of admin→student communications (emails and RE feedback) so
+ * they can be reviewed later. Message bodies are sanitized on write because they
+ * are rendered with `dangerouslySetInnerHTML` in the admin UI (stored-XSS
+ * defense).
+ */
 @Injectable()
 export class CommunicationsService {
   constructor(private readonly prismaService: PrismaService) {}
+  /**
+   * Persists a communication entry, sanitizing the HTML body before storage.
+   *
+   * @param dto - Sender, recipient, type, and optional subject/body/score.
+   * @returns The created communication row.
+   */
   async create(dto: CreateCommunicationDto) {
     const comm = await this.prismaService.communication.create({
       data: {
@@ -28,6 +40,14 @@ export class CommunicationsService {
     return comm;
   }
 
+  /**
+   * Lists communications, optionally filtered by a participant and/or type, with
+   * sender and recipient profiles included, newest first.
+   *
+   * @param userId - Optional user id; matches as either sender or recipient.
+   * @param type - Optional communication type filter (EMAIL, FEEDBACK).
+   * @returns The matching communications with participant info.
+   */
   async findAll(userId?: number, type?: CommunicationType) {
     const where: Prisma.CommunicationWhereInput = {};
 

@@ -6,6 +6,12 @@ import { NotifType, Role, User } from '../../prisma/generated/prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PromoAccessService, Requester } from '../promos/promo-access.service';
 
+/**
+ * Manages promo objectives and their per-student completion state. Admin writes
+ * are gated by {@link PromoAccessService}; students can only see and toggle
+ * objectives belonging to their own promo. Creating an objective notifies every
+ * student in the promo.
+ */
 @Injectable()
 export class ObjectivesService {
   private readonly logger = new Logger(ObjectivesService.name);
@@ -16,13 +22,28 @@ export class ObjectivesService {
     private readonly promoAccess: PromoAccessService,
   ) {}
 
-  /** Prisma filter restricting objectives to the promos the requester administers. */
+  /**
+   * Builds a Prisma where-fragment restricting objectives to the promos the
+   * requester administers. SUPER_ADMIN gets an empty (unrestricted) filter.
+   *
+   * @param requester - The calling user (id + role).
+   * @returns A Prisma `ObjectiveWhereInput` fragment to spread into queries.
+   */
   private promoScope(requester: Requester) {
     return requester.role === Role.SUPER_ADMIN
       ? {}
       : { promo: { adminPromos: { some: { adminId: requester.id } } } };
   }
 
+  /**
+   * Creates an objective for a promo and notifies every student in it. A
+   * notification failure is logged but does not roll back the creation.
+   *
+   * @param dto - Objective fields plus the target `promoId`.
+   * @param requester - The calling admin (must administer the promo).
+   * @throws ForbiddenException When the requester doesn't administer the promo.
+   * @returns The created objective.
+   */
   async create(dto: CreateObjectiveDto, requester: Requester) {
     await this.promoAccess.assertAdministersPromo(requester, dto.promoId);
 
@@ -66,6 +87,13 @@ export class ObjectivesService {
     return objective;
   }
 
+  /**
+   * Lists objectives visible to an admin, scoped to their promos, with the promo
+   * relation included.
+   *
+   * @param requester - The calling admin (id + role).
+   * @returns The in-scope objectives.
+   */
   findAll(requester: Requester) {
     return this.prismaService.objective.findMany({
       where: this.promoScope(requester),
@@ -73,6 +101,14 @@ export class ObjectivesService {
     });
   }
 
+  /**
+   * Fetches a single objective, asserting the requester administers its promo.
+   *
+   * @param id - Objective id.
+   * @param requester - The calling admin (id + role).
+   * @throws ForbiddenException When the requester doesn't administer the promo.
+   * @returns The objective, or `null` if it doesn't exist.
+   */
   async findOne(id: number, requester: Requester) {
     const objective = await this.prismaService.objective.findUnique({
       where: { id },
@@ -86,6 +122,14 @@ export class ObjectivesService {
     return objective;
   }
 
+  /**
+   * Returns the student's promo objectives, each flattened with a `done` boolean
+   * derived from that student's completion row. Students with no promo get an
+   * empty list.
+   *
+   * @param user - The student (needs `id` and `promoId`).
+   * @returns Objectives augmented with a per-student `done` flag.
+   */
   async findByUser(user: User) {
     if (user.promoId === null) {
       return [];
@@ -108,6 +152,15 @@ export class ObjectivesService {
     }));
   }
 
+  /**
+   * Toggles (or creates) the student's completion flag for an objective. Guards
+   * that the objective belongs to the student's own promo (AC-05).
+   *
+   * @param objectiveId - Objective to toggle.
+   * @param user - The student toggling completion.
+   * @throws ForbiddenException When the objective is outside the student's promo.
+   * @returns The upserted completion row.
+   */
   async toggleCompletion(objectiveId: number, user: User) {
     const objective = await this.prismaService.objective.findUnique({
       where: { id: objectiveId },
@@ -135,6 +188,13 @@ export class ObjectivesService {
     });
   }
 
+  /**
+   * Returns in-scope objectives with all their completions and the associated
+   * student profiles, used to build the admin completion matrix.
+   *
+   * @param requester - The calling admin (id + role).
+   * @returns Objectives with nested completions and student info.
+   */
   async findAllCompletions(requester: Requester) {
     const objectives = await this.prismaService.objective.findMany({
       where: this.promoScope(requester),
@@ -159,6 +219,14 @@ export class ObjectivesService {
     return objectives;
   }
 
+  /**
+   * Returns the most recent objective completions across the requester's promos,
+   * for the admin dashboard activity feed.
+   *
+   * @param requester - The calling admin (id + role).
+   * @param limit - Maximum number of activity entries (default 5).
+   * @returns Recent completions with student and objective info, newest first.
+   */
   async findRecentActivity(requester: Requester, limit = 5) {
     return this.prismaService.objectiveCompletion.findMany({
       where: {
@@ -190,6 +258,15 @@ export class ObjectivesService {
     });
   }
 
+  /**
+   * Updates an objective after asserting the requester administers its promo.
+   *
+   * @param id - Objective id to update.
+   * @param dto - Partial objective fields.
+   * @param requester - The calling admin (id + role).
+   * @throws ForbiddenException When the objective is missing or out of scope.
+   * @returns The updated objective.
+   */
   async update(id: number, dto: UpdateObjectiveDto, requester: Requester) {
     const objective = await this.prismaService.objective.findUnique({
       where: { id },
@@ -204,6 +281,14 @@ export class ObjectivesService {
     });
   }
 
+  /**
+   * Deletes an objective after asserting the requester administers its promo.
+   *
+   * @param id - Objective id to delete.
+   * @param requester - The calling admin (id + role).
+   * @throws ForbiddenException When the objective is missing or out of scope.
+   * @returns The deleted objective.
+   */
   async remove(id: number, requester: Requester) {
     const objective = await this.prismaService.objective.findUnique({
       where: { id },

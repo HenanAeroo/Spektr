@@ -16,6 +16,13 @@ export type UpdateApplicationData = {
   outcome?: Outcome | null;
 };
 
+/**
+ * Updates an existing application via `PATCH /applications/:id`.
+ *
+ * @param id - Id of the application to update.
+ * @param data - The partial fields to change (null clears a value).
+ * @returns The updated {@link Application}.
+ */
 export async function updateApplication(
   id: number,
   data: UpdateApplicationData,

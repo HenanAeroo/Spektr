@@ -17,6 +17,13 @@ export type CreateApplicationData = {
   outcome?: Outcome;
 };
 
+/**
+ * Creates a new application (candidature) for the current user via
+ * `POST /applications`.
+ *
+ * @param data - The application fields to create.
+ * @returns The created {@link Application}.
+ */
 export async function createApplication(data: CreateApplicationData) {
   return apiFetch<Application>("/applications", {
     method: "POST",

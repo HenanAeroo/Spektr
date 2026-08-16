@@ -1,5 +1,16 @@
 import { RefObject, useEffect } from "react";
 
+/**
+ * Traps keyboard focus inside an open modal for accessibility (RGAA): focuses
+ * the first focusable element on open, cycles Tab/Shift+Tab within the modal,
+ * closes on Escape, and restores focus to the previously active element on
+ * unmount.
+ *
+ * @param ref - Ref to the modal container element.
+ * @param isOpen - Whether the modal is currently open (the trap is a no-op when
+ *   closed).
+ * @param onClose - Called when the user presses Escape.
+ */
 export function useFocusTrap(
   ref: RefObject<HTMLElement | null>,
   isOpen: boolean,

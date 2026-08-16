@@ -10,7 +10,15 @@ import { apiFetch } from "@/shared/lib/api";
 import { getToken } from "@/shared/lib/auth";
 import { User } from "@spektr/shared";
 
-// Using useState because it is a dedicated context for the authentication
+/**
+ * Auth actions hook for forms and the sidebar. Wraps the login/register/logout
+ * network calls with shared `isLoading`/`error`/`emailSent` UI state, syncs the
+ * auth context user, and handles post-action navigation. Local `useState` is
+ * used because this is scoped UI state, not the global auth context.
+ *
+ * @returns Handlers (`handleLogin`, `handleRegister`, `handleLogout`,
+ *   `loginWithGoogle`) plus the `isLoading`, `error` and `emailSent` flags.
+ */
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +26,12 @@ export function useAuth() {
   const { setUser } = useAuthContext();
   const navigate = useNavigate();
 
+  /**
+   * Logs in, loads the current user into the auth context, and navigates home.
+   * Failures are surfaced through `error`.
+   *
+   * @param data - The login form credentials.
+   */
   async function handleLogin(data: LoginFormData) {
     setIsLoading(true);
     setError(null);
@@ -34,6 +48,12 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Registers a new account and flips `emailSent` so the UI can prompt the user
+   * to confirm their email. Failures are surfaced through `error`.
+   *
+   * @param data - The registration form data.
+   */
   async function handleRegister(data: RegisterFormData) {
     setIsLoading(true);
     setError(null);
@@ -50,6 +70,10 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Logs out, clears the auth context user, and navigates to `/login`.
+   * Failures are surfaced through `error`.
+   */
   async function handleLogout() {
     setIsLoading(true);
     setError(null);

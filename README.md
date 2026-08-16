@@ -1,31 +1,31 @@
 # Spektr
 
-Plateforme de suivi des candidatures et de gestion de documents pour les étudiants suivis par les RE de Rennes Ynov Campus.
+Application-tracking and document-management platform for students supported by the Relation Entreprises (RE) team at Rennes Ynov Campus.
 
 ---
 
-## Stack technique
+## Tech stack
 
-| Couche          | Technologie                                      |
-| --------------- | ------------------------------------------------ |
-| Frontend        | React 19 + Vite + React Router v7 + TypeScript   |
-| Backend         | NestJS 11 + TypeScript                           |
-| Base de données | PostgreSQL + Prisma 7                            |
-| Auth            | JWT dual-token + Google OAuth (Passport.js)      |
-| UI              | shadcn/ui + Tailwind CSS v4 + HugeIcons + Lucide |
-| Stockage        | Minio (S3-compatible)                            |
-| Temps réel      | WebSocket (Socket.io)                            |
-| Email           | Brevo (SMTP)                                     |
-| Monorepo        | Turborepo + pnpm workspaces                      |
+| Layer      | Technology                                       |
+| ---------- | ------------------------------------------------ |
+| Frontend   | React 19 + Vite + React Router v7 + TypeScript   |
+| Backend    | NestJS 11 + TypeScript                           |
+| Database   | PostgreSQL + Prisma 7                            |
+| Auth       | JWT dual-token + Google OAuth (Passport.js)      |
+| UI         | shadcn/ui + Tailwind CSS v4 + HugeIcons + Lucide |
+| Storage    | Cloudflare R2 (S3-compatible, via the MinIO client) |
+| Real-time  | WebSocket (Socket.io)                            |
+| Email      | SMTP through Nodemailer (Brevo relay)            |
+| Monorepo   | Turborepo + pnpm workspaces                      |
 
 ---
 
-## Prérequis
+## Prerequisites
 
-- Node.js >= 20
+- Node.js >= 20 (CI runs on Node 22)
 - pnpm >= 9
 - PostgreSQL >= 14
-- Minio (instance locale ou distante)
+- An S3-compatible object store — Cloudflare R2 in production, or a local MinIO instance for development
 
 ---
 
@@ -39,15 +39,15 @@ pnpm install
 
 ---
 
-## Variables d'environnement
+## Environment variables
 
 ### `apps/api/.env`
 
 ```env
-# Base de données
+# Database
 DATABASE_URL=postgresql://user:password@localhost:5432/spektr
 
-# JWT
+# JWT (secret must be at least 32 characters)
 JWT_SECRET=your_jwt_secret
 
 # Google OAuth
@@ -58,18 +58,20 @@ GOOGLE_CALLBACK_URL=http://localhost:3001/auth/google/callback
 # App
 PORT=3001
 FRONT_URL=http://localhost:3000
+NODE_ENV=development
 
-# Minio
-MINIO_ENDPOINT=localhost
-MINIO_PORT=9000
-MINIO_ACCESS_KEY=minioadmin
-MINIO_SECRET_KEY=minioadmin
-MINIO_BUCKET=spektr-documents
-MINIO_USE_SSL=false
+# Object storage (Cloudflare R2 / S3-compatible)
+R2_ENDPOINT=localhost
+R2_PORT=9000
+R2_USE_SSL=false
+R2_ACCESS_KEY=your_access_key
+R2_SECRET_KEY=your_secret_key
+R2_BUCKET=spektr-documents
 
-# Email (Brevo SMTP)
-BREVO_SMTP_LOGIN=your_email@domain.com
-BREVO_SMTP_KEY=your_brevo_smtp_key
+# Email (SMTP — Brevo relay)
+SMTP_USER=your_smtp_login
+SMTP_PASS=your_smtp_key
+SMTP_FROM=no-reply@your-domain.com
 ```
 
 ### `apps/web/.env.local`
@@ -80,30 +82,30 @@ VITE_API_URL=http://localhost:3001
 
 ---
 
-## Lancer le projet
+## Running the project
 
 ```bash
-# À la racine — démarre frontend et backend en parallèle
+# From the repo root — starts the frontend and backend in parallel
 pnpm dev
 ```
 
-- Frontend : http://localhost:3000
-- Backend : http://localhost:3001
+- Frontend: http://localhost:3000
+- Backend: http://localhost:3001
 
 ---
 
-## Base de données
+## Database
 
 ```bash
 cd apps/api
 
-# Générer le client Prisma
+# Generate the Prisma client
 npx prisma generate
 
-# Créer et appliquer les migrations
+# Create and apply migrations
 npx prisma migrate dev
 
-# Interface graphique
+# Visual database browser
 npx prisma studio
 ```
 
@@ -114,49 +116,61 @@ npx prisma studio
 ```
 Spektr/
 ├── apps/
-│   ├── api/          # Backend NestJS
-│   └── web/          # Frontend React + Vite
+│   ├── api/          # NestJS backend
+│   └── web/          # React + Vite frontend
 ├── turbo.json
 └── package.json
 ```
 
-### Frontend — Feature-first (`apps/web/src/`)
+### Frontend — feature-first (`apps/web/`)
 
 ```
-src/
-├── pages/            # Composants de route (login, home, applications, documents, profile)
-├── routes/           # ProtectedRoute
-├── features/         # Logique métier par domaine
-│   ├── applications/ #   actions/, components/, hooks/, types.ts
+apps/web/
+├── src/
+│   ├── pages/        # route components (login, home, applications, documents, profile)
+│   └── routes/       # ProtectedRoute
+├── features/         # per-domain business logic (actions/, components/, hooks/, types.ts)
+│   ├── applications/
 │   ├── documents/
 │   ├── folders/
 │   ├── notifications/
+│   ├── objectives/
+│   ├── promos/
+│   ├── admin/
+│   ├── profile/
 │   └── auth/
 └── shared/
-    ├── lib/          # api.ts (fetch wrapper), auth.ts (token en mémoire)
-    ├── components/   # Layout, Sidebar, UI réutilisable
+    ├── lib/          # api.ts (fetch wrapper), auth.ts (in-memory token store)
+    ├── hooks/        # cross-feature hooks (useFocusTrap, useRole…)
+    ├── components/   # layout, sidebar, reusable UI
     └── types/
 ```
 
-### Backend — Modules NestJS (`apps/api/src/`)
+### Backend — NestJS modules (`apps/api/src/`)
 
-| Module          | Responsabilité                                       |
-| --------------- | ---------------------------------------------------- |
-| `auth`          | JWT dual-token, Google OAuth, register/login/refresh |
-| `users`         | Profil utilisateur                                   |
-| `applications`  | Suivi des candidatures (statuts, entreprises, dates) |
-| `documents`     | Upload/download de fichiers via Minio                |
-| `folders`       | Organisation des documents par dossier               |
-| `notifications` | Notifications temps réel + email (Brevo)             |
-| `events`        | Gateway WebSocket                                    |
-| `minio`         | Service de stockage objet S3-compatible              |
-| `prisma`        | Accès base de données                                |
+| Module           | Responsibility                                              |
+| ---------------- | ----------------------------------------------------------- |
+| `auth`           | JWT dual-token, Google OAuth, register/login/refresh/logout |
+| `users`          | User profiles, account management, student CSV import       |
+| `applications`   | Application tracking (status, company, contacts, dates, outcome) |
+| `documents`      | File upload/download (R2), admin review workflow, status audit trail |
+| `folders`        | Organizing documents into folders                           |
+| `notifications`  | Real-time (WebSocket) and email notifications               |
+| `communications` | Messages between RE staff and students                      |
+| `objectives`     | Monthly objectives per promo + per-student completion       |
+| `promos`         | Cohort (promo) management + promo-based access control      |
+| `events`         | WebSocket gateway (Socket.io)                               |
+| `mail`           | Transactional email (Nodemailer / Brevo SMTP relay)         |
+| `minio`          | S3-compatible object storage client (Cloudflare R2)         |
+| `prisma`         | Database access                                             |
+
+**Roles:** `SUPER_ADMIN`, `ADMIN`, `STUDENT`. Admin access to a promo is scoped per cohort, with `OWNER` and `COLLABORATOR` levels.
 
 ---
 
-## Authentification
+## Authentication
 
-| Méthode      | Route                 |
+| Method       | Route                 |
 | ------------ | --------------------- |
 | Register     | `POST /auth/register` |
 | Login        | `POST /auth/login`    |
@@ -164,25 +178,28 @@ src/
 | Logout       | `POST /auth/logout`   |
 | Google OAuth | `GET /auth/google`    |
 
-**Stratégie JWT dual-token :**
+**JWT dual-token strategy:**
 
-- `accessToken` → stocké en mémoire JS (15 min)
-- `refreshToken` → cookie httpOnly (7 jours), haché en base
-- Refresh automatique au montage de l'app via `AuthProvider`
-- `AuthTasks` (cron quotidien à 1h) purge les refresh tokens expirés
+- `accessToken` → kept in JS memory (15 min)
+- `refreshToken` → httpOnly cookie (7 days), hashed in the database
+- Silent refresh on app mount via `AuthProvider`
+- `AuthTasks` (daily cron at 1 AM) purges expired refresh tokens
 
-**Google OAuth :** l'API redirige vers `FRONT_URL/oauth/callback?token=<accessToken>` après succès ; la page stocke le token en mémoire et redirige vers `/`.
+**Google OAuth:** after a successful sign-in the API redirects to `FRONT_URL/oauth/callback?token=<accessToken>`; the callback page stores the token in memory and redirects to `/`.
 
 ---
 
-## Fonctionnalités
+## Features
 
-- **Candidatures** — création, suivi par statut (_À contacter_, _Envoyé_, _Relancé_, _En discussion_, _Réponse positive_, _Refus_)
-- **Documents** — upload/download de fichiers organisés en dossiers, stockage Minio
-- **Notifications** — alertes en temps réel (WebSocket) et par email (Brevo) sur les ajouts de documents et changements de statut
-- **Profil** — gestion des informations utilisateur
-- **Dark mode** — toggle dans la sidebar
-- **Rate limiting** — 100 req/60s global, 10 req/60s sur les routes auth
+- **Applications** — creation and tracking by status (_To contact_, _Sent_, _Followed up_, _In discussion_, _Positive response_, _Rejected_) and outcome (_Reminder_, _No response_, _Interview_, _Landed_).
+- **Documents** — upload/download organized in folders and stored on Cloudflare R2; admin review (_validate_ / _to correct_), with a PostgreSQL trigger recording every status change into an audit table.
+- **Objectives** — monthly objectives defined per promo, with per-student completion tracking.
+- **Communications** — messages exchanged between RE staff and students.
+- **Promos** — cohort management with role-based access (super admin / admin / student; promo owner / collaborator).
+- **Notifications** — real-time (WebSocket) and email alerts on document uploads and status changes.
+- **Profile** — user information management.
+- **Dark mode** — toggle in the sidebar.
+- **Rate limiting** — 30 req/60s globally (`@nestjs/throttler`), with tighter per-route limits on sensitive endpoints (10/60s on auth, down to 3/60s on account and CSV-import routes).
 
 ---
 
@@ -190,9 +207,9 @@ src/
 
 ```bash
 # Backend
-cd apps/api && pnpm test          # Jest (unitaires)
+cd apps/api && pnpm test          # Jest (unit)
 cd apps/api && pnpm test:e2e      # Jest e2e
-cd apps/api && pnpm test:cov      # Couverture
+cd apps/api && pnpm test:cov      # coverage
 
 # Frontend
 cd apps/web && pnpm test          # Vitest
@@ -202,7 +219,9 @@ cd apps/web && pnpm test          # Vitest
 
 ## CI/CD
 
-GitHub Actions déclenché sur chaque push et PR vers `master` :
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request to `master` — a single `ci` job on Node 22:
 
-- `test-api` — génère le client Prisma puis lance les tests Jest
-- `test-web` — lance les tests Vitest
+- installs dependencies (`pnpm install --frozen-lockfile`)
+- lints and type-checks the frontend
+- generates the Prisma client, then lints the backend
+- runs the backend test suite (Jest)

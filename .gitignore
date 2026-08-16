@@ -3,6 +3,8 @@
 *.pdf
 .claude/
 KANBAN.md
+recap.html
+audit-rgaa.html
 
 .env
 .env.*
